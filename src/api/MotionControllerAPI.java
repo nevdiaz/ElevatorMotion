@@ -1,6 +1,6 @@
 package api;
 
-public interface MotionController {
+public interface MotionControllerAPI {
     void startMotor(Direction direction);
     void stopMotor();
     void stepUpMotor();
