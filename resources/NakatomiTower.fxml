@@ -23,13 +23,13 @@
             <Label fx:id="speed" text="speed" />
             <Label fx:id="acceleration" text="acceleration" />
             <Label fx:id="deceleration" text="deceleration" />
-            <ToggleButton fx:id="viewMode" mnemonicParsing="false" text="ToggleButton" />
+            <ToggleButton fx:id="viewMode" mnemonicParsing="false" text="viewMode" />
             <ComboBox fx:id="elevatorSelector" prefWidth="150.0" promptText="elevatorSelector" />
          </children>
       </VBox>
    </right>
    <bottom>
-      <LineChart prefHeight="200.0" BorderPane.alignment="CENTER">
+      <LineChart fx:id="speedChart" prefHeight="200.0" BorderPane.alignment="CENTER">
         <xAxis>
           <CategoryAxis side="BOTTOM" />
         </xAxis>
@@ -39,9 +39,9 @@
       </LineChart>
    </bottom>
    <center>
-      <StackPane fx:id="Viewport" minHeight="400.0" minWidth="400.0" prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+      <StackPane fx:id="viewport" minHeight="400.0" minWidth="400.0" prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
          <children>
-            <Pane fx:id="World" maxWidth="300.0" prefWidth="300.0">
+            <Pane fx:id="world" maxWidth="300.0" prefWidth="300.0">
                <children>
                   <Rectangle fx:id="shaft" arcHeight="5.0" arcWidth="5.0" fill="#1f96ff00" height="479.0" layoutX="50.0" stroke="BLACK" strokeType="INSIDE" width="200.0" />
                   <Group fx:id="cabinAssembly" layoutX="70.0" layoutY="147.0">
