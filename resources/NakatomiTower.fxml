@@ -4,6 +4,8 @@
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 
@@ -21,4 +23,11 @@
         </yAxis>
       </LineChart>
    </bottom>
+   <center>
+      <StackPane fx:id="Viewport" minHeight="400.0" minWidth="400.0" prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+         <children>
+            <Pane fx:id="World" maxWidth="300.0" prefWidth="300.0" />
+         </children>
+      </StackPane>
+   </center>
 </BorderPane>
