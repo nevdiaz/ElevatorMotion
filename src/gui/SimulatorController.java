@@ -2,6 +2,7 @@ package gui;
 
 import javafx.fxml.FXML;
 import javafx.scene.Group;
+import javafx.scene.chart.LineChart;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleButton;
@@ -10,12 +11,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 
 public class SimulatorController {
-
-    @FXML
-    private StackPane Viewport;
-
-    @FXML
-    private Pane World;
 
     @FXML
     private Label acceleration;
@@ -60,6 +55,15 @@ public class SimulatorController {
     private Label speed;
 
     @FXML
+    private LineChart<?, ?> speedChart;
+
+    @FXML
     private ToggleButton viewMode;
+
+    @FXML
+    private StackPane viewport;
+
+    @FXML
+    private Pane world;
 
 }
