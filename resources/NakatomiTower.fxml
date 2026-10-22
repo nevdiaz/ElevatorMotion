@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.Group?>
 <?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
@@ -7,11 +8,12 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
 
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
    <right>
-      <VBox prefHeight="200.0" prefWidth="280.0" BorderPane.alignment="CENTER" />
+      <VBox prefHeight="520.0" prefWidth="189.0" BorderPane.alignment="CENTER" />
    </right>
    <bottom>
       <LineChart prefHeight="200.0" BorderPane.alignment="CENTER">
@@ -26,7 +28,21 @@
    <center>
       <StackPane fx:id="Viewport" minHeight="400.0" minWidth="400.0" prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
          <children>
-            <Pane fx:id="World" maxWidth="300.0" prefWidth="300.0" />
+            <Pane fx:id="World" maxWidth="300.0" prefWidth="300.0">
+               <children>
+                  <Rectangle fx:id="shaft" arcHeight="5.0" arcWidth="5.0" fill="#1f96ff00" height="479.0" layoutX="50.0" stroke="BLACK" strokeType="INSIDE" width="200.0" />
+                  <Group fx:id="cabinAssembly" layoutX="70.0" layoutY="147.0">
+                     <children>
+                        <Rectangle fx:id="gondola" arcHeight="5.0" arcWidth="5.0" fill="DODGERBLUE" height="160.0" layoutY="23.0" stroke="BLACK" strokeType="INSIDE" width="160.0" />
+                        <Rectangle fx:id="ceilingSensorRight" arcHeight="5.0" arcWidth="5.0" fill="#ffb01f" height="11.0" layoutX="148.0" layoutY="12.0" stroke="BLACK" strokeType="INSIDE" width="12.0" />
+                        <Rectangle fx:id="floorSensorRight" arcHeight="5.0" arcWidth="5.0" fill="#ffb01f" height="11.0" layoutX="148.0" layoutY="183.0" stroke="BLACK" strokeType="INSIDE" width="12.0" />
+                        <Rectangle fx:id="motor" arcHeight="5.0" arcWidth="5.0" height="24.0" layoutX="49.0" stroke="BLACK" strokeType="INSIDE" width="62.0" />
+                        <Rectangle fx:id="ceilingSensorLeft" arcHeight="5.0" arcWidth="5.0" fill="#ffb01f" height="11.0" layoutX="2.0" layoutY="12.0" stroke="BLACK" strokeType="INSIDE" width="12.0" />
+                        <Rectangle fx:id="floorSensorLeft" arcHeight="5.0" arcWidth="5.0" fill="#ffb01f" height="11.0" layoutX="2.0" layoutY="183.0" stroke="BLACK" strokeType="INSIDE" width="12.0" />
+                     </children>
+                  </Group>
+               </children>
+            </Pane>
          </children>
       </StackPane>
    </center>
