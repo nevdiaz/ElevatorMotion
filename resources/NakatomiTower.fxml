@@ -4,6 +4,9 @@
 <?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.StackPane?>
@@ -13,7 +16,17 @@
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
    <right>
-      <VBox prefHeight="520.0" prefWidth="189.0" BorderPane.alignment="CENTER" />
+      <VBox prefHeight="520.0" prefWidth="189.0" BorderPane.alignment="CENTER">
+         <children>
+            <Label fx:id="currentFloor" text="currentFloor" />
+            <Label fx:id="motionState" text="motionState" />
+            <Label fx:id="speed" text="speed" />
+            <Label fx:id="acceleration" text="acceleration" />
+            <Label fx:id="deceleration" text="deceleration" />
+            <ToggleButton fx:id="viewMode" mnemonicParsing="false" text="ToggleButton" />
+            <ComboBox fx:id="elevatorSelector" prefWidth="150.0" promptText="elevatorSelector" />
+         </children>
+      </VBox>
    </right>
    <bottom>
       <LineChart prefHeight="200.0" BorderPane.alignment="CENTER">
