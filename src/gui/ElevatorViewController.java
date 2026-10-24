@@ -88,6 +88,8 @@ public class ElevatorViewController {
         buildShaft();
         buildFloors();
         clipViewport();
+        placeCabin(0);
+        System.out.println(cabinAssembly.getLayoutY()); //TODO: Delete after testing
     }
 
     private void buildShaft() {
@@ -109,6 +111,12 @@ public class ElevatorViewController {
             world.getChildren().add(0, floorLine);
             world.getChildren().add(0, floorNumber);
         }
+    }
+
+    private void placeCabin(double feet) {
+        double floorLineY = ViewScale.feetToWorldYValue(feet);
+        double cabinPosition = gondola.getLayoutY() + gondola.getHeight();
+        cabinAssembly.setLayoutY(floorLineY - cabinPosition);
     }
 
     private void clipViewport() {
