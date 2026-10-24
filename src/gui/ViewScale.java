@@ -14,5 +14,7 @@ public class ViewScale {
 
     public static final int pitBelowFloorOne = 4;
 
+    public static final int totalTravelBetweenFloorOneAndTen = 126; //(floorCount-1) * floorHeight
+
 
 }
