@@ -82,6 +82,12 @@ public class ElevatorViewController {
         speed.setText("Current Speed");
         acceleration.setText("Current Acceleration");
         deceleration.setText("Current Deceleration");
+        buildShaft();
+    }
+
+    void buildShaft() {
+        shaft.setLayoutY(0);
+        shaft.setHeight(ViewScale.shaftHeight); //Height is 2840
     }
 
 }
