@@ -83,11 +83,19 @@ public class ElevatorViewController {
         acceleration.setText("Current Acceleration");
         deceleration.setText("Current Deceleration");
         buildShaft();
+        clipViewport();
     }
 
     void buildShaft() {
         shaft.setLayoutY(0);
         shaft.setHeight(ViewScale.shaftHeight); //Height is 2840
+    }
+
+    private void clipViewport() {
+        Rectangle clip = new Rectangle();
+        clip.widthProperty().bind(viewport.widthProperty());
+        clip.heightProperty().bind(viewport.heightProperty());
+        viewport.setClip(clip);
     }
 
 }
