@@ -1,5 +1,6 @@
 package gui;
 
+import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.chart.LineChart;
@@ -89,6 +90,9 @@ public class ElevatorViewController {
         buildFloors();
         clipViewport();
         placeCabin(0);
+        viewMode.heightProperty().addListener((observable, oldValue, newValue)
+                -> {updateCamera();});
+        updateCamera();
         System.out.println(cabinAssembly.getLayoutY()); //TODO: Delete after testing
     }
 
@@ -117,6 +121,12 @@ public class ElevatorViewController {
         double floorLineY = ViewScale.feetToWorldYValue(feet);
         double cabinPosition = gondola.getLayoutY() + gondola.getHeight();
         cabinAssembly.setLayoutY(floorLineY - cabinPosition);
+    }
+
+    private void updateCamera() {
+        double liveHeight = viewport.getHeight()/2;
+        double gondolaView = cabinAssembly.getLayoutY() + gondola.getLayoutY() + gondola.getHeight()/2;
+        world.setTranslateY(liveHeight - gondolaView);
     }
 
     private void clipViewport() {
