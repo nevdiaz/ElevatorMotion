@@ -86,7 +86,7 @@ public class ElevatorViewController {
         clipViewport();
     }
 
-    void buildShaft() {
+    private void buildShaft() {
         shaft.setLayoutY(0);
         shaft.setHeight(ViewScale.shaftHeight); //Height is 2840
     }
