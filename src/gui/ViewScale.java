@@ -14,7 +14,13 @@ public class ViewScale {
 
     public static final int pitBelowFloorOne = 4;
 
-    public static final int totalTravelBetweenFloorOneAndTen = 126; //(floorCount-1) * floorHeight
+    public static final int totalTravelBetweenFloorOneAndTen = (floorCount - 1) * floorHeight; //126
+
+    public static final int floorOneYValue =
+            ((((floorCount - 1) * floorHeight)) + headroomAboveFloorTen) * pixelsPerFoot; //2760
+
+    public static final int shaftHeight =
+            ((headroomAboveFloorTen + totalTravelBetweenFloorOneAndTen + pitBelowFloorOne) * pixelsPerFoot); //2840
 
 
 }
