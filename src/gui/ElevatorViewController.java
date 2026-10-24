@@ -10,7 +10,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 
-public class SimulatorController {
+public class ElevatorViewController {
 
     @FXML
     private Label acceleration;
