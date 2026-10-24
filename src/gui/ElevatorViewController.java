@@ -8,6 +8,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 
 public class ElevatorViewController {
@@ -83,12 +86,29 @@ public class ElevatorViewController {
         acceleration.setText("Current Acceleration");
         deceleration.setText("Current Deceleration");
         buildShaft();
+        buildFloors();
         clipViewport();
     }
 
     private void buildShaft() {
         shaft.setLayoutY(0);
         shaft.setHeight(ViewScale.shaftHeight); //Height is 2840
+    }
+
+    private void buildFloors() {
+        double feet;
+        double floorYPosition;
+        for (int i = 1; i <= ViewScale.floorCount; i++) {
+            feet = ViewScale.floorToFeet(i);
+            floorYPosition = ViewScale.feetToWorldYValue(feet);
+            Line floorLine = new Line(shaft.getLayoutX(), floorYPosition, shaft.getLayoutX() + shaft.getWidth(), floorYPosition);
+            floorLine.setStroke(Color.GREEN);
+            Label floorNumber = new Label(String.valueOf(i));
+            floorNumber.setLayoutX(shaft.getLayoutX() - 35);
+            floorNumber.setLayoutY(floorYPosition - 10);
+            world.getChildren().add(0, floorLine);
+            world.getChildren().add(0, floorNumber);
+        }
     }
 
     private void clipViewport() {
