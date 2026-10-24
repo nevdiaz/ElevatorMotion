@@ -31,6 +31,15 @@ public class ElevatorViewController {
     private Label deceleration;
 
     @FXML
+    private Rectangle doorLeft;
+
+    @FXML
+    private Rectangle doorOpening;
+
+    @FXML
+    private Rectangle doorRight;
+
+    @FXML
     private ComboBox<?> elevatorSelector;
 
     @FXML
