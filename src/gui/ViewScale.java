@@ -1,6 +1,8 @@
 package gui;
 
-public class ViewScale {
+public final class ViewScale {
+
+    private ViewScale() {}
 
     public static final int pixelsPerFoot = 20;
 
@@ -17,10 +19,18 @@ public class ViewScale {
     public static final int totalTravelBetweenFloorOneAndTen = (floorCount - 1) * floorHeight; //126
 
     public static final int floorOneYValue =
-            ((((floorCount - 1) * floorHeight)) + headroomAboveFloorTen) * pixelsPerFoot; //2760
+            (totalTravelBetweenFloorOneAndTen + headroomAboveFloorTen) * pixelsPerFoot; //2760
 
     public static final int shaftHeight =
             ((headroomAboveFloorTen + totalTravelBetweenFloorOneAndTen + pitBelowFloorOne) * pixelsPerFoot); //2840
+
+    public static double floorToFeet(int floorNumber) {
+        return (floorNumber - 1) * floorHeight;
+    }
+
+    public static double feetToWorldYValue(double feet) {
+        return floorOneYValue - feet * pixelsPerFoot;
+    }
 
 
 }
