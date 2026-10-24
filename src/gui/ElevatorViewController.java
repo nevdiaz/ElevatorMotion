@@ -79,6 +79,10 @@ public class ElevatorViewController {
     @FXML
     private Pane world;
 
+    private static final double fakeSpeed = 4.0;
+
+    long startTime = -1;
+
     @FXML
     private void initialize() {
         currentFloor.setText("Current Floor");
@@ -94,6 +98,33 @@ public class ElevatorViewController {
                 -> {updateCamera();});
         updateCamera();
         System.out.println(cabinAssembly.getLayoutY()); //TODO: Delete after testing
+        AnimationTimer timer = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                if (startTime < 0) {
+                    startTime = now;
+                }
+
+                double elapsedSeconds = (now - startTime)/1000000000.0;
+                double feet = fakePosition(elapsedSeconds);
+                placeCabin(feet);
+                updateCamera();
+
+            }
+        };
+        timer.start();
+    }
+
+    private double fakePosition(double elapsedSeconds) {
+        double feet = elapsedSeconds * fakeSpeed;
+        double cycle = 2 * ViewScale.totalTravelBetweenFloorOneAndTen;
+        feet = feet % cycle;
+
+        if (feet > ViewScale.totalTravelBetweenFloorOneAndTen) {
+            feet = cycle - feet;
+        }
+
+        return feet;
     }
 
     private void buildShaft() {
