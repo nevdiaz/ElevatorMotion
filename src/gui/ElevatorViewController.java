@@ -75,4 +75,13 @@ public class ElevatorViewController {
     @FXML
     private Pane world;
 
+    @FXML
+    private void initialize() {
+        currentFloor.setText("Current Floor");
+        motionState.setText("Current Motion State");
+        speed.setText("Current Speed");
+        acceleration.setText("Current Acceleration");
+        deceleration.setText("Current Deceleration");
+    }
+
 }
