@@ -13,7 +13,6 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Rectangle?>
 
-
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.ElevatorViewController">
    <right>
       <VBox prefHeight="520.0" prefWidth="189.0" BorderPane.alignment="CENTER">
@@ -52,6 +51,9 @@
                         <Rectangle fx:id="motor" arcHeight="5.0" arcWidth="5.0" height="24.0" layoutX="49.0" stroke="BLACK" strokeType="INSIDE" width="62.0" />
                         <Rectangle fx:id="ceilingSensorLeft" arcHeight="5.0" arcWidth="5.0" fill="#ffb01f" height="11.0" layoutX="2.0" layoutY="12.0" stroke="BLACK" strokeType="INSIDE" width="12.0" />
                         <Rectangle fx:id="floorSensorLeft" arcHeight="5.0" arcWidth="5.0" fill="#ffb01f" height="11.0" layoutX="2.0" layoutY="183.0" stroke="BLACK" strokeType="INSIDE" width="12.0" />
+                        <Rectangle fx:id="doorOpening" arcHeight="5.0" arcWidth="5.0" fill="#7c838a" height="140.0" layoutX="40.0" layoutY="43.0" stroke="BLACK" strokeType="INSIDE" width="80.0" />
+                        <Rectangle fx:id="doorLeft" arcHeight="5.0" arcWidth="5.0" fill="#bdc3c9" height="140.0" layoutX="40.0" layoutY="43.0" stroke="BLACK" strokeType="INSIDE" width="40.0" />
+                        <Rectangle fx:id="doorRight" arcHeight="5.0" arcWidth="5.0" fill="#bdc3c9" height="140.0" layoutX="80.0" layoutY="43.0" stroke="BLACK" strokeType="INSIDE" width="40.0" />
                      </children>
                   </Group>
                </children>
