@@ -137,6 +137,12 @@ public class ElevatorViewController {
         timer.start();
     }
 
+    //Has to be public so that it works in main
+    public void attach(MotionControllerAPI motion) {
+        this.motion = motion;
+        System.out.println(motion.getPosition());
+    }
+
     private double fakePosition(double elapsedSeconds) {
         double feet = elapsedSeconds * fakeSpeed;
         double cycle = 2 * ViewScale.totalTravelBetweenFloorOneAndTen;
