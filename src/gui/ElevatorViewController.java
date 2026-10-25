@@ -1,5 +1,6 @@
 package gui;
 
+import api.MotionControllerAPI;
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
@@ -10,9 +11,10 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.LinearGradient;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ElevatorViewController {
 
@@ -79,9 +81,25 @@ public class ElevatorViewController {
     @FXML
     private Pane world;
 
+    private MotionControllerAPI motion;
+
+    private static final Color sensorsAligned = Color.LIGHTGREEN;
+
+    private static final Color shaftSensorColor = Color.GRAY;
+
+    private static final Color cabinSensorColor = Color.ORANGE;
+
+    private static final Color offColor = Color.BLACK;
+
     private static final double fakeSpeed = 4.0;
 
     long startTime = -1;
+
+    private record FloorMarkers(Rectangle floorLeft, Rectangle floorRight, Rectangle ceilingLeft, Rectangle ceilingRight) {}
+
+    private final List<FloorMarkers> floorMarkers = new ArrayList<>();
+
+    private static final double SENSOR_ZONE_HALF = 0.25;
 
     @FXML
     private void initialize() {
@@ -94,10 +112,9 @@ public class ElevatorViewController {
         buildFloors();
         clipViewport();
         placeCabin(0);
-        viewMode.heightProperty().addListener((observable, oldValue, newValue)
+        viewport.heightProperty().addListener((observable, oldValue, newValue)
                 -> {updateCamera();});
         updateCamera();
-        System.out.println(cabinAssembly.getLayoutY()); //TODO: Delete after testing
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -108,11 +125,17 @@ public class ElevatorViewController {
                 double elapsedSeconds = (now - startTime)/1000000000.0;
                 double feet = fakePosition(elapsedSeconds);
                 placeCabin(feet);
+                updateSensors(feet);
                 updateCamera();
 
             }
         };
         timer.start();
+    }
+
+    //Has to be public so that it works in main
+    public void attach(MotionControllerAPI motion) {
+        this.motion = motion;
     }
 
     private double fakePosition(double elapsedSeconds) {
@@ -132,6 +155,16 @@ public class ElevatorViewController {
         shaft.setHeight(ViewScale.shaftHeight); //Height is 2840
     }
 
+    private Rectangle buildShaftSensor(Rectangle cabinSensor, double floorLineY) {
+        double x = cabinAssembly.getLayoutX() + cabinSensor.getLayoutX();
+        double y = floorLineY + cabinSensor.getLayoutY() - gondolaBottomOffset();
+        Rectangle shaftSensor = new Rectangle(x, y, cabinSensor.getWidth(), cabinSensor.getHeight());
+        shaftSensor.setFill(Color.GRAY);
+        shaftSensor.setStroke(Color.BLACK);
+        world.getChildren().add(0, shaftSensor);
+        return shaftSensor;
+    }
+
     private void buildFloors() {
         double feet;
         double floorYPosition;
@@ -145,19 +178,65 @@ public class ElevatorViewController {
             floorNumber.setLayoutY(floorYPosition - 10);
             world.getChildren().add(0, floorLine);
             world.getChildren().add(0, floorNumber);
+            floorMarkers.add(
+                    new FloorMarkers(
+                            buildShaftSensor(floorSensorLeft, floorYPosition),
+                            buildShaftSensor(floorSensorRight, floorYPosition),
+                            buildShaftSensor(ceilingSensorLeft, floorYPosition),
+                            buildShaftSensor(ceilingSensorRight, floorYPosition)));
         }
+    }
+
+    private double gondolaBottomOffset() {
+        return gondola.getLayoutY() + gondola.getHeight();
     }
 
     private void placeCabin(double feet) {
         double floorLineY = ViewScale.feetToWorldYValue(feet);
-        double cabinPosition = gondola.getLayoutY() + gondola.getHeight();
-        cabinAssembly.setLayoutY(floorLineY - cabinPosition);
+        cabinAssembly.setLayoutY(floorLineY - gondolaBottomOffset());
+    }
+
+    private void setSensorColor(Rectangle sensor, boolean lit, Color offColor) {
+        if (lit == true) {
+            sensor.setFill(sensorsAligned);
+        } else {
+            sensor.setFill(offColor);
+        }
     }
 
     private void updateCamera() {
         double liveHeight = viewport.getHeight()/2;
         double gondolaView = cabinAssembly.getLayoutY() + gondola.getLayoutY() + gondola.getHeight()/2;
         world.setTranslateY(liveHeight - gondolaView);
+    }
+
+    private void updateSensors(double feet) {
+        boolean anyAligned = false;
+        for (int i = 1; i <= ViewScale.floorCount; i++) {
+            boolean aligned = isFloorAligned(feet, i);
+            FloorMarkers markers = floorMarkers.get(i-1);
+            setSensorColor(markers.floorLeft(), aligned, shaftSensorColor);
+            setSensorColor(markers.floorRight(), aligned, shaftSensorColor);
+            setSensorColor(markers.ceilingLeft(), aligned, shaftSensorColor);
+            setSensorColor(markers.ceilingRight(), aligned, shaftSensorColor);
+            if (aligned == true) {
+                anyAligned = true;
+            }
+        }
+        setSensorColor(floorSensorLeft, anyAligned, cabinSensorColor);
+        setSensorColor(floorSensorRight, anyAligned, cabinSensorColor);
+        setSensorColor(ceilingSensorLeft, anyAligned, cabinSensorColor);
+        setSensorColor(ceilingSensorRight, anyAligned, cabinSensorColor);
+    }
+
+    //TODO: Erase later, this is purely a test method since the engine is not hooked up yet
+    //This method will be erased and will be replaced with isFloorAligned(n)
+    private boolean isFloorAligned(double position, int floorNumber) {
+        double distance = Math.abs(position - ViewScale.floorToFeet(floorNumber));
+        if (distance <= SENSOR_ZONE_HALF) {
+            return true;
+        }
+        return false;
     }
 
     private void clipViewport() {
