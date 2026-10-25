@@ -126,7 +126,7 @@ public class ElevatorViewController {
                 }
 
                 double elapsedSeconds = (now - startTime)/1000000000.0;
-                double feet = fakePosition(elapsedSeconds);
+                double feet = motion.getPosition();
                 placeCabin(feet);
                 updateSensors(feet);
                 updateCamera();
