@@ -146,10 +146,13 @@ public class ElevatorViewController {
         }
     }
 
+    private double gondolaBottomOffset() {
+        return gondola.getLayoutY() + gondola.getHeight();
+    }
+
     private void placeCabin(double feet) {
         double floorLineY = ViewScale.feetToWorldYValue(feet);
-        double cabinPosition = gondola.getLayoutY() + gondola.getHeight();
-        cabinAssembly.setLayoutY(floorLineY - cabinPosition);
+        cabinAssembly.setLayoutY(floorLineY - gondolaBottomOffset());
     }
 
     private void updateCamera() {
