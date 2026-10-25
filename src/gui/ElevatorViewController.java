@@ -89,17 +89,9 @@ public class ElevatorViewController {
 
     private static final Color cabinSensorColor = Color.ORANGE;
 
-    private static final Color offColor = Color.BLACK;
-
-    private static final double fakeSpeed = 4.0;
-
-    long startTime = -1;
-
     private record FloorMarkers(Rectangle floorLeft, Rectangle floorRight, Rectangle ceilingLeft, Rectangle ceilingRight) {}
 
     private final List<FloorMarkers> floorMarkers = new ArrayList<>();
-
-    private static final double SENSOR_ZONE_HALF = 0.25;
 
     @FXML
     private void initialize() {
@@ -121,16 +113,10 @@ public class ElevatorViewController {
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                if (startTime < 0) {
-                    startTime = now;
-                }
-
-                double elapsedSeconds = (now - startTime)/1000000000.0;
                 double feet = motion.getPosition();
                 placeCabin(feet);
                 updateSensors(feet);
                 updateCamera();
-
             }
         };
         timer.start();
@@ -140,18 +126,6 @@ public class ElevatorViewController {
     public void attach(MotionControllerAPI motion) {
         this.motion = motion;
         startRenderLoop();
-    }
-
-    private double fakePosition(double elapsedSeconds) {
-        double feet = elapsedSeconds * fakeSpeed;
-        double cycle = 2 * ViewScale.totalTravelBetweenFloorOneAndTen;
-        feet = feet % cycle;
-
-        if (feet > ViewScale.totalTravelBetweenFloorOneAndTen) {
-            feet = cycle - feet;
-        }
-
-        return feet;
     }
 
     private void buildShaft() {
@@ -231,16 +205,6 @@ public class ElevatorViewController {
         setSensorColor(floorSensorRight, anyAligned, cabinSensorColor);
         setSensorColor(ceilingSensorLeft, anyAligned, cabinSensorColor);
         setSensorColor(ceilingSensorRight, anyAligned, cabinSensorColor);
-    }
-
-    //TODO: Erase later, this is purely a test method since the engine is not hooked up yet
-    //This method will be erased and will be replaced with isFloorAligned(n)
-    private boolean isFloorAligned(double position, int floorNumber) {
-        double distance = Math.abs(position - ViewScale.floorToFeet(floorNumber));
-        if (distance <= SENSOR_ZONE_HALF) {
-            return true;
-        }
-        return false;
     }
 
     private void clipViewport() {
