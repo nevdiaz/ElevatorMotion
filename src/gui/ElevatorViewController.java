@@ -80,14 +80,13 @@ public class ElevatorViewController {
     @FXML
     private Pane world;
 
-    @FXML
-    private Color sensorsAligned = Color.LIGHTGREEN;
+    private static final Color sensorsAligned = Color.LIGHTGREEN;
 
-    @FXML
-    private Color shaftSensorColor = Color.GREEN;
+    private static final Color shaftSensorColor = Color.GRAY;
 
-    @FXML
-    private Color cabinSensorColor = Color.ORANGE;
+    private static final Color cabinSensorColor = Color.ORANGE;
+
+    private static final Color offColor = Color.BLACK;
 
     private static final double fakeSpeed = 4.0;
 
@@ -127,6 +126,7 @@ public class ElevatorViewController {
                 double elapsedSeconds = (now - startTime)/1000000000.0;
                 double feet = fakePosition(elapsedSeconds);
                 placeCabin(feet);
+                updateSensors(feet);
                 updateCamera();
 
             }
@@ -192,10 +192,37 @@ public class ElevatorViewController {
         cabinAssembly.setLayoutY(floorLineY - gondolaBottomOffset());
     }
 
+    private void setSensorColor(Rectangle sensor, boolean lit, Color offColor) {
+        if (lit == true) {
+            sensor.setFill(sensorsAligned);
+        } else {
+            sensor.setFill(offColor);
+        }
+    }
+
     private void updateCamera() {
         double liveHeight = viewport.getHeight()/2;
         double gondolaView = cabinAssembly.getLayoutY() + gondola.getLayoutY() + gondola.getHeight()/2;
         world.setTranslateY(liveHeight - gondolaView);
+    }
+
+    private void updateSensors(double feet) {
+        boolean anyAligned = false;
+        for (int i = 1; i <= ViewScale.floorCount; i++) {
+            boolean aligned = isFloorAligned(feet, i);
+            FloorMarkers markers = floorMarkers.get(i-1);
+            setSensorColor(markers.floorLeft(), aligned, shaftSensorColor);
+            setSensorColor(markers.floorRight(), aligned, shaftSensorColor);
+            setSensorColor(markers.ceilingLeft(), aligned, shaftSensorColor);
+            setSensorColor(markers.ceilingRight(), aligned, shaftSensorColor);
+            if (aligned == true) {
+                anyAligned = true;
+            }
+        }
+        setSensorColor(floorSensorLeft, anyAligned, cabinSensorColor);
+        setSensorColor(floorSensorRight, anyAligned, cabinSensorColor);
+        setSensorColor(ceilingSensorLeft, anyAligned, cabinSensorColor);
+        setSensorColor(ceilingSensorRight, anyAligned, cabinSensorColor);
     }
 
     //TODO: Erase later, this is purely a test method since the engine is not hooked up yet
