@@ -115,6 +115,9 @@ public class ElevatorViewController {
         viewport.heightProperty().addListener((observable, oldValue, newValue)
                 -> {updateCamera();});
         updateCamera();
+    }
+
+    private void startRenderLoop() {
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -136,6 +139,7 @@ public class ElevatorViewController {
     //Has to be public so that it works in main
     public void attach(MotionControllerAPI motion) {
         this.motion = motion;
+        startRenderLoop();
     }
 
     private double fakePosition(double elapsedSeconds) {
