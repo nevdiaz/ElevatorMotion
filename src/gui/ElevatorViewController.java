@@ -10,7 +10,6 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.LinearGradient;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 
@@ -94,10 +93,9 @@ public class ElevatorViewController {
         buildFloors();
         clipViewport();
         placeCabin(0);
-        viewMode.heightProperty().addListener((observable, oldValue, newValue)
+        viewport.heightProperty().addListener((observable, oldValue, newValue)
                 -> {updateCamera();});
         updateCamera();
-        System.out.println(cabinAssembly.getLayoutY()); //TODO: Delete after testing
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
