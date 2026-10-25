@@ -1,5 +1,6 @@
 package gui;
 
+import api.MotionControllerAPI;
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
@@ -79,6 +80,8 @@ public class ElevatorViewController {
 
     @FXML
     private Pane world;
+
+    private MotionControllerAPI motion;
 
     private static final Color sensorsAligned = Color.LIGHTGREEN;
 
