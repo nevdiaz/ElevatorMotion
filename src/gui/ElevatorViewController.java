@@ -217,7 +217,7 @@ public class ElevatorViewController {
     private void updateSensors(double feet) {
         boolean anyAligned = false;
         for (int i = 1; i <= ViewScale.floorCount; i++) {
-            boolean aligned = isFloorAligned(feet, i);
+            boolean aligned = motion.isFloorAligned(i);
             FloorMarkers markers = floorMarkers.get(i-1);
             setSensorColor(markers.floorLeft(), aligned, shaftSensorColor);
             setSensorColor(markers.floorRight(), aligned, shaftSensorColor);
