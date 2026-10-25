@@ -115,10 +115,6 @@ public class ElevatorViewController {
         viewport.heightProperty().addListener((observable, oldValue, newValue)
                 -> {updateCamera();});
         updateCamera();
-        System.out.println(isFloorAligned(0.1, 1)); //true
-        System.out.println(isFloorAligned(0.3, 1));//false
-        System.out.println(isFloorAligned(14.2, 2)); //true
-        System.out.println(isFloorAligned(7.0, 2)); //false
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -140,7 +136,6 @@ public class ElevatorViewController {
     //Has to be public so that it works in main
     public void attach(MotionControllerAPI motion) {
         this.motion = motion;
-        System.out.println(motion.getPosition());
     }
 
     private double fakePosition(double elapsedSeconds) {
