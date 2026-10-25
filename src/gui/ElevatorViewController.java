@@ -80,6 +80,15 @@ public class ElevatorViewController {
     @FXML
     private Pane world;
 
+    @FXML
+    private Color sensorsAligned = Color.LIGHTGREEN;
+
+    @FXML
+    private Color shaftSensorColor = Color.GREEN;
+
+    @FXML
+    private Color cabinSensorColor = Color.ORANGE;
+
     private static final double fakeSpeed = 4.0;
 
     long startTime = -1;
@@ -159,10 +168,12 @@ public class ElevatorViewController {
             floorNumber.setLayoutY(floorYPosition - 10);
             world.getChildren().add(0, floorLine);
             world.getChildren().add(0, floorNumber);
-            buildShaftSensor(floorSensorLeft, floorYPosition);
-            buildShaftSensor(floorSensorRight, floorYPosition);
-            buildShaftSensor(ceilingSensorLeft, floorYPosition);
-            buildShaftSensor(ceilingSensorRight, floorYPosition);
+            floorMarkers.add(
+                    new FloorMarkers(
+                            buildShaftSensor(floorSensorLeft, floorYPosition),
+                            buildShaftSensor(floorSensorRight, floorYPosition),
+                            buildShaftSensor(ceilingSensorLeft, floorYPosition),
+                            buildShaftSensor(ceilingSensorRight, floorYPosition)));
         }
     }
 
