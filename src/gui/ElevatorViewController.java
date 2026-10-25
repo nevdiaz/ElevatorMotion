@@ -12,6 +12,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ElevatorViewController {
 
@@ -81,6 +83,10 @@ public class ElevatorViewController {
     private static final double fakeSpeed = 4.0;
 
     long startTime = -1;
+
+    private record FloorMarkers(Rectangle floorLeft, Rectangle floorRight, Rectangle ceilingLeft, Rectangle ceilingRight) {}
+
+    private final List<FloorMarkers> floorMarkers = new ArrayList<>();
 
     @FXML
     private void initialize() {
