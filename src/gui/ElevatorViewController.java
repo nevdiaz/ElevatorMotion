@@ -130,6 +130,16 @@ public class ElevatorViewController {
         shaft.setHeight(ViewScale.shaftHeight); //Height is 2840
     }
 
+    private Rectangle buildShaftSensor(Rectangle cabinSensor, double floorLineY) {
+        double x = cabinAssembly.getLayoutX() + cabinSensor.getLayoutX();
+        double y = floorLineY + cabinSensor.getLayoutY() - gondolaBottomOffset();
+        Rectangle shaftSensor = new Rectangle(x, y, cabinSensor.getWidth(), cabinSensor.getHeight());
+        shaftSensor.setFill(Color.GRAY);
+        shaftSensor.setStroke(Color.BLACK);
+        world.getChildren().add(0, shaftSensor);
+        return shaftSensor;
+    }
+
     private void buildFloors() {
         double feet;
         double floorYPosition;
@@ -143,6 +153,10 @@ public class ElevatorViewController {
             floorNumber.setLayoutY(floorYPosition - 10);
             world.getChildren().add(0, floorLine);
             world.getChildren().add(0, floorNumber);
+            buildShaftSensor(floorSensorLeft, floorYPosition);
+            buildShaftSensor(floorSensorRight, floorYPosition);
+            buildShaftSensor(ceilingSensorLeft, floorYPosition);
+            buildShaftSensor(ceilingSensorRight, floorYPosition);
         }
     }
 
