@@ -97,6 +97,8 @@ public class ElevatorViewController {
 
     private final List<FloorMarkers> floorMarkers = new ArrayList<>();
 
+    private static final double SENSOR_ZONE_HALF = 0.25;
+
     @FXML
     private void initialize() {
         currentFloor.setText("Current Floor");
@@ -111,6 +113,10 @@ public class ElevatorViewController {
         viewport.heightProperty().addListener((observable, oldValue, newValue)
                 -> {updateCamera();});
         updateCamera();
+        System.out.println(isFloorAligned(0.1, 1)); //true
+        System.out.println(isFloorAligned(0.3, 1));//false
+        System.out.println(isFloorAligned(14.2, 2)); //true
+        System.out.println(isFloorAligned(7.0, 2)); //false
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -190,6 +196,16 @@ public class ElevatorViewController {
         double liveHeight = viewport.getHeight()/2;
         double gondolaView = cabinAssembly.getLayoutY() + gondola.getLayoutY() + gondola.getHeight()/2;
         world.setTranslateY(liveHeight - gondolaView);
+    }
+
+    //TODO: Erase later, this is purely a test method since the engine is not hooked up yet
+    //This method will be erased and will be replaced with isFloorAligned(n)
+    private boolean isFloorAligned(double position, int floorNumber) {
+        double distance = Math.abs(position - ViewScale.floorToFeet(floorNumber));
+        if (distance <= SENSOR_ZONE_HALF) {
+            return true;
+        }
+        return false;
     }
 
     private void clipViewport() {
