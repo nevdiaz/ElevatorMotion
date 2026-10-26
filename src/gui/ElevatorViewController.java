@@ -5,6 +5,8 @@ import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleButton;
@@ -73,7 +75,7 @@ public class ElevatorViewController {
     private Label speed;
 
     @FXML
-    private LineChart<?, ?> speedChart;
+    private LineChart<Number, Number> speedChart;
 
     @FXML
     private ToggleButton viewMode;
@@ -83,6 +85,8 @@ public class ElevatorViewController {
 
     @FXML
     private Pane world;
+
+    private final XYChart.Series<Number, Number> speedSeries = new XYChart.Series();
 
     private MotionControllerAPI motion;
 
@@ -107,6 +111,7 @@ public class ElevatorViewController {
         cruisingSpeed.setText("Cruising Speed: 4.0 ft/s");
         acceleration.setText("Acceleration: 2.0 ft/s");
         deceleration.setText("Deceleration: 2..0 ft/s");
+        buildSpeedChart();
         buildShaft();
         buildFloors();
         clipViewport();
@@ -151,6 +156,32 @@ public class ElevatorViewController {
         shaftSensor.setStroke(Color.BLACK);
         world.getChildren().add(0, shaftSensor);
         return shaftSensor;
+    }
+
+    private void buildSpeedChart() {
+        NumberAxis timeAxis = (NumberAxis) speedChart.getXAxis();
+        NumberAxis speedAxis = (NumberAxis) speedChart.getYAxis();
+
+        timeAxis.setAutoRanging(false);
+        timeAxis.setLowerBound(0);
+        timeAxis.setUpperBound(30);
+        timeAxis.setTickUnit(5);
+        timeAxis.setLabel("Time (s)");
+
+        speedAxis.setAutoRanging(false);
+        speedAxis.setLowerBound(0);
+        speedAxis.setUpperBound(5);
+        speedAxis.setTickUnit(1);
+        speedAxis.setLabel("Speed (ft/s)");
+
+        speedSeries.setName("Speed");
+        speedChart.getData().add(speedSeries);
+        speedChart.setLegendVisible(false);
+
+        speedSeries.getData().add(new XYChart.Data<>(0, 0));
+        speedSeries.getData().add(new XYChart.Data<>(2, 4));
+        speedSeries.getData().add(new XYChart.Data<>(10, 4));
+        speedSeries.getData().add(new XYChart.Data<>(12, 0));
     }
 
     private void buildFloors() {
