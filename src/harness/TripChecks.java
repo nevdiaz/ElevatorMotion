@@ -60,7 +60,9 @@ public class TripChecks {
     private static void verifyTrip(MotionEngine engine, TripController controller,
                                    Runnable tick, int floor) {
         String label = "trip to floor " + floor + ": ";
-        boolean finished = runTrip(controller, tick, floor, 5000);
+        int[] reads = new int[MotionEngine.FLOORS + 1];
+        double startPos = engine.getPosition();
+        boolean finished = runTrip(controller, engine, tick, floor, 5000, reads);
         check(finished, label + "finishes");
         check(engine.getState() == MotionState.STOPPED, label + "state is STOPPED");
         check(!engine.isMoving(), label + "not moving");
