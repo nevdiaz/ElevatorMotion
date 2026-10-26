@@ -1,5 +1,6 @@
 package manager;
 
+import api.Direction;
 import sim.MotionEngine;
 
 
@@ -11,6 +12,8 @@ public class SimulationManager {
     private double accumulator = 0.0;
     private double timeScale = 1.0;
     private static final double longestCatchUp = 0.25;
+    boolean tripActive = false;
+    private double targetPosition;
 
     public SimulationManager(MotionEngine engine) {
         this.engine = engine;
@@ -35,5 +38,27 @@ public class SimulationManager {
 
     public void setTimeScale(double timeScale) {
         this.timeScale = timeScale;
+    }
+
+    public void goToFloor(int floor) {
+        if (floor < 1 || floor > MotionEngine.FLOORS) {
+            System.out.println("Floor must be 1 through 10.");
+            return;
+        }
+        if (tripActive == true || engine.isMoving() == true) {
+            System.out.println("Elevator is busy.");
+            return;
+        }
+        if (engine.isFloorAligned(floor) == true) {
+            System.out.println("Elevator has already arrived.");
+            return;
+        }
+        targetPosition = MotionEngine.floorPosition(floor);
+        tripActive = true;
+        if (targetPosition > engine.getPosition()) {
+            engine.startMotor(Direction.Up);
+        } else {
+            engine.startMotor(Direction.Down);
+        }
     }
 }

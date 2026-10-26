@@ -30,6 +30,7 @@ public class Main extends Application {
             }
         };
         timer.start();
+        simulationManager.goToFloor(5);
     }
 
     public static void main(String[] args) {launch(args);}
