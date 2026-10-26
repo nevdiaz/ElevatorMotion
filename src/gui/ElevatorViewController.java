@@ -86,6 +86,8 @@ public class ElevatorViewController {
 
     private MotionControllerAPI motion;
 
+    private String stateText;
+
     private double shownFeet = 0;
 
     private static final Color sensorsAligned = Color.LIGHTGREEN;
@@ -197,12 +199,35 @@ public class ElevatorViewController {
                 floor = i;
             }
         }
-        currentFloor.setText(floor + "");
-        String.format("%.2f ft/s", motion.getVelocity());
-        if (motion.isMoving() ==  true) {
-            motionState.setText("Moving");
+
+        if (floor == 0) {
+            currentFloor.setText("-");
         } else {
-            motionState.setText("Stopped");
+            currentFloor.setText(floor + "");
+        }
+
+        String.format("%.2f ft/s", motion.getVelocity());
+        switch (motion.getState()) {
+            //STOPPED, ACCELERATING, CRUISING, DECELERATING
+            case STOPPED:
+                motionState.setText("STOPPED");
+                break;
+
+            case ACCELERATING:
+                motionState.setText("ACCELERATING");
+                break;
+
+            case CRUISING:
+                motionState.setText("CRUISING");
+                break;
+
+            case DECELERATING:
+                motionState.setText("DECELERATING");
+                break;
+
+            default:
+                motionState.setText("Unknown");
+                break;
         }
     }
 
