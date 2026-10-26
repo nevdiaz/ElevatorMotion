@@ -17,6 +17,10 @@ public class Main extends Application {
         ElevatorViewController controller = loader.getController();
         MotionEngine motionEngine = new MotionEngine();
         controller.attach(motionEngine);
+
+        new harness.TestHarness(motionEngine, motionEngine::tick).start();
+
+
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.setTitle("NakatomiTower");
