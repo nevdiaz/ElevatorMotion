@@ -5,6 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import manager.FloorSequencer;
 import manager.SimulationManager;
 import sim.MotionEngine;
 
@@ -18,7 +19,8 @@ public class Main extends Application {
         MotionEngine motionEngine = new MotionEngine();
         controller.attach(motionEngine);
 
-        new harness.TestHarness(motionEngine, motionEngine::tick).start();
+        //Kenny commented this out for testing purposes, can't use two clocks. Uncomment when appropriate.
+        //new harness.TestHarness(motionEngine, motionEngine::tick).start();
 
 
         Scene scene = new Scene(root);
@@ -26,15 +28,24 @@ public class Main extends Application {
         primaryStage.setTitle("NakatomiTower");
         primaryStage.show();
 
-//        SimulationManager simulationManager = new SimulationManager(motionEngine);
-//        AnimationTimer timer = new AnimationTimer() {
-//            @Override
-//            public void handle(long now) {
-//                simulationManager.update(now);
-//            }
-//        };
-//        timer.start();
-//        simulationManager.goToFloor(5);
+        SimulationManager simulationManager = new SimulationManager(motionEngine);
+        FloorSequencer floorSequencer = new FloorSequencer(simulationManager);
+        AnimationTimer timer = new AnimationTimer() {
+
+            long previousFramesTimeStamp = -1;
+            @Override
+            public void handle(long now) {
+                double elapsedSeconds = 0;
+                if (previousFramesTimeStamp != -1) {
+                    elapsedSeconds = (now - previousFramesTimeStamp) / 1000000000.0;
+                }
+                simulationManager.update(now);
+                floorSequencer.update(elapsedSeconds);
+                previousFramesTimeStamp = now;
+            }
+        };
+        timer.start();
+        //simulationManager.goToFloor(5);
     }
 
     public static void main(String[] args) {launch(args);}
