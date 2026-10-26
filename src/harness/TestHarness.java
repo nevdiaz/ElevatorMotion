@@ -1,5 +1,6 @@
 package harness;
 
+import manager.FloorSequencer;
 import manager.TripController;
 
 
@@ -8,20 +9,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Test harness class to stand in for the elevator manager.
- * Runs the clocks and moves the elevator through the floors.
- * I chose the floors randomly for now.
+ * Test harness standing in for the elevator manager.
+ * Owns the clock and the test route; trip logic lives in TripController
+ * and the floor cycle in FloorSequencer, so removing this class loses nothing vital.
  */
 public class TestHarness {
 
-    private static final long TIME_STEP = 50; // 0.05s
-    private static final int[] FLOORS = {2, 10, 4, 1}; // random floor numbers for now
-    private static final double PAUSE_TIME = 2.0; // seconds
-    private int nextFloorIndex = 0;
-    private boolean onTrip = false;
-    private static final int PAUSE_STEPS = (int) Math.round(PAUSE_TIME * 1000 / TIME_STEP);
-    private int pauseStepsLeft = PAUSE_STEPS;
+    private static final int[] ROUTE = {2, 10, 4, 1};
+    private static final double PAUSE_SECONDS = 2.0;
+    private static final long TIME_STEP = 50; // milliseconds (0.05 s)
     private final TripController controller;
+    private final FloorSequencer sequencer;
     private final Runnable updateTimeStep;
 
     private final ScheduledExecutorService clock =
@@ -34,6 +32,7 @@ public class TestHarness {
 
     public TestHarness(TripController controller, Runnable updateTimeStep) {
         this.controller = controller;
+        this.sequencer = new FloorSequencer(controller, ROUTE, PAUSE_SECONDS);
         this.updateTimeStep = updateTimeStep;
     }
 
@@ -43,27 +42,11 @@ public class TestHarness {
 
     void onUpdate() {
         try {
-            if (controller.isTripActive()) {
-                controller.controlStep();
-                onTrip = true;
-            } else if (onTrip) {
-                onTrip = false;
-                pauseStepsLeft = PAUSE_STEPS;
-            } else if (pauseStepsLeft > 0) {
-                pauseStepsLeft--;
-            } else {
-                startNextTrip();
-            }
+            sequencer.update(TIME_STEP / 1000.0);
+            controller.controlStep();
             updateTimeStep.run();
         } catch (RuntimeException e) {
             e.printStackTrace();
         }
-    }
-
-    private void startNextTrip() {
-        int floor = FLOORS[nextFloorIndex];
-        nextFloorIndex = (nextFloorIndex + 1) % FLOORS.length;
-        controller.goToFloor(floor);
-        pauseStepsLeft = PAUSE_STEPS;
     }
 }
