@@ -7,9 +7,13 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import manager.FloorSequencer;
 import manager.SimulationManager;
+import manager.TripController;
 import sim.MotionEngine;
 
 public class Main extends Application {
+
+    private static final boolean HARNESS_MODE = true;
+    private static final int[] DEMO_ROUTE = {2, 10, 4, 1};
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -19,33 +23,33 @@ public class Main extends Application {
         MotionEngine motionEngine = new MotionEngine();
         controller.attach(motionEngine);
 
-        //Kenny commented this out for testing purposes, can't use two clocks. Uncomment when appropriate.
-        //new harness.TestHarness(motionEngine, motionEngine::tick).start();
-
-
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.setTitle("NakatomiTower");
         primaryStage.show();
+        TripController tripController = new TripController(motionEngine);
 
-        SimulationManager simulationManager = new SimulationManager(motionEngine);
-        FloorSequencer floorSequencer = new FloorSequencer(simulationManager);
-        AnimationTimer timer = new AnimationTimer() {
-
-            long previousFramesTimeStamp = -1;
-            @Override
-            public void handle(long now) {
-                double elapsedSeconds = 0;
-                if (previousFramesTimeStamp != -1) {
-                    elapsedSeconds = (now - previousFramesTimeStamp) / 1000000000.0;
+        if (HARNESS_MODE) {
+            new harness.TestHarness(tripController, motionEngine::tick).start();
+        } else {
+            SimulationManager simulationManager =
+                    new SimulationManager(tripController, motionEngine::tick);
+            FloorSequencer floorSequencer = new FloorSequencer(tripController, DEMO_ROUTE, 2.0);
+            AnimationTimer timer = new AnimationTimer() {
+                long previousFramesTimeStamp = -1;
+                @Override
+                public void handle(long now) {
+                    double elapsedSeconds = 0;
+                    if (previousFramesTimeStamp != -1) {
+                        elapsedSeconds = (now - previousFramesTimeStamp) / 1000000000.0;
+                    }
+                    simulationManager.update(now);
+                    floorSequencer.update(elapsedSeconds);
+                    previousFramesTimeStamp = now;
                 }
-                simulationManager.update(now);
-                floorSequencer.update(elapsedSeconds);
-                previousFramesTimeStamp = now;
-            }
-        };
-        timer.start();
-        //simulationManager.goToFloor(5);
+            };
+            timer.start();
+        }
     }
 
     public static void main(String[] args) {launch(args);}
