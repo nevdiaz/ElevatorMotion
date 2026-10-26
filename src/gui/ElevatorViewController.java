@@ -83,6 +83,8 @@ public class ElevatorViewController {
 
     private MotionControllerAPI motion;
 
+    private double shownFeet = 0;
+
     private static final Color sensorsAligned = Color.LIGHTGREEN;
 
     private static final Color shaftSensorColor = Color.GRAY;
@@ -114,7 +116,9 @@ public class ElevatorViewController {
             @Override
             public void handle(long now) {
                 double feet = motion.getPosition();
-                placeCabin(feet);
+                shownFeet += (feet - shownFeet) * 0.3; //this should smooth out some of the jitteriness
+                if (Math.abs(feet - shownFeet) < 0.001) { shownFeet = feet; } //checks if the gap is tiny
+                placeCabin(shownFeet);
                 updateSensors(feet);
                 updateCamera();
             }
