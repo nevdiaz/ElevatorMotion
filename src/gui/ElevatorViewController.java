@@ -31,6 +31,9 @@ public class ElevatorViewController {
     private Rectangle ceilingSensorRight;
 
     @FXML
+    private Label cruisingSpeed;
+
+    @FXML
     private Label currentFloor;
 
     @FXML
@@ -99,9 +102,9 @@ public class ElevatorViewController {
     private void initialize() {
         currentFloor.setText("Current Floor");
         motionState.setText("Current Motion State");
-        speed.setText("Current Speed");
-        acceleration.setText("Current Acceleration");
-        deceleration.setText("Current Deceleration");
+        cruisingSpeed.setText("Cruising Speed: 4.0 ft/s");
+        acceleration.setText("Acceleration: 2.0 ft/s");
+        deceleration.setText("Deceleration: 2..0 ft/s");
         buildShaft();
         buildFloors();
         clipViewport();
@@ -120,6 +123,7 @@ public class ElevatorViewController {
                 if (Math.abs(feet - shownFeet) < 0.001) { shownFeet = feet; } //checks if the gap is tiny
                 placeCabin(shownFeet);
                 updateSensors(feet);
+                updateLabels();
                 updateCamera();
             }
         };
@@ -183,6 +187,22 @@ public class ElevatorViewController {
             sensor.setFill(sensorsAligned);
         } else {
             sensor.setFill(offColor);
+        }
+    }
+
+    private void updateLabels() {
+        int floor = 0;
+        for (int i = 1; i <= ViewScale.floorCount; i++) {
+            if (motion.isFloorAligned(i) == true) {
+                floor = i;
+            }
+        }
+        currentFloor.setText(floor + "");
+        String.format("%.2f ft/s", motion.getVelocity());
+        if (motion.isMoving() ==  true) {
+            motionState.setText("Moving");
+        } else {
+            motionState.setText("Stopped");
         }
     }
 
