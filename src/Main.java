@@ -1,4 +1,3 @@
-import api.Direction;
 import gui.ElevatorViewController;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -30,7 +29,6 @@ public class Main extends Application {
                 simulationManager.update(now);
             }
         };
-        motionEngine.startMotor(Direction.Up);
         timer.start();
     }
 
