@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.Group?>
-<?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.ComboBox?>
@@ -29,9 +28,9 @@
       </VBox>
    </right>
    <bottom>
-      <LineChart fx:id="speedChart" prefHeight="200.0" BorderPane.alignment="CENTER">
+      <LineChart fx:id="speedChart" prefHeight="200.0" BorderPane.alignment="CENTER" animated="false" createSymbols="false">
         <xAxis>
-          <CategoryAxis side="BOTTOM" />
+          <NumberAxis side="BOTTOM" />
         </xAxis>
         <yAxis>
           <NumberAxis side="LEFT" />
