@@ -2,6 +2,7 @@ package sim;
 
 import api.Direction;
 import api.MotionControllerAPI;
+import api.MotionState;
 
 /** checks for MotionEngine */
 public class MotionEngineCheck {
