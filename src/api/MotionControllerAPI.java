@@ -14,4 +14,5 @@ public interface MotionControllerAPI {
     boolean isTopAligned();
     boolean isBottomAligned();
     boolean isFloorAligned(int floor);
+    MotionState getState();
 }
