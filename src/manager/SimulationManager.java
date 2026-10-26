@@ -32,4 +32,8 @@ public class SimulationManager {
             accumulator -= MotionEngine.TIME_STEP;
         }
     }
+
+    public void setTimeScale(double timeScale) {
+        this.timeScale = timeScale;
+    }
 }
