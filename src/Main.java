@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import manager.FloorSequencer;
 import manager.SimulationManager;
+import manager.TripController;
 import sim.MotionEngine;
 
 public class Main extends Application {
@@ -28,7 +29,9 @@ public class Main extends Application {
         primaryStage.setTitle("NakatomiTower");
         primaryStage.show();
 
-        SimulationManager simulationManager = new SimulationManager(motionEngine);
+        TripController tripController = new TripController(motionEngine);
+        SimulationManager simulationManager =
+                new SimulationManager(tripController, motionEngine::tick);
         FloorSequencer floorSequencer = new FloorSequencer(simulationManager);
         AnimationTimer timer = new AnimationTimer() {
 

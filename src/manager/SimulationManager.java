@@ -7,19 +7,16 @@ import sim.MotionEngine;
 
 public class SimulationManager {
 
-    private final MotionEngine engine;
+    private final TripController tripController;
+    private final Runnable tick;
     private long lastFramesStartTime = -1;
     private double accumulator = 0.0;
     private double timeScale = 1.0;
     private static final double longestCatchUp = 0.25;
-    boolean tripActive = false;
-    private double targetPosition;
-    private static final double levelTolerance = 0.11; //Little over half a step (0.1 ft)
-    private static final int ticksBetweenSteps = 10; //Helps slow down the elevator stepping up and down
-    private int levelWait;
 
-    public SimulationManager(MotionEngine engine) {
-        this.engine = engine;
+    public SimulationManager(TripController tripController, Runnable tick) {
+        this.tripController = tripController;
+        this.tick = tick;
     }
 
     public void update(long currentNanos) {
@@ -34,8 +31,8 @@ public class SimulationManager {
             accumulator = longestCatchUp;
         }
         while (accumulator >= MotionEngine.TIME_STEP) {
-            controlStep();
-            engine.tick();
+            tripController.controlStep();
+            tick.run();
             accumulator -= MotionEngine.TIME_STEP;
         }
     }
@@ -44,64 +41,11 @@ public class SimulationManager {
         this.timeScale = timeScale;
     }
 
-    public boolean isTripActive() {
-        return tripActive;
-    }
-
     public void goToFloor(int floor) {
-        if (floor < 1 || floor > MotionEngine.FLOORS) {
-            System.out.println("Floor must be 1 through 10.");
-            return;
-        }
-        if (tripActive == true || engine.isMoving() == true) {
-            System.out.println("Elevator is busy.");
-            return;
-        }
-        if (engine.isFloorAligned(floor) == true) {
-            System.out.println("Elevator has already arrived.");
-            return;
-        }
-        targetPosition = MotionEngine.floorPosition(floor);
-        tripActive = true;
-        levelWait = ticksBetweenSteps;
-        if (targetPosition > engine.getPosition()) {
-            engine.startMotor(Direction.Up);
-        } else {
-            engine.startMotor(Direction.Down);
-        }
+        tripController.goToFloor(floor);
     }
 
-    private void controlStep() {
-        if (tripActive == false) {
-            return;
-        }
-        if (engine.isMoving() == true) {
-            double remaining = Math.abs(targetPosition - engine.getPosition());
-            if (remaining <= MotionEngine.brakingDistance(engine.getVelocity())) {
-                engine.stopMotor();
-            }
-        } else {
-            double error = engine.getPosition() - targetPosition;
-            if (Math.abs(error) > levelTolerance) {
-
-                if (levelWait > 0) {
-                    levelWait -= 1;
-                    return;
-                }
-
-                if (error > 0) {
-                    if (levelWait > 0) {
-                        return;
-                    }
-                    engine.stepDnMotor();
-                } else {
-                    engine.stepUpMotor();
-                }
-                levelWait = ticksBetweenSteps;
-                return;
-            }
-            tripActive = false;
-            System.out.println("Arrived at " + engine.getPosition() + "ft, floor " + engine.getCurrentFloor());
-        }
+    public boolean isTripActive() {
+        return tripController.isTripActive();
     }
 }
