@@ -86,6 +86,18 @@ public class ElevatorViewController {
     @FXML
     private Pane world;
 
+    private NumberAxis timeAxis;
+
+    private NumberAxis speedAxis;
+
+    private double graphTime = 0.0; //running elapsed time
+
+    private final double sampleInterval = 0.1;
+
+    private double nextSampleTime = 0.0;
+
+    private final double graphWindow = 30.0; //Number of seconds the x axis shows
+
     private final XYChart.Series<Number, Number> speedSeries = new XYChart.Series();
 
     private MotionControllerAPI motion;
@@ -123,15 +135,20 @@ public class ElevatorViewController {
 
     private void startRenderLoop() {
         AnimationTimer timer = new AnimationTimer() {
+            long previousTimeStamp = -1;
             @Override
             public void handle(long now) {
+                double elapsed = 0.0;
                 double feet = motion.getPosition();
                 shownFeet += (feet - shownFeet) * 0.3; //this should smooth out some of the jitteriness
+                if (previousTimeStamp != -1) {elapsed = ((now - previousTimeStamp) / 1000000000.0);}
                 if (Math.abs(feet - shownFeet) < 0.001) { shownFeet = feet; } //checks if the gap is tiny
                 placeCabin(shownFeet);
                 updateSensors(feet);
                 updateLabels();
                 updateCamera();
+                updateGraph(elapsed);
+                previousTimeStamp = now;
             }
         };
         timer.start();
@@ -159,8 +176,9 @@ public class ElevatorViewController {
     }
 
     private void buildSpeedChart() {
-        NumberAxis timeAxis = (NumberAxis) speedChart.getXAxis();
-        NumberAxis speedAxis = (NumberAxis) speedChart.getYAxis();
+        timeAxis = (NumberAxis) speedChart.getXAxis();
+
+        speedAxis = (NumberAxis) speedChart.getYAxis();
 
         timeAxis.setAutoRanging(false);
         timeAxis.setLowerBound(0);
@@ -177,11 +195,6 @@ public class ElevatorViewController {
         speedSeries.setName("Speed");
         speedChart.getData().add(speedSeries);
         speedChart.setLegendVisible(false);
-
-        speedSeries.getData().add(new XYChart.Data<>(0, 0));
-        speedSeries.getData().add(new XYChart.Data<>(2, 4));
-        speedSeries.getData().add(new XYChart.Data<>(10, 4));
-        speedSeries.getData().add(new XYChart.Data<>(12, 0));
     }
 
     private void buildFloors() {
@@ -258,6 +271,24 @@ public class ElevatorViewController {
             default:
                 motionState.setText("Unknown");
                 break;
+        }
+    }
+
+    private void updateGraph(double elapsedSeconds) {
+        graphTime += elapsedSeconds;
+        if (graphTime >= nextSampleTime) {
+            speedSeries.getData().add(new XYChart.Data<>(graphTime, Math.abs(motion.getVelocity())));
+            nextSampleTime += sampleInterval;
+        }
+
+        if (graphTime > graphWindow) {
+            timeAxis.setUpperBound(graphTime);
+            timeAxis.setLowerBound(graphTime - graphWindow);
+
+            while (!speedSeries.getData().isEmpty()
+                    && speedSeries.getData().get(0).getXValue().doubleValue() < timeAxis.getLowerBound()) {
+                speedSeries.getData().remove(0);
+            }
         }
     }
 
