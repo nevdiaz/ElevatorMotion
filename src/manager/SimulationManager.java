@@ -10,7 +10,7 @@ public class SimulationManager {
     private long lastFramesStartTime = -1;
     private double accumulator = 0.0;
     private double timeScale = 1.0;
-    private final double longestCatchUp = 0.25;
+    private static final double longestCatchUp = 0.25;
 
     public SimulationManager(MotionEngine engine) {
         this.engine = engine;
@@ -23,11 +23,11 @@ public class SimulationManager {
         }
         double frameSeconds = (currentNanos - lastFramesStartTime)/1000000000.0;
         lastFramesStartTime = currentNanos;
-        accumulator += frameSeconds + timeScale;
+        accumulator += frameSeconds * timeScale;
         if (accumulator > longestCatchUp) {
             accumulator = longestCatchUp;
         }
-        while (accumulator <= MotionEngine.TIME_STEP) {
+        while (accumulator >= MotionEngine.TIME_STEP) {
             engine.tick();
             accumulator -= MotionEngine.TIME_STEP;
         }
