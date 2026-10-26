@@ -14,6 +14,7 @@ public class SimulationManager {
     private static final double longestCatchUp = 0.25;
     boolean tripActive = false;
     private double targetPosition;
+    private static final double levelTolerance = 0.11; //Little over half a step (0.1 ft)
 
     public SimulationManager(MotionEngine engine) {
         this.engine = engine;
@@ -73,6 +74,15 @@ public class SimulationManager {
                 engine.stopMotor();
             }
         } else {
+            double error = engine.getPosition() - targetPosition;
+            if (Math.abs(error) > levelTolerance) {
+                if (error > 0) {
+                    engine.stepDnMotor();
+                } else {
+                    engine.stepUpMotor();
+                }
+                return;
+            }
             tripActive = false;
             System.out.println("Arrived at " + engine.getPosition() + "ft, floor " + engine.getCurrentFloor());
         }
