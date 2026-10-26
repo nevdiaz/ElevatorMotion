@@ -44,6 +44,10 @@ public class SimulationManager {
         this.timeScale = timeScale;
     }
 
+    public boolean isTripActive() {
+        return tripActive;
+    }
+
     public void goToFloor(int floor) {
         if (floor < 1 || floor > MotionEngine.FLOORS) {
             System.out.println("Floor must be 1 through 10.");
