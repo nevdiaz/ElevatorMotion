@@ -31,6 +31,7 @@ public class SimulationManager {
             accumulator = longestCatchUp;
         }
         while (accumulator >= MotionEngine.TIME_STEP) {
+            controlStep();
             engine.tick();
             accumulator -= MotionEngine.TIME_STEP;
         }
@@ -59,6 +60,21 @@ public class SimulationManager {
             engine.startMotor(Direction.Up);
         } else {
             engine.startMotor(Direction.Down);
+        }
+    }
+
+    private void controlStep() {
+        if (tripActive == false) {
+            return;
+        }
+        if (engine.isMoving() == true) {
+            double remaining = Math.abs(targetPosition - engine.getPosition());
+            if (remaining <= MotionEngine.brakingDistance(engine.getVelocity())) {
+                engine.stopMotor();
+            }
+        } else {
+            tripActive = false;
+            System.out.println("Arrived at " + engine.getPosition() + "ft, floor " + engine.getCurrentFloor());
         }
     }
 }
