@@ -208,7 +208,6 @@ public class ElevatorViewController {
 
         String.format("%.2f ft/s", motion.getVelocity());
         switch (motion.getState()) {
-            //STOPPED, ACCELERATING, CRUISING, DECELERATING
             case STOPPED:
                 motionState.setText("STOPPED");
                 break;

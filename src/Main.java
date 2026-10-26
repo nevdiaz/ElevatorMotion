@@ -26,15 +26,15 @@ public class Main extends Application {
         primaryStage.setTitle("NakatomiTower");
         primaryStage.show();
 
-        SimulationManager simulationManager = new SimulationManager(motionEngine);
-        AnimationTimer timer = new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                simulationManager.update(now);
-            }
-        };
-        timer.start();
-        simulationManager.goToFloor(5);
+//        SimulationManager simulationManager = new SimulationManager(motionEngine);
+//        AnimationTimer timer = new AnimationTimer() {
+//            @Override
+//            public void handle(long now) {
+//                simulationManager.update(now);
+//            }
+//        };
+//        timer.start();
+//        simulationManager.goToFloor(5);
     }
 
     public static void main(String[] args) {launch(args);}
