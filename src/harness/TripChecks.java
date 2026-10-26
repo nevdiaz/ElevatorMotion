@@ -1,5 +1,6 @@
 package harness;
 
+import api.MotionControllerAPI;
 import api.MotionState;
 import manager.TripController;
 import sim.MotionEngine;
@@ -28,13 +29,20 @@ public class TripChecks {
     }
 
     /** Sends the car to a floor and ticks until the trip ends or the cap is hit. */
-    private static boolean runTrip(TripController controller, Runnable tick,
-                                   int floor, int maxTicks) {
+    private static boolean runTrip(TripController controller, MotionControllerAPI api, Runnable tick,
+                                   int floor, int maxTicks, int[] reads) {
         controller.goToFloor(floor);
         int ticks = 0;
         while (controller.isTripActive() && ticks < maxTicks) {
             controller.controlStep();
             tick.run();
+            if (reads != null) {
+                for (int f = 1; f <= MotionEngine.FLOORS; f++) {
+                    if (api.isFloorAligned(f)) {
+                        reads[f]++;
+                    }
+                }
+            }
             ticks++;
         }
         return !controller.isTripActive();
