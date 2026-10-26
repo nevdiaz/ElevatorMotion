@@ -191,8 +191,8 @@ public class MotionEngine implements MotionControllerAPI {
     }
 
     // extra values for the gui
-
     /** One of STOPPED, ACCELERATING, CRUISING, DECELERATING. For the motionState label. */
+    @Override
     public synchronized MotionState getState() {
         return state;
     }
