@@ -24,6 +24,7 @@
             <Label fx:id="deceleration" text="deceleration" />
             <ToggleButton fx:id="viewMode" mnemonicParsing="false" text="viewMode" />
             <ComboBox fx:id="elevatorSelector" prefWidth="150.0" promptText="elevatorSelector" />
+            <Label fx:id="cruisingSpeed" text="cruisingSpeed" />
          </children>
       </VBox>
    </right>
