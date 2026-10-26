@@ -59,6 +59,7 @@ public class TripChecks {
 
     private static void verifyTrip(MotionEngine engine, TripController controller,
                                    Runnable tick, int floor) {
+
         String label = "trip to floor " + floor + ": ";
         int[] reads = new int[MotionEngine.FLOORS + 1];
         double startPos = engine.getPosition();
@@ -74,13 +75,27 @@ public class TripChecks {
                 check(!engine.isFloorAligned(other), label + "not aligned with floor " + other);
             }
         }
+
+        double target = MotionEngine.floorPosition(floor);
+        double lowPos = Math.min(startPos, target);
+        double highPos = Math.max(startPos, target);
+        for (int f = 1; f <= MotionEngine.FLOORS; f++) {
+            double p = MotionEngine.floorPosition(f);
+            if (p >= lowPos - 0.01 && p <= highPos + 0.01) {
+                check(reads[f] >= 2, label + "floor " + f + " sensor read at least twice (read " + reads[f] + ")");
+            } else {
+                check(reads[f] == 0, label + "floor " + f + " sensor never read outside the trip");
+            }
+        }
+        check(engine.isTopAligned() == (floor == MotionEngine.FLOORS), label + "top sensor matches the floor");
+        check(engine.isBottomAligned() == (floor == 1), label + "bottom sensor matches the floor");
     }
 
     private static void edgeCases(MotionEngine engine, Runnable tick) {
         TripController controller = new TripController(engine);
 
         // 1. Requesting the floor we're already on does nothing
-        runTrip(controller, tick, 3, 5000);
+        runTrip(controller, engine, tick, 3, 5000, null);
         double before = engine.getPosition();
         controller.goToFloor(3);
         check(!controller.isTripActive(), "same-floor request starts no trip");
