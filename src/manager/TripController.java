@@ -7,7 +7,7 @@ import sim.MotionEngine;
 public class TripController {
 
     private double targetPosition;
-    boolean tripActive = false;
+    private boolean tripActive = false;
     private static final double levelTolerance = 0.11; //Little over half a step (0.1 ft)
     private static final int ticksBetweenSteps = 10; //Helps slow down the elevator stepping up and down
     private int levelWait;
@@ -65,9 +65,6 @@ public class TripController {
                 }
 
                 if (error > 0) {
-                    if (levelWait > 0) {
-                        return;
-                    }
                     motionController.stepDnMotor();
                 } else {
                     motionController.stepUpMotor();

@@ -51,7 +51,7 @@ public class ElevatorViewController {
     private Rectangle doorRight;
 
     @FXML
-    private ComboBox<?> elevatorSelector;
+    private ComboBox<String> elevatorSelector;
 
     @FXML
     private Rectangle floorSensorLeft;
@@ -98,11 +98,9 @@ public class ElevatorViewController {
 
     private final double graphWindow = 30.0; //Number of seconds the x axis shows
 
-    private final XYChart.Series<Number, Number> speedSeries = new XYChart.Series();
+    private final XYChart.Series<Number, Number> speedSeries = new XYChart.Series<>();
 
     private MotionControllerAPI motion;
-
-    private String stateText;
 
     private double shownFeet = 0;
 
@@ -121,8 +119,8 @@ public class ElevatorViewController {
         currentFloor.setText("Current Floor");
         motionState.setText("Current Motion State");
         cruisingSpeed.setText("Cruising Speed: 4.0 ft/s");
-        acceleration.setText("Acceleration: 2.0 ft/s");
-        deceleration.setText("Deceleration: 2..0 ft/s");
+        acceleration.setText("Acceleration: 2.0 ft/s^2");
+        deceleration.setText("Deceleration: 2.0 ft/s^2");
         buildSpeedChart();
         buildShaft();
         buildFloors();
@@ -144,7 +142,7 @@ public class ElevatorViewController {
                 if (previousTimeStamp != -1) {elapsed = ((now - previousTimeStamp) / 1000000000.0);}
                 if (Math.abs(feet - shownFeet) < 0.001) { shownFeet = feet; } //checks if the gap is tiny
                 placeCabin(shownFeet);
-                updateSensors(feet);
+                updateSensors();
                 updateLabels();
                 updateCamera();
                 updateGraph(elapsed);
@@ -250,28 +248,8 @@ public class ElevatorViewController {
             currentFloor.setText(floor + "");
         }
 
-        String.format("%.2f ft/s", motion.getVelocity());
-        switch (motion.getState()) {
-            case STOPPED:
-                motionState.setText("STOPPED");
-                break;
-
-            case ACCELERATING:
-                motionState.setText("ACCELERATING");
-                break;
-
-            case CRUISING:
-                motionState.setText("CRUISING");
-                break;
-
-            case DECELERATING:
-                motionState.setText("DECELERATING");
-                break;
-
-            default:
-                motionState.setText("Unknown");
-                break;
-        }
+        speed.setText(String.format("%.2f ft/s", Math.abs(motion.getVelocity())));
+        motionState.setText(motion.getState().name());
     }
 
     private void updateGraph(double elapsedSeconds) {
@@ -298,7 +276,7 @@ public class ElevatorViewController {
         world.setTranslateY(liveHeight - gondolaView);
     }
 
-    private void updateSensors(double feet) {
+    private void updateSensors() {
         boolean anyAligned = false;
         for (int i = 1; i <= ViewScale.floorCount; i++) {
             boolean aligned = motion.isFloorAligned(i);
