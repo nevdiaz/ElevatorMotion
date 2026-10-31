@@ -33,7 +33,6 @@ public class BusStandIn {
             if (topic < 1 || topic > BusCodes.MAX_TOPIC || subtopic <= 0 || subtopic > 255) {
                 throw new IllegalArgumentException("Invalid topic or subtopic");
             }
-
             //Subscribing twice must not wipe the queue, computeIfAbsent handles this
             queues.computeIfAbsent(key(topic, subtopic), k -> new ArrayDeque<>());
         }
@@ -43,18 +42,26 @@ public class BusStandIn {
             if (topic < 1 || topic > BusCodes.MAX_TOPIC || subtopic <= 0 || subtopic > 255) {
                 throw new IllegalArgumentException("Invalid topic or subtopic");
             }
-
             queues.remove(key(topic, subtopic));
         }
 
         @Override
         public void publish(BusMessage message) {
-
+            
         }
 
         @Override
         public Optional<BusMessage> get(int topic, int subtopic) {
-            return Optional.empty();
+            if (topic < 1 || topic > BusCodes.MAX_TOPIC || subtopic < 0 || subtopic > 255) {
+                throw new IllegalArgumentException("topic must be 1 to " + BusCodes.MAX_TOPIC + " and subtopic 0 to 255");
+            }
+            Deque<BusMessage> queue = queues.get(key(topic, subtopic));
+            if (queue == null || queue.isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.of(queue.pollFirst());   //takes the oldest and removes it
         }
+
+
     }
 }
