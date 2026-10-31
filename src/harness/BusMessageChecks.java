@@ -5,6 +5,8 @@ import bus.BusMessage;
 
 import java.util.Arrays;
 
+import static bus.BusMessage.of;
+
 public class BusMessageChecks {
 
     private static int checksRun = 0;
@@ -53,11 +55,21 @@ public class BusMessageChecks {
         message.getBody()[0] = 77;
         check(message.getBody()[0] == 1, "changing the returned body does not change the message");
 
+        numberChecks();
+
         System.out.println(checksRun + " checks run, " + checksFailed + " failed");
         if (checksFailed > 0) {
             System.exit(1);
         }
 
+    }
+
+    //Needed these checks after incorporating Team03's repo
+    private static void numberChecks() {
+        //A small number lands in the last body byte
+        BusMessage five = BusMessage.of(1, 1, 5);
+        check(Arrays.equals(five.getBody(), new byte[]{0, 0, 0, 0, 0, 5}), "of(5) fills the last body byte");
+        check(five.value() == 5, "value() returns 5");
     }
 
     private static void check(boolean condition, String message) {
