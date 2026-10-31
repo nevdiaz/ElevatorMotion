@@ -9,7 +9,7 @@ public class BusMessage {
     public static final WORD_SIZE = 8;
     public static final BODY_SIZE = 6;
 
-    public BusMessage() {}
+    public BusMessage(int topic, int subtopic, byte[] body) {}
 
 
 }
