@@ -3,6 +3,8 @@ package harness;
 
 import bus.BusMessage;
 
+import java.util.Arrays;
+
 public class BusMessageChecks {
 
     private static int checksRun = 0;
@@ -11,6 +13,13 @@ public class BusMessageChecks {
     public static void main(String[] args) {
 
         byte[] body = {1, 2, 3, 4, 5, 6};
+
+        //Round trip keeps every field
+        BusMessage original = new BusMessage(7, 9, body);
+        BusMessage copy = BusMessage.fromBytes(original.toBytes());
+        check(copy.getTopic() == 7, "round trip keeps the topic");
+        check(copy.getSubtopic() == 9, "round trip keeps the subtopic");
+        check(Arrays.equals(copy.getBody(), body), "round trip keeps the body");
 
         //Bad input is rejected
         checkRejects(() -> new BusMessage(256, 0, body), "topic 256 rejected");
