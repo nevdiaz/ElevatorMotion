@@ -62,6 +62,23 @@ public class BusStandInChecks {
         check(holdsValue(second.get(topic, elevator), 3), "second listener gets the message");
     }
 
+    private static void orderChecks() {
+        BusStandIn bus = new BusStandIn();
+        BusMessageDispatcher sender = bus.connect();
+        BusMessageDispatcher listener = bus.connect();
+        int topic = BusCodes.CAR_CALL;
+        int elevator = BusCodes.ELEVATOR_1;
+
+        listener.subscribe(topic, elevator);
+        for (int i = 1; i <= 3; i++) {
+            sender.publish(BusMessage.of(topic, elevator, i));
+        }
+        check(holdsValue(listener.get(topic, elevator), 1), "the oldest message comes first");
+        check(holdsValue(listener.get(topic, elevator), 2), "the second message comes second");
+        check(holdsValue(listener.get(topic, elevator), 3), "the third message comes third");
+        check(listener.get(topic, elevator).isEmpty(), "the queue is empty once everything is taken");
+    }
+
     private static void collisionChecks() {
         BusStandIn bus = new BusStandIn();
         bus.publish(new BusMessage(1, 2, BODY_A));
