@@ -21,5 +21,10 @@ public final class BusCodes {
     public static final int CAR_CALL = 6;
     public static final int DOOR_STATE = 7;
 
-    
+    //Subtopics
+    public static final int ALL = 0;
+    public static final int ELEVATOR_1 = 1;
+    public static final int ELEVATOR_2 = 2;
+    public static final int ELEVATOR_3 = 3;
+    public static final int ELEVATOR_4 = 4;
 }
