@@ -1,57 +1,98 @@
 package bus;
 
 import java.util.*;
-import java.util.function.Consumer;
 
-public class BusStandIn implements BusMessageDispatcher {
+public class BusStandIn {
 
-    private int nextId = 1;
-    private Map<Integer, List<Consumer<BusMessage>>> subscribers = new HashMap<>();
-    private Map<Integer, BusMessage> mostRecentMessage = new HashMap<>();
+    private final List<Connection> connections = new ArrayList<>();
+    private static final int MAX_QUEUE_SIZE = 1024;
 
-    @Override
-    public int register(String componentName) {
-        if (componentName == null || componentName.isBlank()) {
-            throw new IllegalArgumentException("componentName must not be null or blank");
-        } else {
-            return nextId++;
-        }
-    }
-
-    @Override
-    public void subscribe(int topic, Consumer<BusMessage> listener) {
-        if (topic < 0 || topic > 255 || listener == null) {
-            throw new IllegalArgumentException("topic must be between 0 and 255 and listner must not be null");
-        }
-        subscribers.computeIfAbsent(topic, t -> new ArrayList<>()).add(listener);
-    }
-
-    @Override
-    public void publish(BusMessage message) {
-        if (message == null) {
-            throw new IllegalArgumentException("message must not be null");
-        }
-        mostRecentMessage.put(key(message.getTopic(), message.getSubtopic()), message);
-        List<Consumer<BusMessage>> listeners = subscribers.get(message.getTopic());
-        if (listeners == null) {
-            return;
-        }
-        for (Consumer<BusMessage> listener : new ArrayList<>(listeners)) {
-            listener.accept(message);
-        }
-
-    }
-
-    @Override
-    public Optional<BusMessage> get(int topic, int subtopic) {
-        if (topic < 0 || topic > 255 || subtopic < 0 || subtopic > 255) {
-            throw new IllegalArgumentException("topic and subtopic must be between 0 and 255");
-        }
-        return Optional.ofNullable(mostRecentMessage.get(key(topic, subtopic)));
+    public BusMessageDispatcher connect() {
+        Connection connection = new Connection();
+        connections.add(connection);
+        return connection;
     }
 
     //Helper Methods
-        private static int key(int topic, int subtopic) {
+    private static int key(int topic, int subtopic) {
         return topic * 256 + subtopic;
+    }
+
+    private class Connection implements BusMessageDispatcher {
+
+        private final Map<Integer, Deque<BusMessage>> queues = new HashMap<>();
+
+
+        @Override
+        public void register() {
+            //The real bus will print a line
+        }
+
+        @Override
+        public void subscribe(int topic, int subtopic) {
+            if (topic < 1 || topic > BusCodes.MAX_TOPIC || subtopic < 0 || subtopic > 255) {
+                throw new IllegalArgumentException("Invalid topic or subtopic");
+            }
+            //Subscribing twice must not wipe the queue, computeIfAbsent handles this
+            queues.computeIfAbsent(key(topic, subtopic), k -> new ArrayDeque<>());
+        }
+
+        @Override
+        public void unsubscribe(int topic, int subtopic) {
+            if (topic < 1 || topic > BusCodes.MAX_TOPIC || subtopic < 0 || subtopic > 255) {
+                throw new IllegalArgumentException("Invalid topic or subtopic");
+            }
+            queues.remove(key(topic, subtopic));
+        }
+
+        @Override
+        public void publish(BusMessage message) {
+            if (message == null || message.getTopic() < 1 || message.getTopic() > BusCodes.MAX_TOPIC) {
+                throw new IllegalArgumentException("message must not be null and its topic must be 1 to " + BusCodes.MAX_TOPIC);
+            }
+            for (Connection other: connections) {
+                if (other != this) {
+                    other.receive(message);
+                }
+            }
+        }
+
+        private void receive(BusMessage message) {
+            int topic = message.getTopic();
+            int subtopic = message.getSubtopic();
+
+            if (subtopic == BusCodes.ALL) {
+                for (Map.Entry<Integer, Deque<BusMessage>> entry : queues.entrySet()) {
+                    if (entry.getKey() / 256 == topic) {
+                        addIfRoom(entry.getValue(), message);
+                    }
+                }
+            } else {
+                Deque<BusMessage> queue = queues.get(key(topic, subtopic));
+                if (queue != null) {
+                    addIfRoom(queue, message);
+                }
+            }
+        }
+
+        private void addIfRoom(Deque<BusMessage> queue, BusMessage message) {
+            if (queue.size() < MAX_QUEUE_SIZE) {
+                queue.addLast(message);
+            }
+        }
+
+        @Override
+        public Optional<BusMessage> get(int topic, int subtopic) {
+            if (topic < 1 || topic > BusCodes.MAX_TOPIC || subtopic < 0 || subtopic > 255) {
+                throw new IllegalArgumentException("topic must be 1 to " + BusCodes.MAX_TOPIC + " and subtopic 0 to 255");
+            }
+            Deque<BusMessage> queue = queues.get(key(topic, subtopic));
+            if (queue == null || queue.isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.of(queue.pollFirst());   //takes the oldest and removes it
+        }
+
+
     }
 }
