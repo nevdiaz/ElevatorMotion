@@ -18,6 +18,19 @@ public class BusStandInChecks {
         return message.isPresent() && Arrays.equals(message.get().getBody(), expectedBody);
     }
 
+    private static void collisionChecks() {
+        BusStandIn bus = new BusStandIn();
+        bus.publish(new BusMessage(1, 2, BODY_A));
+        bus.publish(new BusMessage(2, 1, BODY_B));
+        check(holds(bus.get(1, 2), BODY_A), "(1, 2) is not overwritten by (2, 1)");
+        check(holds(bus.get(2, 1), BODY_B), "(2, 1) is kept separate from (1, 2)");
+
+        bus.publish(new BusMessage(1, 0, BODY_A));
+        bus.publish(new BusMessage(2, 0, BODY_B));
+        check(holds(bus.get(1, 0), BODY_A), "(1, 0) is not overwritten by (2, 0)");
+        check(holds(bus.get(2, 0), BODY_B), "(2, 0) is kept separate from (1, 0)");
+    }
+
     private static void getChecks() {
         BusStandIn bus = new BusStandIn();
         check(bus.get(3, 4).isEmpty(), "get returns empty when nothing was published");
