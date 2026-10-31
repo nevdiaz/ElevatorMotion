@@ -87,7 +87,13 @@ public class BusMessageChecks {
         checkRejects(() -> BusMessage.of(1, 1, -1), "negative value rejected");
         checkRejects(() -> BusMessage.of(1, 1, BusMessage.MAX_VALUE + 1), "value above 48 bits rejected");
 
-
+        //equals and hashCode
+        BusMessage a = BusMessage.of(3, 1, 7);
+        BusMessage b = BusMessage.of(3, 1, 7);
+        check(a.equals(b), "messages with the same fields are equal");
+        check(a.hashCode() == b.hashCode(), "equal messages have the same hash code");
+        check(!a.equals(BusMessage.of(3, 1, 8)), "different body is not equal");
+        check(!a.equals(BusMessage.of(4, 1, 7)), "different topic is not equal");
     }
 
     private static void check(boolean condition, String message) {
