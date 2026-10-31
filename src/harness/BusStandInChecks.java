@@ -81,15 +81,20 @@ public class BusStandInChecks {
 
     private static void collisionChecks() {
         BusStandIn bus = new BusStandIn();
-        bus.publish(new BusMessage(1, 2, BODY_A));
-        bus.publish(new BusMessage(2, 1, BODY_B));
-        check(holds(bus.get(1, 2), BODY_A), "(1, 2) is not overwritten by (2, 1)");
-        check(holds(bus.get(2, 1), BODY_B), "(2, 1) is kept separate from (1, 2)");
+        BusMessageDispatcher sender = bus.connect();
+        BusMessageDispatcher listener = bus.connect();
 
-        bus.publish(new BusMessage(1, 0, BODY_A));
-        bus.publish(new BusMessage(2, 0, BODY_B));
-        check(holds(bus.get(1, 0), BODY_A), "(1, 0) is not overwritten by (2, 0)");
-        check(holds(bus.get(2, 0), BODY_B), "(2, 0) is kept separate from (1, 0)");
+        listener.subscribe(1, 2);
+        listener.subscribe(2, 1);
+        sender.publish(BusMessage.of(1, 2, 100));
+        check(listener.get(2, 1).isEmpty(), "a message for (1, 2) does not appear in the (2, 1) queue");
+        check(holdsValue(listener.get(1, 2), 100), "a message for (1, 2) is in the (1, 2) queue");
+
+        listener.subscribe(1, 0);
+        listener.subscribe(2, 0);
+        sender.publish(BusMessage.of(1, 0, 7));
+        check(listener.get(2, 0).isEmpty(), "a message for (1, 0) does not appear in the (2, 0) queue");
+        check(holdsValue(listener.get(1, 0), 7), "a message for (1, 0) is in the (1, 0) queue");
     }
 
     private static void getChecks() {
