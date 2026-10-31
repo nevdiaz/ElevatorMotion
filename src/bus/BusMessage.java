@@ -26,5 +26,17 @@ public class BusMessage {
         this.body = body.clone();
     }
 
+    public int getTopic() {
+        return topic;
+    }
+
+    public int getSubtopic() {
+        return subtopic;
+    }
+
+    public byte[] getBody() {
+        return body.clone();
+    }
+
 
 }
