@@ -27,6 +27,15 @@ public class BusStandInChecks {
         check(holds(bus.get(3, 4), BODY_B), "get returns the latest message");
     }
 
+    private static void registerChecks() {
+        BusStandIn bus = new BusStandIn();
+        int a = bus.register("cabin");
+        int b = bus.register("panel");
+        check(a != b, "register gives different ids");
+        checkRejects(() -> bus.register(null), "null component name rejected");
+        checkRejects(() -> bus.register("  "), "blank component name rejected");
+    }
+
     private static void badInputChecks() {
         BusStandIn bus = new BusStandIn();
         checkRejects(() -> bus.subscribe(256, m -> { }), "subscribe topic 256 rejected");
