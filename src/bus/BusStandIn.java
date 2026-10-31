@@ -14,7 +14,7 @@ public class BusStandIn {
     }
 
     //Helper Methods
-        private static int key(int topic, int subtopic) {
+    private static int key(int topic, int subtopic) {
         return topic * 256 + subtopic;
     }
 
@@ -25,12 +25,11 @@ public class BusStandIn {
 
         @Override
         public void register() {
-
+            //The real bus will print a line
         }
 
         @Override
         public void subscribe(int topic, int subtopic) {
-
         }
 
         @Override
