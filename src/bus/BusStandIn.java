@@ -3,7 +3,7 @@ package bus;
 import java.util.*;
 import java.util.function.Consumer;
 
-public class BusStandIn implements BusMessageDispatcher {
+public class BusStandIn {
 
     private int nextId = 1;
     private Map<Integer, List<Consumer<BusMessage>>> subscribers = new HashMap<>();
