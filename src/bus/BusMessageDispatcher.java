@@ -5,7 +5,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 //TODO: These are assumptions as we don't have Team03's software bus details, ERASE when/if necessary
-public interface Dispatcher {
+public interface BusMessageDispatcher {
 
     //ASSUMPTION: The bus hands back an id for the component
     void register(String componentName);
