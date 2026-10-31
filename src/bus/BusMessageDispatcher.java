@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 public interface BusMessageDispatcher {
 
     //ASSUMPTION: The bus hands back an id for the component
-    void register(String componentName);
+    int register(String componentName);
 
     //ASSUMPTION: We assume the delivery is by callback
     void subscribe(int topic, Consumer<BusMessage> listener);

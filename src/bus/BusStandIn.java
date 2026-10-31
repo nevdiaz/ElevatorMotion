@@ -13,8 +13,12 @@ public class BusStandIn implements BusMessageDispatcher {
     Map<Integer, BusMessage> mostRecentMessage = new HashMap<>();
 
     @Override
-    public void register(String componentName) {
-
+    public int register(String componentName) {
+        if (componentName == null || componentName.isBlank()) {
+            throw new IllegalArgumentException("componentName must be not null or blank");
+        } else {
+            return nextId++;
+        }
     }
 
     @Override
@@ -30,5 +34,10 @@ public class BusStandIn implements BusMessageDispatcher {
     @Override
     public Optional<BusMessage> get(int topic, int subtopic) {
         return Optional.empty();
+    }
+
+    //Helper Methods
+        private static int key(int topic, int subtopic) {
+        return topic * 256 * subtopic;
     }
 }
