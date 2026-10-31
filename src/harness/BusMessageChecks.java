@@ -45,6 +45,13 @@ public class BusMessageChecks {
         checkRejects(() -> BusMessage.fromBytes(new byte[7]), "7-byte word rejected");
         checkRejects(() -> BusMessage.fromBytes(null), "null word rejected");
 
+        //Immutability
+        byte[] mutable = {1, 2, 3, 4, 5, 6};
+        BusMessage message = new BusMessage(1, 1, mutable);
+        mutable[0] = 99;
+        check(message.getBody()[0] == 1, "changing the input array does not change the message");
+        message.getBody()[0] = 77;
+        check(message.getBody()[0] == 1, "changing the returned body does not change the message");
 
 
     }
