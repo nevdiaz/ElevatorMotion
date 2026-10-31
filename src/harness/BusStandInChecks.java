@@ -121,6 +121,25 @@ public class BusStandInChecks {
         check(holdsValue(listener.get(topic, BusCodes.ELEVATOR_2), 9), "a message for all reaches the elevator 2 queue");
         check(holdsValue(listener.get(topic, BusCodes.ALL), 9), "a message for all reaches the subtopic 0 queue");
     }
+    private static void unsubscribeChecks() {
+        BusStandIn bus = new BusStandIn();
+        BusMessageDispatcher sender = bus.connect();
+        BusMessageDispatcher listener = bus.connect();
+        int topic = BusCodes.CAR_POSITION;
+        int elevator = BusCodes.ELEVATOR_1;
+
+        listener.subscribe(topic, elevator);
+        sender.publish(BusMessage.of(topic, elevator, 4));
+        listener.unsubscribe(topic, elevator);
+        check(listener.get(topic, elevator).isEmpty(), "unsubscribe discards the queued message");
+
+        sender.publish(BusMessage.of(topic, elevator, 6));
+        check(listener.get(topic, elevator).isEmpty(), "no delivery after unsubscribing");
+
+        listener.subscribe(topic, elevator);
+        check(listener.get(topic, elevator).isEmpty(), "a new subscription starts with an empty queue");
+    }
+
 
     private static void registerChecks() {
         BusStandIn bus = new BusStandIn();
