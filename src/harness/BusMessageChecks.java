@@ -21,6 +21,13 @@ public class BusMessageChecks {
         check(copy.getSubtopic() == 9, "round trip keeps the subtopic");
         check(Arrays.equals(copy.getBody(), body), "round trip keeps the body");
 
+        //Values above 127 survive (the signed-byte case)
+        BusMessage high = new BusMessage(200, 255, new byte[]{-1, -128, 127, 0, 1, 2});
+        BusMessage highCopy = BusMessage.fromBytes(high.toBytes());
+        check(highCopy.getTopic() == 200, "topic 200 survives the round trip");
+        check(highCopy.getSubtopic() == 255, "subtopic 255 survives the round trip");
+        check(Arrays.equals(highCopy.getBody(), high.getBody()), "high body bytes survive");
+
         //Bad input is rejected
         checkRejects(() -> new BusMessage(256, 0, body), "topic 256 rejected");
         checkRejects(() -> new BusMessage(-1, 0, body), "topic -1 rejected");
