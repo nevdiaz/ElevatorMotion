@@ -101,6 +101,27 @@ public class BusStandInChecks {
         check(holds(bus.get(3, 4), BODY_B), "get returns the latest message");
     }
 
+    private static void subtopicChecks() {
+        BusStandIn bus = new BusStandIn();
+        BusMessageDispatcher sender = bus.connect();
+        BusMessageDispatcher listener = bus.connect();
+        int topic = BusCodes.CAR_CALL;
+
+        listener.subscribe(topic, BusCodes.ALL);
+        listener.subscribe(topic, BusCodes.ELEVATOR_1);
+        listener.subscribe(topic, BusCodes.ELEVATOR_2);
+
+        sender.publish(BusMessage.of(topic, BusCodes.ELEVATOR_1, 5));
+        check(holdsValue(listener.get(topic, BusCodes.ELEVATOR_1), 5), "a message for elevator 1 reaches the elevator 1 queue");
+        check(listener.get(topic, BusCodes.ELEVATOR_2).isEmpty(), "a message for elevator 1 does not reach the elevator 2 queue");
+        check(listener.get(topic, BusCodes.ALL).isEmpty(), "a subscription on subtopic 0 does not catch a message for elevator 1 (as on the real bus)");
+
+        sender.publish(BusMessage.of(topic, BusCodes.ALL, 9));
+        check(holdsValue(listener.get(topic, BusCodes.ELEVATOR_1), 9), "a message for all reaches the elevator 1 queue");
+        check(holdsValue(listener.get(topic, BusCodes.ELEVATOR_2), 9), "a message for all reaches the elevator 2 queue");
+        check(holdsValue(listener.get(topic, BusCodes.ALL), 9), "a message for all reaches the subtopic 0 queue");
+    }
+
     private static void registerChecks() {
         BusStandIn bus = new BusStandIn();
         int a = bus.register("cabin");
