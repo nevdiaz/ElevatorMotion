@@ -2,6 +2,7 @@ package bus;
 
 public final class BusCodes {
 
+    //These numbers come from the Software Bus Code Sheet from Team03's repo
     //Empty constructor so no one can instantiate this like ViewScale
     public BusCodes() {}
 
@@ -27,4 +28,8 @@ public final class BusCodes {
     public static final int ELEVATOR_2 = 2;
     public static final int ELEVATOR_3 = 3;
     public static final int ELEVATOR_4 = 4;
+
+    //Limits
+    public static final int FIRST_COMMAND = 0xF0;
+    public static final int MAX_TOPIC = 0xEF;
 }
