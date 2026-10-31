@@ -1,6 +1,8 @@
 package harness;
 
+import bus.BusCodes;
 import bus.BusMessage;
+import bus.BusMessageDispatcher;
 import bus.BusStandIn;
 
 import java.util.ArrayList;
@@ -35,24 +37,29 @@ public class BusStandInChecks {
 
     private static void deliveryChecks() {
         BusStandIn bus = new BusStandIn();
-        List<BusMessage> received = new ArrayList<>();
-        bus.subscribe(5, received::add);
+        BusMessageDispatcher sender = bus.connect();
+        BusMessageDispatcher listener = bus.connect();
+        int topic = BusCodes.CAR_DIRECTION;
+        int elevator = BusCodes.ELEVATOR_1;
 
-        bus.publish(new BusMessage(5, 1, BODY_A));
-        check(received.size() == 1, "listener receives a message on its topic");
-        check(received.size() == 1 && Arrays.equals(received.get(0).getBody(), BODY_A),
-                "delivered body is intact");
+        listener.subscribe(topic, elevator);
+        sender.publish(BusMessage.of(topic, elevator, 1));
+        check(holdsValue(listener.get(topic, elevator), 1), "subscriber receives a published message");
+        check(listener.get(topic, elevator).isEmpty(), "get removes the message");
 
-        bus.publish(new BusMessage(6, 1, BODY_A));
-        check(received.size() == 1, "listener on topic 5 is not called for topic 6");
+        sender.subscribe(topic, elevator);
+        sender.publish(BusMessage.of(topic, elevator, 2));
+        check(sender.get(topic, elevator).isEmpty(), "publisher does not receive its own message");
+        check(holdsValue(listener.get(topic, elevator), 2), "the other connection still receives it");
 
-        List<BusMessage> first = new ArrayList<>();
-        List<BusMessage> second = new ArrayList<>();
-        bus.subscribe(7, first::add);
-        bus.subscribe(7, second::add);
-        bus.publish(new BusMessage(7, 0, BODY_B));
-        check(first.size() == 1, "first listener on topic 7 is called");
-        check(second.size() == 1, "second listener on topic 7 is called");
+        sender.publish(BusMessage.of(BusCodes.CAR_POSITION, elevator, 5));
+        check(listener.get(BusCodes.CAR_POSITION, elevator).isEmpty(), "no message without a subscription");
+
+        BusMessageDispatcher second = bus.connect();
+        second.subscribe(topic, elevator);
+        sender.publish(BusMessage.of(topic, elevator, 3));
+        check(holdsValue(listener.get(topic, elevator), 3), "first listener gets the message");
+        check(holdsValue(second.get(topic, elevator), 3), "second listener gets the message");
     }
 
     private static void collisionChecks() {
