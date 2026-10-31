@@ -8,6 +8,7 @@ public class BusMessage {
 
     public static final int WORD_SIZE = 8;
     public static final int BODY_SIZE = 6;
+    public static final int HEADER_SIZE = 2;
 
     public BusMessage(int topic, int subtopic, byte[] body) {
 
@@ -36,6 +37,16 @@ public class BusMessage {
 
     public byte[] getBody() {
         return body.clone();
+    }
+
+    public byte[] toBytes() {
+        byte[] word = new byte[WORD_SIZE];
+        word[0] = (byte) topic;
+        word[1] = (byte) subtopic;
+        for (int i = 0; i < BODY_SIZE; i++) {
+            word[i + HEADER_SIZE] = body[i];
+        }
+        return word;
     }
 
 
