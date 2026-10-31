@@ -3,7 +3,9 @@ package harness;
 import bus.BusMessage;
 import bus.BusStandIn;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 public class BusStandInChecks {
@@ -16,6 +18,28 @@ public class BusStandInChecks {
 
     private static boolean holds(Optional<BusMessage> message, byte[] expectedBody) {
         return message.isPresent() && Arrays.equals(message.get().getBody(), expectedBody);
+    }
+
+    private static void deliveryChecks() {
+        BusStandIn bus = new BusStandIn();
+        List<BusMessage> received = new ArrayList<>();
+        bus.subscribe(5, received::add);
+
+        bus.publish(new BusMessage(5, 1, BODY_A));
+        check(received.size() == 1, "listener receives a message on its topic");
+        check(received.size() == 1 && Arrays.equals(received.get(0).getBody(), BODY_A),
+                "delivered body is intact");
+
+        bus.publish(new BusMessage(6, 1, BODY_A));
+        check(received.size() == 1, "listener on topic 5 is not called for topic 6");
+
+        List<BusMessage> first = new ArrayList<>();
+        List<BusMessage> second = new ArrayList<>();
+        bus.subscribe(7, first::add);
+        bus.subscribe(7, second::add);
+        bus.publish(new BusMessage(7, 0, BODY_B));
+        check(first.size() == 1, "first listener on topic 7 is called");
+        check(second.size() == 1, "second listener on topic 7 is called");
     }
 
     private static void collisionChecks() {
