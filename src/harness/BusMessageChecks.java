@@ -75,6 +75,11 @@ public class BusMessageChecks {
         BusMessage big = BusMessage.of(1, 1, 256);
         check(Arrays.equals(big.getBody(), new byte[]{0, 0, 0, 0, 1, 0}), "256 is stored big-endian");
 
+        //Largest 48-bit value
+        BusMessage max = BusMessage.of(1, 1, BusMessage.MAX_VALUE);
+        check(Arrays.equals(max.getBody(), new byte[]{-1, -1, -1, -1, -1, -1}), "MAX_VALUE fills all six bytes");
+        check(max.value() == BusMessage.MAX_VALUE, "MAX_VALUE round trips");
+
     }
 
     private static void check(boolean condition, String message) {
