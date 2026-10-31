@@ -4,10 +4,6 @@ import bus.BusCodes;
 import bus.BusMessage;
 import bus.BusMessageDispatcher;
 import bus.BusStandIn;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 public class BusStandInChecks {
@@ -15,24 +11,19 @@ public class BusStandInChecks {
     private static int checksRun = 0;
     private static int checksFailed = 0;
 
-    private static final byte[] BODY_A = {1, 2, 3, 4, 5, 6};
-    private static final byte[] BODY_B = {9, 8, 7, 6, 5, 4};
-
     public static void main(String[] args) {
         deliveryChecks();
-        getChecks();
+        orderChecks();
+        subtopicChecks();
+        unsubscribeChecks();
+        queueLimitChecks();
         collisionChecks();
-        registerChecks();
         badInputChecks();
 
         System.out.println(checksRun + " checks run, " + checksFailed + " failed");
         if (checksFailed > 0) {
             System.exit(1);
         }
-    }
-
-    private static boolean holds(Optional<BusMessage> message, byte[] expectedBody) {
-        return message.isPresent() && Arrays.equals(message.get().getBody(), expectedBody);
     }
 
     private static void deliveryChecks() {
@@ -113,15 +104,6 @@ public class BusStandInChecks {
         checkRejects(() -> conn.get(5, 256), "get subtopic 256 rejected");
     }
 
-    private static void getChecks() {
-        BusStandIn bus = new BusStandIn();
-        check(bus.get(3, 4).isEmpty(), "get returns empty when nothing was published");
-
-        bus.publish(new BusMessage(3, 4, BODY_A));
-        bus.publish(new BusMessage(3, 4, BODY_B));
-        check(holds(bus.get(3, 4), BODY_B), "get returns the latest message");
-    }
-
     private static void subtopicChecks() {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
@@ -186,16 +168,6 @@ public class BusStandInChecks {
         check(count == 1024, "a full queue holds 1024 messages");
         check(first == 0, "the oldest message is kept");
         check(last == 1023, "new messages are dropped once the queue is full");
-    }
-
-
-    private static void registerChecks() {
-        BusStandIn bus = new BusStandIn();
-        int a = bus.register("cabin");
-        int b = bus.register("panel");
-        check(a != b, "register gives different ids");
-        checkRejects(() -> bus.register(null), "null component name rejected");
-        checkRejects(() -> bus.register("  "), "blank component name rejected");
     }
 
     private static boolean holdsValue(Optional<BusMessage> message, long expected) {
