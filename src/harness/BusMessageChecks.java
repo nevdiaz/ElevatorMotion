@@ -53,6 +53,10 @@ public class BusMessageChecks {
         message.getBody()[0] = 77;
         check(message.getBody()[0] == 1, "changing the returned body does not change the message");
 
+        System.out.println(checksRun + " checks run, " + checksFailed + " failed");
+        if (checksFailed > 0) {
+            System.exit(1);
+        }
 
     }
 
