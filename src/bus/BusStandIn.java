@@ -1,9 +1,13 @@
 package bus;
 
+import java.sql.Connection;
 import java.util.*;
 import java.util.function.Consumer;
 
 public class BusStandIn {
+
+    private final List<Connection> connections = new ArrayList<>();
+    private static final int MAX_QUEUE_SIZE = 1024;
 
     private int nextId = 1;
     private Map<Integer, List<Consumer<BusMessage>>> subscribers = new HashMap<>();
