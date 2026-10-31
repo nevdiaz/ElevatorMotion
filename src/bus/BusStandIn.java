@@ -1,9 +1,6 @@
 package bus;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class BusStandIn implements BusMessageDispatcher {
@@ -23,7 +20,10 @@ public class BusStandIn implements BusMessageDispatcher {
 
     @Override
     public void subscribe(int topic, Consumer<BusMessage> listener) {
-
+        if (topic < 0 || topic > 255 || listener == null) {
+            throw new IllegalArgumentException("topic must be between 0 and 255");
+        }
+        subscribers.computeIfAbsent(topic, t -> new ArrayList<>()).add(listener);
     }
 
     @Override
