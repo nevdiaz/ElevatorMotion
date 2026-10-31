@@ -28,6 +28,14 @@ public class BusMessageChecks {
         check(highCopy.getSubtopic() == 255, "subtopic 255 survives the round trip");
         check(Arrays.equals(highCopy.getBody(), high.getBody()), "high body bytes survive");
 
+        //Layout on the wire
+        byte[] word = original.toBytes();
+        check(word.length == 8, "a word is 8 bytes");
+        check(word[0] == 7, "byte 0 is the topic");
+        check(word[1] == 9, "byte 1 is the subtopic");
+        check(Arrays.equals(Arrays.copyOfRange(word, 2, 8), body), "bytes 2 to 7 are the body");
+
+
         //Bad input is rejected
         checkRejects(() -> new BusMessage(256, 0, body), "topic 256 rejected");
         checkRejects(() -> new BusMessage(-1, 0, body), "topic -1 rejected");
