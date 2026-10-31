@@ -198,6 +198,10 @@ public class BusStandInChecks {
         checkRejects(() -> bus.register("  "), "blank component name rejected");
     }
 
+    private static boolean holdsValue(Optional<BusMessage> message, long expected) {
+        return message.isPresent() && message.get().value() == expected;
+    }
+
     private static void check(boolean condition, String message) {
         checksRun++;
         if (condition == false) {
@@ -215,5 +219,15 @@ public class BusStandInChecks {
             threw = true;
         }
         check(threw, message);
+    }
+
+    private static void checkAccepts(Runnable action, String message) {
+        boolean threw = false;
+        try {
+            action.run();
+        } catch (IllegalArgumentException e) {
+            threw = true;
+        }
+        check(!threw, message);
     }
 }
