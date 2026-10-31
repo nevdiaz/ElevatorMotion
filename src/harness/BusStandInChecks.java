@@ -140,6 +140,33 @@ public class BusStandInChecks {
         check(listener.get(topic, elevator).isEmpty(), "a new subscription starts with an empty queue");
     }
 
+    private static void queueLimitChecks() {
+        BusStandIn bus = new BusStandIn();
+        BusMessageDispatcher sender = bus.connect();
+        BusMessageDispatcher listener = bus.connect();
+        int topic = BusCodes.HALL_CALL;
+
+        listener.subscribe(topic, BusCodes.ALL);
+        for (int i = 0; i < 1100; i++) {
+            sender.publish(BusMessage.of(topic, BusCodes.ALL, i));
+        }
+        int count = 0;
+        long first = -1;
+        long last = -1;
+        Optional<BusMessage> next = listener.get(topic, BusCodes.ALL);
+        while (next.isPresent()) {
+            if (count == 0) {
+                first = next.get().value();
+            }
+            last = next.get().value();
+            count++;
+            next = listener.get(topic, BusCodes.ALL);
+        }
+        check(count == 1024, "a full queue holds 1024 messages");
+        check(first == 0, "the oldest message is kept");
+        check(last == 1023, "new messages are dropped once the queue is full");
+    }
+
 
     private static void registerChecks() {
         BusStandIn bus = new BusStandIn();
