@@ -12,7 +12,7 @@ public class BusStandIn implements BusMessageDispatcher {
     @Override
     public int register(String componentName) {
         if (componentName == null || componentName.isBlank()) {
-            throw new IllegalArgumentException("componentName must be not null or blank");
+            throw new IllegalArgumentException("componentName must not be null or blank");
         } else {
             return nextId++;
         }
@@ -28,12 +28,23 @@ public class BusStandIn implements BusMessageDispatcher {
 
     @Override
     public void publish(BusMessage message) {
+        if (message == null) {
+            throw new IllegalArgumentException("message must be not null");
+        }
+        mostRecentMessage.put(key(message.getTopic(), message.getSubtopic()), message);
+        List<Consumer<BusMessage>> listeners = subscribers.get(message.getTopic());
+        if (listeners == null) {
+            return;
+        }
+        for (Consumer<BusMessage> listener : new ArrayList<>(listeners)) {
+            listener.accept(message);
+        }
 
     }
 
     @Override
     public Optional<BusMessage> get(int topic, int subtopic) {
-        return Optional.empty();
+        return Optional.ofNullable(mostRecentMessage.get(key(topic, subtopic)));
     }
 
     //Helper Methods
