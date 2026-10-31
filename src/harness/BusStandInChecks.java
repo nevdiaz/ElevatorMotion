@@ -16,6 +16,19 @@ public class BusStandInChecks {
     private static final byte[] BODY_A = {1, 2, 3, 4, 5, 6};
     private static final byte[] BODY_B = {9, 8, 7, 6, 5, 4};
 
+    public static void main(String[] args) {
+        deliveryChecks();
+        getChecks();
+        collisionChecks();
+        registerChecks();
+        badInputChecks();
+
+        System.out.println(checksRun + " checks run, " + checksFailed + " failed");
+        if (checksFailed > 0) {
+            System.exit(1);
+        }
+    }
+
     private static boolean holds(Optional<BusMessage> message, byte[] expectedBody) {
         return message.isPresent() && Arrays.equals(message.get().getBody(), expectedBody);
     }
