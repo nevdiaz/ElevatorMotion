@@ -30,6 +30,11 @@ public class BusStandIn {
 
         @Override
         public void subscribe(int topic, int subtopic) {
+            if (topic < 1 || topic > BusCodes.MAX_TOPIC || subtopic <= 0 || subtopic > 255) {
+                throw new IllegalArgumentException("Invalid topic or subtopic");
+            }
+            //Subscribing twice must not wipe the queue, computeIfAbsent handles this
+            queues.computeIfAbsent(key(topic, subtopic), k -> new ArrayDeque<>());
         }
 
         @Override
