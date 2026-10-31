@@ -66,7 +66,7 @@ public class BusMessageChecks {
 
     //Needed these checks after incorporating Team03's repo
     private static void numberChecks() {
-        //A small number lands in the last body byte
+        //A small numbers lands in the last body byte
         BusMessage five = BusMessage.of(1, 1, 5);
         check(Arrays.equals(five.getBody(), new byte[]{0, 0, 0, 0, 0, 5}), "of(5) fills the last body byte");
         check(five.value() == 5, "value() returns 5");
@@ -82,6 +82,11 @@ public class BusMessageChecks {
 
         //Zero
         check(BusMessage.of(1, 1, 0).value() == 0, "zero round trips");
+
+        //Out of range
+        checkRejects(() -> BusMessage.of(1, 1, -1), "negative value rejected");
+        checkRejects(() -> BusMessage.of(1, 1, BusMessage.MAX_VALUE + 1), "value above 48 bits rejected");
+
 
     }
 
