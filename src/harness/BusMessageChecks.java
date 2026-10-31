@@ -80,6 +80,9 @@ public class BusMessageChecks {
         check(Arrays.equals(max.getBody(), new byte[]{-1, -1, -1, -1, -1, -1}), "MAX_VALUE fills all six bytes");
         check(max.value() == BusMessage.MAX_VALUE, "MAX_VALUE round trips");
 
+        //Zero
+        check(BusMessage.of(1, 1, 0).value() == 0, "zero round trips");
+
     }
 
     private static void check(boolean condition, String message) {
