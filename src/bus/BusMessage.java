@@ -66,7 +66,8 @@ public class BusMessage {
         return new BusMessage(topic, subtopic, body);
     }
 
-    //Method for number bodies, needed after incorporating Team03's repo
+    //Needed after seeing Team03's repo
+    //Method for building a body from a number
     public static BusMessage of(int topic, int subtopic, long value) {
         if (value < 0 || value > MAX_VALUE) {
             throw new IllegalArgumentException("value out of range for a 6-byte body: " + value);
@@ -80,5 +81,14 @@ public class BusMessage {
         return new BusMessage(topic, subtopic, body);
     }
 
+    //Needed after seeing Team03's repo
+    //Method for building a number from a body
+    public long value() {
+        long v = 0;
+        for (byte b : body) {
+            v = (v << 8) | (b & 0xFF);
+        }
+        return v;
+    }
 
 }
