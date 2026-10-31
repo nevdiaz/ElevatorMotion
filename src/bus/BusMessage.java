@@ -12,6 +12,8 @@ public class BusMessage {
     public static final int BODY_SIZE = 6;
     public static final int HEADER_SIZE = 2;
 
+    public static final long MAX_VALUE = (1L << 48) - 1; //Largest number 6 bytes can hold
+
     public BusMessage(int topic, int subtopic, byte[] body) {
 
 
@@ -61,6 +63,20 @@ public class BusMessage {
         int subtopic = word[1] & 0xFF;
         byte[] body = Arrays.copyOfRange(word, HEADER_SIZE, WORD_SIZE);
 
+        return new BusMessage(topic, subtopic, body);
+    }
+
+    //Method for number bodies, needed after incorporating Team03's repo
+    public static BusMessage of(int topic, int subtopic, long value) {
+        if (value < 0 || value > MAX_VALUE) {
+            throw new IllegalArgumentException("value out of range for a 6-byte body: " + value);
+        }
+        byte[] body = new byte[BODY_SIZE];
+        //Builds from the right guaranteeing Big-Endian
+        for (int i = BODY_SIZE - 1; i >= 0; i--) {
+            body[i] = (byte) (value & 0xFF);
+            value >>>= 8;
+        }
         return new BusMessage(topic, subtopic, body);
     }
 
