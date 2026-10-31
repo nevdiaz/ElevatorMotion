@@ -2,20 +2,25 @@ package bus;
 
 
 import java.util.Optional;
-import java.util.function.Consumer;
 
-//TODO: These are assumptions as we don't have Team03's software bus details, ERASE when/if necessary
+//TODO: Follows Team03's code and the Software Bus Codes sheet. Still need to confirm with them:
+//  - where the subtopic goes in SUBSCRIBE / UNSUBSCRIBE / GET (their code uses byte 7),
+//  - whether their server moves to the 0xF0+ command bytes from the sheet.
+
 public interface BusMessageDispatcher {
 
-    //ASSUMPTION: The bus hands back an id for the component
-    int register(String componentName);
+    /** Announces this connection to the bus. The bus sends no reply. */
+    void register();
 
-    //ASSUMPTION: We assume the delivery is by callback
-    void subscribe(int topic, Consumer<BusMessage> listener);
+    /** Creates a queue for topic and subtopic on this connection. There is no callback, poll with get. */
+    void subscribe(int topic, int subtopic);
 
-    //ASSUMPTION: publish sens one message to every subscriber of its topic
+    /** Removes the queue for topic and subtopic and any messages in it. */
+    void unsubscribe(int topic, int subtopic);
+
+    /** Sends a message to every other connection subscribed to its topic. The sender does not receive its own message. */
     void publish(BusMessage message);
 
-    //ASSUMPTION: returns the latest message with for the topic and subtopic
+    /** Returns the oldest queued message for topic and subtopic, removes it, or empty if there is none. */
     Optional<BusMessage> get(int topic, int subtopic);
 }
