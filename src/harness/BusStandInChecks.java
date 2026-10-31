@@ -97,6 +97,22 @@ public class BusStandInChecks {
         check(holdsValue(listener.get(1, 0), 7), "a message for (1, 0) is in the (1, 0) queue");
     }
 
+    private static void badInputChecks() {
+        BusMessageDispatcher conn = new BusStandIn().connect();
+
+        checkRejects(() -> conn.subscribe(0, 1), "subscribe topic 0 rejected");
+        checkRejects(() -> conn.subscribe(BusCodes.FIRST_COMMAND, 1), "subscribe a command-range topic rejected");
+        checkRejects(() -> conn.subscribe(5, 256), "subscribe subtopic 256 rejected");
+        checkRejects(() -> conn.subscribe(5, -1), "subscribe subtopic -1 rejected");
+        checkAccepts(() -> conn.subscribe(5, 0), "subscribe with subtopic 0 (all elevators) accepted");
+        checkRejects(() -> conn.unsubscribe(0, 1), "unsubscribe topic 0 rejected");
+        checkRejects(() -> conn.publish(null), "publish null rejected");
+        checkRejects(() -> conn.publish(BusMessage.of(0, 1, 1)), "publish topic 0 rejected");
+        checkRejects(() -> conn.publish(BusMessage.of(BusCodes.FIRST_COMMAND, 1, 1)), "publish a command-range topic rejected");
+        checkRejects(() -> conn.get(300, 0), "get topic 300 rejected");
+        checkRejects(() -> conn.get(5, 256), "get subtopic 256 rejected");
+    }
+
     private static void getChecks() {
         BusStandIn bus = new BusStandIn();
         check(bus.get(3, 4).isEmpty(), "get returns empty when nothing was published");
@@ -180,15 +196,6 @@ public class BusStandInChecks {
         check(a != b, "register gives different ids");
         checkRejects(() -> bus.register(null), "null component name rejected");
         checkRejects(() -> bus.register("  "), "blank component name rejected");
-    }
-
-    private static void badInputChecks() {
-        BusStandIn bus = new BusStandIn();
-        checkRejects(() -> bus.subscribe(256, m -> { }), "subscribe topic 256 rejected");
-        checkRejects(() -> bus.subscribe(5, null), "subscribe null listener rejected");
-        checkRejects(() -> bus.publish(null), "publish null rejected");
-        checkRejects(() -> bus.get(300, 0), "get topic 300 rejected");
-        checkRejects(() -> bus.get(0, -1), "get subtopic -1 rejected");
     }
 
     private static void check(boolean condition, String message) {
