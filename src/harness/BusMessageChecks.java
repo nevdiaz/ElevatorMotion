@@ -70,6 +70,11 @@ public class BusMessageChecks {
         BusMessage five = BusMessage.of(1, 1, 5);
         check(Arrays.equals(five.getBody(), new byte[]{0, 0, 0, 0, 0, 5}), "of(5) fills the last body byte");
         check(five.value() == 5, "value() returns 5");
+
+        //Big-endian: 256 is {1, 0} at the end, not {0, 1}
+        BusMessage big = BusMessage.of(1, 1, 256);
+        check(Arrays.equals(big.getBody(), new byte[]{0, 0, 0, 0, 1, 0}), "256 is stored big-endian");
+
     }
 
     private static void check(boolean condition, String message) {
