@@ -27,6 +27,15 @@ public class BusStandInChecks {
         check(holds(bus.get(3, 4), BODY_B), "get returns the latest message");
     }
 
+    private static void badInputChecks() {
+        BusStandIn bus = new BusStandIn();
+        checkRejects(() -> bus.subscribe(256, m -> { }), "subscribe topic 256 rejected");
+        checkRejects(() -> bus.subscribe(5, null), "subscribe null listener rejected");
+        checkRejects(() -> bus.publish(null), "publish null rejected");
+        checkRejects(() -> bus.get(300, 0), "get topic 300 rejected");
+        checkRejects(() -> bus.get(0, -1), "get subtopic -1 rejected");
+    }
+
     private static void check(boolean condition, String message) {
         checksRun++;
         if (condition == false) {
