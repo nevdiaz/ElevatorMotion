@@ -1,6 +1,7 @@
 package bus;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class BusMessage {
 
@@ -91,4 +92,20 @@ public class BusMessage {
         return v;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        BusMessage that = (BusMessage) o;
+        return topic == that.topic && subtopic == that.subtopic && Objects.deepEquals(body, that.body);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(topic, subtopic, Arrays.hashCode(body));
+    }
+
+    @Override
+    public String toString() {
+        return "[topic " + topic + " | subtopic " + subtopic + " | value " + value() + "]";
+    }
 }
