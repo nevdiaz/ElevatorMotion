@@ -1,6 +1,7 @@
 package bus;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class BusMessage {
 
@@ -11,6 +12,8 @@ public class BusMessage {
     public static final int WORD_SIZE = 8;
     public static final int BODY_SIZE = 6;
     public static final int HEADER_SIZE = 2;
+
+    public static final long MAX_VALUE = (1L << 48) - 1; //Largest number 6 bytes can hold
 
     public BusMessage(int topic, int subtopic, byte[] body) {
 
@@ -64,5 +67,45 @@ public class BusMessage {
         return new BusMessage(topic, subtopic, body);
     }
 
+    //Needed after seeing Team03's repo
+    //Method for building a body from a number
+    public static BusMessage of(int topic, int subtopic, long value) {
+        if (value < 0 || value > MAX_VALUE) {
+            throw new IllegalArgumentException("value out of range for a 6-byte body: " + value);
+        }
+        byte[] body = new byte[BODY_SIZE];
+        //Builds from the right guaranteeing Big-Endian
+        for (int i = BODY_SIZE - 1; i >= 0; i--) {
+            body[i] = (byte) (value & 0xFF);
+            value >>>= 8;
+        }
+        return new BusMessage(topic, subtopic, body);
+    }
 
+    //Needed after seeing Team03's repo
+    //Method for building a number from a body
+    public long value() {
+        long v = 0;
+        for (byte b : body) {
+            v = (v << 8) | (b & 0xFF);
+        }
+        return v;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        BusMessage that = (BusMessage) o;
+        return topic == that.topic && subtopic == that.subtopic && Objects.deepEquals(body, that.body);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(topic, subtopic, Arrays.hashCode(body));
+    }
+
+    @Override
+    public String toString() {
+        return "[topic " + topic + " | subtopic " + subtopic + " | value " + value() + "]";
+    }
 }

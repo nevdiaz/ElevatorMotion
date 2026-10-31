@@ -5,6 +5,8 @@ import bus.BusMessage;
 
 import java.util.Arrays;
 
+import static bus.BusMessage.of;
+
 public class BusMessageChecks {
 
     private static int checksRun = 0;
@@ -53,11 +55,45 @@ public class BusMessageChecks {
         message.getBody()[0] = 77;
         check(message.getBody()[0] == 1, "changing the returned body does not change the message");
 
+        numberChecks();
+
         System.out.println(checksRun + " checks run, " + checksFailed + " failed");
         if (checksFailed > 0) {
             System.exit(1);
         }
 
+    }
+
+    //Needed these checks after incorporating Team03's repo
+    private static void numberChecks() {
+        //A small numbers lands in the last body byte
+        BusMessage five = BusMessage.of(1, 1, 5);
+        check(Arrays.equals(five.getBody(), new byte[]{0, 0, 0, 0, 0, 5}), "of(5) fills the last body byte");
+        check(five.value() == 5, "value() returns 5");
+
+        //Big-endian: 256 is {1, 0} at the end, not {0, 1}
+        BusMessage big = BusMessage.of(1, 1, 256);
+        check(Arrays.equals(big.getBody(), new byte[]{0, 0, 0, 0, 1, 0}), "256 is stored big-endian");
+
+        //Largest 48-bit value
+        BusMessage max = BusMessage.of(1, 1, BusMessage.MAX_VALUE);
+        check(Arrays.equals(max.getBody(), new byte[]{-1, -1, -1, -1, -1, -1}), "MAX_VALUE fills all six bytes");
+        check(max.value() == BusMessage.MAX_VALUE, "MAX_VALUE round trips");
+
+        //Zero
+        check(BusMessage.of(1, 1, 0).value() == 0, "zero round trips");
+
+        //Out of range
+        checkRejects(() -> BusMessage.of(1, 1, -1), "negative value rejected");
+        checkRejects(() -> BusMessage.of(1, 1, BusMessage.MAX_VALUE + 1), "value above 48 bits rejected");
+
+        //equals and hashCode
+        BusMessage a = BusMessage.of(3, 1, 7);
+        BusMessage b = BusMessage.of(3, 1, 7);
+        check(a.equals(b), "messages with the same fields are equal");
+        check(a.hashCode() == b.hashCode(), "equal messages have the same hash code");
+        check(!a.equals(BusMessage.of(3, 1, 8)), "different body is not equal");
+        check(!a.equals(BusMessage.of(4, 1, 7)), "different topic is not equal");
     }
 
     private static void check(boolean condition, String message) {
