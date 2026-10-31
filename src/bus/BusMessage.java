@@ -1,5 +1,7 @@
 package bus;
 
+import java.util.Arrays;
+
 public class BusMessage {
 
     private final int topic;
@@ -47,6 +49,19 @@ public class BusMessage {
             word[i + HEADER_SIZE] = body[i];
         }
         return word;
+    }
+
+    public static BusMessage fromBytes(byte[] word) {
+        if (word == null || word.length != WORD_SIZE) {
+            throw new IllegalArgumentException("word must be exactly " + WORD_SIZE + " bytes");
+        }
+
+        //0xFF is used to prevent bugs with signed integers
+        int topic = word[0] & 0xFF;
+        int subtopic = word[1] & 0xFF;
+        byte[] body = Arrays.copyOfRange(word, HEADER_SIZE, WORD_SIZE);
+
+        return new BusMessage(topic, subtopic, body);
     }
 
 
