@@ -123,6 +123,15 @@ public class BusCabinGatewayChecks {
         check(rig.drain(BusCodes.CAR_DIRECTION).isEmpty(), "a call for the current floor publishes no direction change");
     }
 
+    private static void otherElevatorChecks() {
+        Rig rig = new Rig();
+        rig.run(1);
+
+        rig.call(BusCodes.ELEVATOR_2, 5);
+        rig.run(200);
+        check(rig.engine.isFloorAligned(1), "a call for elevator 2 is ignored by elevator 1");
+    }
+
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {
