@@ -71,9 +71,13 @@ public class BusCabinGateway {
             lastFloor = floor;
         }
 
-        int direction = 0; //0 = idle
+        int direction;
         if (motion.isMoving()) {
             direction = (motion.getDirection() == Direction.Up) ? 1 : 2;
+        } else if (trip.isTripActive()) {
+            direction = lastDirection;     //still leveling, so don't announce idle yet
+        } else {
+            direction = 0;                 //truly idle
         }
         if (direction != lastDirection) {
             bus.publish(BusMessage.of(BusCodes.CAR_DIRECTION, elevator, direction));
@@ -83,8 +87,9 @@ public class BusCabinGateway {
 
     public void update() {
         readCalls();
-        startNextCall();
-        publishChanges();
+        publishChanges(); //report the car's state first so a finished trip shows as idle
+        startNextCall(); //only then start the next queued call
+
     }
 
 
