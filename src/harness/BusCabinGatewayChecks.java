@@ -43,4 +43,22 @@ public class BusCabinGatewayChecks {
             }
         }
     }
+
+    private static void check(boolean condition, String message) {
+        checksRun++;
+        if (!condition) {
+            checksFailed++;
+            System.out.println("FAIL: " + message);
+        }
+    }
+
+    private static void checkRejects(Runnable action, String message) {
+        boolean threw = false;
+        try {
+            action.run();
+        } catch (IllegalArgumentException e) {
+            threw = true;
+        }
+        check(threw, message);
+    }
 }
