@@ -82,6 +82,23 @@ public class BusCabinGatewayChecks {
                 "direction goes up, then idle");
     }
 
+    private static void queuedCallsChecks() {
+        Rig rig = new Rig();
+        rig.run(1);
+        rig.drain(BusCodes.CAR_POSITION);
+        rig.drain(BusCodes.CAR_DIRECTION);
+
+        rig.call(BusCodes.ELEVATOR_1, 3);
+        rig.call(BusCodes.ELEVATOR_1, 2);
+        rig.call(BusCodes.ELEVATOR_1, 4);
+        rig.run(4000);
+        check(rig.engine.isFloorAligned(4), "three calls are served and the car ends at floor 4");
+        check(rig.drain(BusCodes.CAR_POSITION).equals(List.of(2L, 3L, 2L, 3L, 4L)),
+                "calls are served in the order they arrived (3, then 2, then 4)");
+        check(rig.drain(BusCodes.CAR_DIRECTION).equals(List.of(1L, 0L, 2L, 0L, 1L, 0L)),
+                "direction is up, idle, down, idle, up, idle");
+    }
+
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {
