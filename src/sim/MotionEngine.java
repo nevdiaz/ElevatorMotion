@@ -31,14 +31,20 @@ public class MotionEngine implements MotionControllerAPI {
      * Braking can leave the car up to one step (0.2 ft) past floor level, and this room
      * lets it finish a normal deceleration instead of being cut off at the end floor.
      */
+    //Normal braking can leave the car up to one step (0.2 ft) past floor level
     public static final double OVERRUN = 0.25;
-    public static final double MIN_POSITION = -OVERRUN;
-    public static final double MAX_POSITION = SHAFT_TOP + OVERRUN;
+    //The safety levers sit this far past floor 1 and floor 10. Normal braking never reaches them.
+    public static final double LEVER_MARGIN = 1.0;
+    public static final double MIN_POSITION = -LEVER_MARGIN;
+    public static final double MAX_POSITION = SHAFT_TOP + LEVER_MARGIN;
 
     private double position;
     private double speed;
     private Direction direction = Direction.Up;
     private MotionState state = MotionState.STOPPED;
+
+    private boolean topLimitTripped = false;
+    private boolean bottomLimitTripped = false;
 
     public MotionEngine() {
         this(0.0);
