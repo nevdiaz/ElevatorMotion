@@ -46,7 +46,14 @@ public class BusCabinGateway {
         }
     }
 
-    private void startNextCall() {}
+    //Take the next waiting floor when the cabin is free
+    private void startNextCall() {
+        //Only starts a trip if the cabin is idle
+        if (pendingFloors.isEmpty() || trip.isTripActive() || motion.isMoving()) {
+            return;
+        }
+        trip.goToFloor(pendingFloors.pollFirst());
+    }
 
     private void publishChanges() {}
 
