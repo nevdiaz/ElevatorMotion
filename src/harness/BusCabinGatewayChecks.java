@@ -99,6 +99,18 @@ public class BusCabinGatewayChecks {
                 "direction is up, idle, down, idle, up, idle");
     }
 
+    private static void invalidCallChecks() {
+        Rig rig = new Rig();
+        rig.run(1);
+
+        rig.call(BusCodes.ELEVATOR_1, 0);
+        rig.call(BusCodes.ELEVATOR_1, 11);
+        rig.call(BusCodes.ELEVATOR_1, 99999999999L);
+        rig.call(BusCodes.ELEVATOR_1, 2);
+        rig.run(2000);
+        check(rig.engine.isFloorAligned(2), "invalid floors are skipped and the valid call is still served");
+    }
+
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {
