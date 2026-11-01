@@ -1,8 +1,9 @@
-package sim;
+package checks;
 
 import api.Direction;
 import api.MotionControllerAPI;
 import api.MotionState;
+import sim.MotionEngine;
 
 /** checks for MotionEngine */
 public class MotionEngineCheck {
