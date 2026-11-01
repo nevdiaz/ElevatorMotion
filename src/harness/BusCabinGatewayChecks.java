@@ -111,6 +111,18 @@ public class BusCabinGatewayChecks {
         check(rig.engine.isFloorAligned(2), "invalid floors are skipped and the valid call is still served");
     }
 
+    private static void sameFloorChecks() {
+        Rig rig = new Rig();
+        rig.run(1);
+        rig.drain(BusCodes.CAR_POSITION);
+        rig.drain(BusCodes.CAR_DIRECTION);
+
+        rig.call(BusCodes.ELEVATOR_1, 1);
+        rig.run(200);
+        check(rig.engine.isFloorAligned(1), "a call for the current floor does not move the car");
+        check(rig.drain(BusCodes.CAR_DIRECTION).isEmpty(), "a call for the current floor publishes no direction change");
+    }
+
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {
