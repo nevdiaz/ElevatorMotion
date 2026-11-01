@@ -1,7 +1,9 @@
 package bus;
 
+import api.Direction;
 import api.MotionControllerAPI;
 import manager.TripController;
+import sim.MotionEngine;
 
 import java.util.ArrayDeque;
 import java.util.Optional;
@@ -55,7 +57,29 @@ public class BusCabinGateway {
         trip.goToFloor(pendingFloors.pollFirst());
     }
 
-    private void publishChanges() {}
+    //Send on the bus only what has changed
+    private void publishChanges() {
+        int floor = 0;
+        for (int f = 1; f <= MotionEngine.FLOORS; f++) {
+            if (motion.isFloorAligned(f)) {
+                floor = f;
+            }
+        }
+        //ASSUMPTION: Publish when the car enters the floor's sensor zone and not between floors
+        if (floor != 0 && floor != lastFloor) {
+            bus.publish(BusMessage.of(BusCodes.CAR_POSITION, elevator, floor));
+            lastFloor = floor;
+        }
+
+        int direction = 0; //0 = idle
+        if (motion.isMoving()) {
+            direction = (motion.getDirection() == Direction.Up) ? 1 : 2;
+        }
+        if (direction != lastDirection) {
+            bus.publish(BusMessage.of(BusCodes.CAR_DIRECTION, elevator, direction));
+            lastDirection = direction;
+        }
+    }
 
     public void update() {
         readCalls();
