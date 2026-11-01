@@ -21,6 +21,8 @@ public class TestHarness {
     private final TripController controller;
     private final FloorSequencer sequencer;
     private final Runnable updateTimeStep;
+    //Volatile is called from the main thread and the field is read by the harness's clock thread
+    private volatile Runnable beforeStep = () -> { };
 
     private final ScheduledExecutorService clock =
             Executors.newSingleThreadScheduledExecutor(r -> {
@@ -40,8 +42,16 @@ public class TestHarness {
         clock.scheduleAtFixedRate(this::onUpdate, 0, TIME_STEP, TimeUnit.MILLISECONDS);
     }
 
+    public void setBeforeStep(Runnable beforeStep) {
+        if (beforeStep == null) {
+            throw new IllegalArgumentException("beforeStep must not be null");
+        }
+        this.beforeStep = beforeStep;
+    }
+
     void onUpdate() {
         try {
+            beforeStep.run();
             sequencer.update(TIME_STEP / 1000.0);
             controller.controlStep();
             updateTimeStep.run();
