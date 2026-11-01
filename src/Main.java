@@ -1,3 +1,6 @@
+import bus.BusCabinGateway;
+import bus.BusCodes;
+import bus.BusStandIn;
 import gui.ElevatorViewController;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -28,12 +31,17 @@ public class Main extends Application {
         primaryStage.setTitle("NakatomiTower");
         primaryStage.show();
         TripController tripController = new TripController(motionEngine);
+        BusStandIn bus = new BusStandIn();
+        BusCabinGateway gateway = new BusCabinGateway(motionEngine, tripController, bus.connect(), BusCodes.ELEVATOR_1);
 
         if (HARNESS_MODE) {
-            new harness.TestHarness(tripController, motionEngine::tick).start();
+            harness.TestHarness testHarness = new harness.TestHarness(tripController, motionEngine::tick);
+            testHarness.setBeforeStep(gateway::update);
+            testHarness.start();
         } else {
             SimulationManager simulationManager =
                     new SimulationManager(tripController, motionEngine::tick);
+            simulationManager.setBeforeStep(gateway::update);
             FloorSequencer floorSequencer = new FloorSequencer(tripController, DEMO_ROUTE, 2.0);
             AnimationTimer timer = new AnimationTimer() {
                 long previousFramesTimeStamp = -1;
