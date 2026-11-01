@@ -2,6 +2,7 @@ import bus.BusCabinGateway;
 import bus.BusCodes;
 import bus.BusStandIn;
 import gui.ElevatorViewController;
+import harness.TopAndBottomHarness;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -15,8 +16,9 @@ import sim.MotionEngine;
 
 public class Main extends Application {
 
-    private static final boolean HARNESS_MODE = true;
     private static final int[] DEMO_ROUTE = {2, 10, 4, 1};
+    private enum Mode { DEMO, ROUTE_HARNESS, TOP_AND_BOTTOM }
+    private static final Mode MODE = Mode.DEMO; //TODO: Change mode to one of the enums to run it
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -34,7 +36,7 @@ public class Main extends Application {
         BusStandIn bus = new BusStandIn();
         BusCabinGateway gateway = new BusCabinGateway(motionEngine, tripController, bus.connect(), BusCodes.ELEVATOR_1);
 
-        if (HARNESS_MODE) {
+        if (MODE == Mode.ROUTE_HARNESS) {
             harness.TestHarness testHarness = new harness.TestHarness(tripController, motionEngine::tick);
             testHarness.setBeforeStep(gateway::update);
             testHarness.start();
@@ -42,7 +44,20 @@ public class Main extends Application {
             SimulationManager simulationManager =
                     new SimulationManager(tripController, motionEngine::tick);
             simulationManager.setBeforeStep(gateway::update);
-            FloorSequencer floorSequencer = new FloorSequencer(tripController, DEMO_ROUTE, 2.0);
+
+            //The demo route only runs in DEMO mode, scenarios drive the car over the bus.
+            FloorSequencer floorSequencer = (MODE == Mode.DEMO)
+                    ? new FloorSequencer(tripController, DEMO_ROUTE, 2.0)
+                    : null;
+
+            if (MODE == Mode.TOP_AND_BOTTOM) {
+                TopAndBottomHarness scenario = new TopAndBottomHarness(bus.connect());
+                simulationManager.setBeforeStep(() -> { scenario.update(); gateway.update(); });
+            } else {
+                simulationManager.setBeforeStep(gateway::update);
+            }
+
+
             AnimationTimer timer = new AnimationTimer() {
                 long previousFramesTimeStamp = -1;
                 @Override
@@ -52,7 +67,9 @@ public class Main extends Application {
                         elapsedSeconds = (now - previousFramesTimeStamp) / 1000000000.0;
                     }
                     simulationManager.update(now);
-                    floorSequencer.update(elapsedSeconds);
+                    if (floorSequencer != null) {
+                        floorSequencer.update(elapsedSeconds);
+                    }
                     previousFramesTimeStamp = now;
                 }
             };
