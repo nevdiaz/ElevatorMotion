@@ -33,7 +33,18 @@ public class BusCabinGateway {
     }
 
     //Empty the bus into the waiting queue
-    private void readCalls() {}
+    private void readCalls() {
+        Optional<BusMessage> call = bus.get(BusCodes.CAR_CALL, elevator);
+        //Removes the oldest message each time until empty
+        while (call.isPresent()) {
+            long floor = call.get().value();
+            //skips a floor that is already waiting so a repeated button press doesn't queue twice
+            if (floor >= 1 && floor <= Integer.MAX_VALUE && !pendingFloors.contains((int) floor)) {
+                pendingFloors.addLast((int) floor);
+            }
+            call = bus.get(BusCodes.CAR_CALL, elevator);
+        }
+    }
 
     private void startNextCall() {}
 
