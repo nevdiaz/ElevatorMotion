@@ -60,6 +60,13 @@ public class BusCabinGatewayChecks {
         }
     }
 
+    private static void initialAnnouncementChecks() {
+        Rig rig = new Rig();
+        rig.run(1);
+        check(rig.drain(BusCodes.CAR_POSITION).equals(List.of(1L)), "the first update announces floor 1");
+        check(rig.drain(BusCodes.CAR_DIRECTION).equals(List.of(0L)), "the first update announces idle");
+    }
+
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {
