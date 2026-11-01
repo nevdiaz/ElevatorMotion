@@ -148,6 +148,22 @@ public class MotionEngine implements MotionControllerAPI {
         return FloorSensors.isAligned(position, floor);
     }
 
+    /** True once the car has hit the safety lever above floor 10. The motor stays locked. */
+    @Override
+    public synchronized boolean isTopLimitTripped() {
+        return topLimitTripped;
+    }
+
+    /** True once the car has hit the safety lever below floor 1. The motor stays locked. */
+    @Override
+    public synchronized boolean isBottomLimitTripped() {
+        return bottomLimitTripped;
+    }
+
+    private boolean isLimitTripped() {
+        return topLimitTripped || bottomLimitTripped;
+    }
+
     // simulation step
 
     /** Advances the simulation by TIME_STEP seconds. */
