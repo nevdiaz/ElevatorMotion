@@ -132,6 +132,14 @@ public class BusCabinGatewayChecks {
         check(rig.engine.isFloorAligned(1), "a call for elevator 2 is ignored by elevator 1");
     }
 
+    private static void constructorChecks() {
+        MotionEngine engine = new MotionEngine();
+        TripController trip = new TripController(engine);
+        BusStandIn bus = new BusStandIn();
+        checkRejects(() -> new BusCabinGateway(engine, trip, bus.connect(), 0), "elevator 0 rejected");
+        checkRejects(() -> new BusCabinGateway(engine, trip, bus.connect(), 5), "elevator 5 rejected");
+    }
+
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {
