@@ -80,6 +80,7 @@ public class MotionEngineCheck {
                 check(Math.abs(t.stopError) <= 0.2 + 1e-9, "stop error " + label);
                 check(t.minReads >= 2, "sensor reads " + label);
                 check(t.endedAligned, "ends aligned " + label);
+                check(!t.leverTripped, "no lever tripped on a normal trip " + label);
             }
         }
 
