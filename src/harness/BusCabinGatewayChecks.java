@@ -1,9 +1,6 @@
 package harness;
 
-import bus.BusCabinGateway;
-import bus.BusCodes;
-import bus.BusMessageDispatcher;
-import bus.BusStandIn;
+import bus.*;
 import manager.TripController;
 import sim.MotionEngine;
 
@@ -41,6 +38,10 @@ public class BusCabinGatewayChecks {
                 trip.controlStep();
                 engine.tick();
             }
+        }
+
+        void call(int subtopic, long floor) {
+            center.publish(BusMessage.of(BusCodes.CAR_CALL, subtopic, floor));
         }
     }
 
