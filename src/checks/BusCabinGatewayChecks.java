@@ -1,4 +1,4 @@
-package harness;
+package checks;
 
 import bus.*;
 import manager.TripController;

@@ -1,4 +1,4 @@
-package harness;
+package checks;
 
 import manager.SimulationManager;
 import manager.TripController;

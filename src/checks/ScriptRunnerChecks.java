@@ -1,8 +1,9 @@
-package harness;
+package checks;
 
 import bus.BusCabinGateway;
 import bus.BusCodes;
 import bus.BusStandIn;
+import harness.TopAndBottomHarness;
 import manager.TripController;
 import sim.MotionEngine;
 

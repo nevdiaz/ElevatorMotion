@@ -1,11 +1,9 @@
-package harness;
+package checks;
 
 
 import bus.BusMessage;
 
 import java.util.Arrays;
-
-import static bus.BusMessage.of;
 
 public class BusMessageChecks {
 

@@ -1,4 +1,4 @@
-package harness;
+package checks;
 
 import api.MotionControllerAPI;
 import api.MotionState;
