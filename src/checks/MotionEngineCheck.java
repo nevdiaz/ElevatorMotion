@@ -90,9 +90,7 @@ public class MotionEngineCheck {
         check(e.getState() == MotionState.STOPPED && !e.isMoving(), "stopMotor while stopped does nothing");
         e.stepUpMotor();
         check(Math.abs(e.getPosition() - 0.2) < 1e-9, "stepUpMotor moves 0.2 ft");
-        e.stepDnMotor();
-        e.stepDnMotor();
-        e.stepDnMotor();
+        for (int i = 0; i < 10; i++) e.stepDnMotor();
         check(e.getPosition() == MotionEngine.MIN_POSITION, "step stops at the bottom of the shaft");
         e = new MotionEngine();
         e.startMotor(Direction.Up);
@@ -116,7 +114,20 @@ public class MotionEngineCheck {
         guard = 0;
         while (top.isMoving() && guard++ < 5000) top.tick();
         check(top.getPosition() == MotionEngine.MAX_POSITION, "car cannot pass the top of the shaft");
-        check(top.isTopAligned() && !top.isBottomAligned(), "top aligned at the top of the shaft");
+        check(top.isTopLimitTripped() && !top.isBottomLimitTripped(), "top lever trips at the top of the shaft");
+        check(top.getVelocity() == 0.0 && !top.isMoving(), "car stops dead at the lever");
+        top.startMotor(Direction.Down);
+        check(!top.isMoving(), "motor stays locked after the lever trips");
+        double lockedAt = top.getPosition();
+        top.stepDnMotor();
+        check(top.getPosition() == lockedAt, "steps are refused after the lever trips");
+        MotionEngine low = new MotionEngine();
+        low.startMotor(Direction.Down);
+        guard = 0;
+        while (low.isMoving() && guard++ < 5000) low.tick();
+        check(low.isBottomLimitTripped() && !low.isTopLimitTripped(), "bottom lever trips below floor 1");
+        check(low.getPosition() == MotionEngine.MIN_POSITION, "car stops at the bottom lever");
+
         MotionEngine bottom = new MotionEngine();
         check(bottom.isBottomAligned() && bottom.getCurrentFloor() == 1, "bottom aligned at floor 1");
         check(new MotionEngine(20.0).getCurrentFloor() == 0, "between zones reports floor 0");
