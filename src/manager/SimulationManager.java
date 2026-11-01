@@ -13,10 +13,18 @@ public class SimulationManager {
     private double accumulator = 0.0;
     private double timeScale = 1.0;
     private static final double longestCatchUp = 0.25;
+    private Runnable beforeStep = () -> { };
 
     public SimulationManager(TripController tripController, Runnable tick) {
         this.tripController = tripController;
         this.tick = tick;
+    }
+
+    public void setBeforeStep(Runnable beforeStep) {
+        if (beforeStep == null) {
+            throw new IllegalArgumentException("beforeStep must not be null");
+        }
+        this.beforeStep = beforeStep;
     }
 
     public void update(long currentNanos) {
