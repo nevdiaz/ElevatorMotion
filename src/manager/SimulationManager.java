@@ -39,6 +39,7 @@ public class SimulationManager {
             accumulator = longestCatchUp;
         }
         while (accumulator >= MotionEngine.TIME_STEP) {
+            beforeStep.run();
             tripController.controlStep();
             tick.run();
             accumulator -= MotionEngine.TIME_STEP;
