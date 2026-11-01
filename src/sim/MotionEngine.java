@@ -193,12 +193,14 @@ public class MotionEngine implements MotionControllerAPI {
                 break;
         }
 
-        // End of the shaft: the car cannot go past the overrun at floor 1 or floor 10.
+        //Safety levers: hitting one stops the car at once and locks the motor.
         if (position <= MIN_POSITION && direction == Direction.Down) {
             position = MIN_POSITION;
+            bottomLimitTripped = true;
             halt();
         } else if (position >= MAX_POSITION && direction == Direction.Up) {
             position = MAX_POSITION;
+            topLimitTripped = true;
             halt();
         }
     }
