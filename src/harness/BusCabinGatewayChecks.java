@@ -15,6 +15,14 @@ public class BusCabinGatewayChecks {
 
     public static void main(String[] args) {
 
+        initialAnnouncementChecks();
+        callServedChecks();
+        queuedCallsChecks();
+        invalidCallChecks();
+        sameFloorChecks();
+        otherElevatorChecks();
+        constructorChecks();
+
         System.out.println(checksRun + " checks run, " + checksFailed + " failed");
         if (checksFailed > 0) {
             System.exit(1);
