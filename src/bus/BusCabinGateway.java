@@ -4,6 +4,7 @@ import api.MotionControllerAPI;
 import manager.TripController;
 
 import java.util.ArrayDeque;
+import java.util.Optional;
 
 public class BusCabinGateway {
 
@@ -30,4 +31,19 @@ public class BusCabinGateway {
         bus.register();
         bus.subscribe(BusCodes.CAR_CALL, elevator);
     }
+
+    //Empty the bus into the waiting queue
+    private void readCalls() {}
+
+    private void startNextCall() {}
+
+    private void publishChanges() {}
+
+    public void update() {
+        readCalls();
+        startNextCall();
+        publishChanges();
+    }
+
+
 }
