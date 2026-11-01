@@ -4,6 +4,10 @@ import bus.*;
 import manager.TripController;
 import sim.MotionEngine;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 public class BusCabinGatewayChecks {
 
     private static int checksRun = 0;
@@ -42,6 +46,17 @@ public class BusCabinGatewayChecks {
 
         void call(int subtopic, long floor) {
             center.publish(BusMessage.of(BusCodes.CAR_CALL, subtopic, floor));
+        }
+
+        // Takes every queued message the monitor has for this topic, oldest first.
+        List<Long> drain(int topic) {
+            List<Long> values = new ArrayList<>();
+            Optional<BusMessage> next = monitor.get(topic, BusCodes.ELEVATOR_1);
+            while (next.isPresent()) {
+                values.add(next.get().value());
+                next = monitor.get(topic, BusCodes.ELEVATOR_1);
+            }
+            return values;
         }
     }
 
