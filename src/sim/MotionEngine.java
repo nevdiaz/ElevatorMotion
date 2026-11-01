@@ -93,7 +93,7 @@ public class MotionEngine implements MotionControllerAPI {
     /** Moves the stopped car up one step (0.2 ft). Ignored unless the car is stopped. */
     @Override
     public synchronized void stepUpMotor() {
-        if (state == MotionState.STOPPED || !isLimitTripped()) {
+        if (state == MotionState.STOPPED && !isLimitTripped()) {
             position = clamp(position + STEP_SIZE);
         }
     }
@@ -101,7 +101,7 @@ public class MotionEngine implements MotionControllerAPI {
     /** Moves the stopped car down one step (0.2 ft). Ignored unless the car is stopped. */
     @Override
     public synchronized void stepDnMotor() {
-        if (state == MotionState.STOPPED || !isLimitTripped()) {
+        if (state == MotionState.STOPPED && !isLimitTripped()) {
             position = clamp(position - STEP_SIZE);
         }
     }
