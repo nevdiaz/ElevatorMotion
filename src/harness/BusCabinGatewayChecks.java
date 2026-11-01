@@ -67,6 +67,21 @@ public class BusCabinGatewayChecks {
         check(rig.drain(BusCodes.CAR_DIRECTION).equals(List.of(0L)), "the first update announces idle");
     }
 
+    private static void callServedChecks() {
+        Rig rig = new Rig();
+        rig.run(1);
+        rig.drain(BusCodes.CAR_POSITION);
+        rig.drain(BusCodes.CAR_DIRECTION);
+
+        rig.call(BusCodes.ELEVATOR_1, 5);
+        rig.run(2000);
+        check(rig.engine.isFloorAligned(5), "a car call for floor 5 takes the car to floor 5");
+        check(rig.drain(BusCodes.CAR_POSITION).equals(List.of(2L, 3L, 4L, 5L)),
+                "floors 2, 3, 4 and 5 are published in order");
+        check(rig.drain(BusCodes.CAR_DIRECTION).equals(List.of(1L, 0L)),
+                "direction goes up, then idle");
+    }
+
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {
