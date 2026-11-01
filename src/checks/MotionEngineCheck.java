@@ -22,6 +22,7 @@ public class MotionEngineCheck {
         double stopError;      // final position minus target position (ft)
         int minReads;          // fewest sensor reads at any floor passed
         boolean endedAligned;  // isFloorAligned(target) is true at the stop
+        boolean leverTripped;  //a safety lever tripped during the trip
     }
 
     /**
@@ -60,6 +61,7 @@ public class MotionEngineCheck {
             t.minReads = Math.min(t.minReads, reads[f]);
         }
         t.endedAligned = api.isFloorAligned(to);
+        t.leverTripped = api.isTopLimitTripped() || api.isBottomLimitTripped();
         return t;
     }
 
