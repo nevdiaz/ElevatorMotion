@@ -41,6 +41,7 @@ public class BusCabinGatewayChecks {
         Rig() {
             monitor.subscribe(BusCodes.CAR_POSITION, BusCodes.ELEVATOR_1);
             monitor.subscribe(BusCodes.CAR_DIRECTION, BusCodes.ELEVATOR_1);
+            monitor.subscribe(BusCodes.CAR_FAULT, BusCodes.ELEVATOR_1);
             gateway = new BusCabinGateway(engine, trip, bus.connect(), BusCodes.ELEVATOR_1);
         }
 
