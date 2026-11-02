@@ -20,6 +20,7 @@ public class TripChecks {
             verifyTrip(engine, controller, tick, floor);
         }
 
+        leverChecks();
         edgeCases(engine, tick);
 
         System.out.println(checksRun + " checks run, " + checksFailed + " failed");
@@ -89,6 +90,28 @@ public class TripChecks {
         }
         check(engine.isTopAligned() == (floor == MotionEngine.FLOORS), label + "top sensor matches the floor");
         check(engine.isBottomAligned() == (floor == 1), label + "bottom sensor matches the floor");
+    }
+
+    private static void leverChecks() {
+        MotionEngine engine = new MotionEngine();
+        TripController trip = new TripController(engine);
+        trip.goToFloor(10);
+        int guard = 0;
+        while (engine.isMoving() && guard++ < 5000) {
+            engine.tick();                    // no controlStep(), so nothing brakes
+        }
+        check(engine.isTopLimitTripped(), "a runaway car reaches the top lever");
+        check(trip.isTripActive(), "the trip is still marked active before controlStep");
+        trip.controlStep();
+        check(trip.isTripActive() == false, "controlStep abandons the trip when a lever has tripped");
+        trip.goToFloor(5);
+        check(trip.isTripActive() == false, "goToFloor is refused while locked out");
+        double frozenAt = engine.getPosition();
+        for (int i = 0; i < 20; i++) {
+            trip.controlStep();
+            engine.tick();
+        }
+        check(engine.getPosition() == frozenAt, "the car stays frozen");
     }
 
     private static void edgeCases(MotionEngine engine, Runnable tick) {
