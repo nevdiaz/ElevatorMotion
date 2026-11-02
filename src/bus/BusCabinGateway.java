@@ -37,12 +37,17 @@ public class BusCabinGateway {
 
     //Empty the bus into the waiting queue
     private void readCalls() {
+        boolean lockedOut = currentFault() != 0;
+        if (lockedOut) {
+            pendingFloors.clear();       // a tripped car cannot serve calls
+        }
+
         Optional<BusMessage> call = bus.get(BusCodes.CAR_CALL, elevator);
         //Removes the oldest message each time until empty
         while (call.isPresent()) {
             long floor = call.get().value();
             //skips a floor that is already waiting so a repeated button press doesn't queue twice
-            if (floor >= 1 && floor <= Integer.MAX_VALUE && !pendingFloors.contains((int) floor)) {
+            if (!lockedOut && floor >= 1 && floor <= Integer.MAX_VALUE && !pendingFloors.contains((int) floor)) {
                 pendingFloors.addLast((int) floor);
             }
             call = bus.get(BusCodes.CAR_CALL, elevator);
@@ -72,7 +77,7 @@ public class BusCabinGateway {
                 floor = f;
             }
         }
-        
+
         //ASSUMPTION: Publish when the car enters the floor's sensor zone and not between floors
         if (floor != 0 && floor != lastFloor) {
             bus.publish(BusMessage.of(BusCodes.CAR_POSITION, elevator, floor));
