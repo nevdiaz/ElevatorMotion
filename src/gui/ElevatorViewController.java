@@ -110,6 +110,10 @@ public class ElevatorViewController {
 
     private static final Color cabinSensorColor = Color.ORANGE;
 
+    private static final Color sensorsFault = Color.RED;
+
+    private static final long blinkNanos = 400_000_000L;   // 0.4 s per on/off phase
+
     private record FloorMarkers(Rectangle floorLeft, Rectangle floorRight, Rectangle ceilingLeft, Rectangle ceilingRight) {}
 
     private final List<FloorMarkers> floorMarkers = new ArrayList<>();
@@ -142,7 +146,7 @@ public class ElevatorViewController {
                 if (previousTimeStamp != -1) {elapsed = ((now - previousTimeStamp) / 1000000000.0);}
                 if (Math.abs(feet - shownFeet) < 0.001) { shownFeet = feet; } //checks if the gap is tiny
                 placeCabin(shownFeet);
-                updateSensors();
+                updateSensors(now);
                 updateLabels();
                 updateCamera();
                 updateGraph(elapsed);
@@ -234,6 +238,18 @@ public class ElevatorViewController {
         }
     }
 
+    private boolean blinkOn(long nowNanos) {
+        return (nowNanos / blinkNanos) % 2 == 0;
+    }
+
+    private void blinkSensor(Rectangle sensor, boolean on, Color offColor) {
+        if (on == true) {
+            sensor.setFill(sensorsFault);
+        } else {
+            sensor.setFill(offColor);
+        }
+    }
+
     private void updateLabels() {
         int floor = 0;
         for (int i = 1; i <= ViewScale.floorCount; i++) {
@@ -249,7 +265,14 @@ public class ElevatorViewController {
         }
 
         speed.setText(String.format("%.2f ft/s", Math.abs(motion.getVelocity())));
-        motionState.setText(motion.getState().name());
+
+        if (motion.isTopLimitTripped() == true || motion.isBottomLimitTripped() == true) {
+            motionState.setText("EMERGENCY STOP");
+            motionState.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+        } else {
+            motionState.setText(motion.getState().name());
+            motionState.setStyle("");
+        }
     }
 
     private void updateGraph(double elapsedSeconds) {
@@ -276,7 +299,7 @@ public class ElevatorViewController {
         world.setTranslateY(liveHeight - gondolaView);
     }
 
-    private void updateSensors() {
+    private void updateSensors(long now) {
         boolean anyAligned = false;
         for (int i = 1; i <= ViewScale.floorCount; i++) {
             boolean aligned = motion.isFloorAligned(i);
@@ -293,6 +316,21 @@ public class ElevatorViewController {
         setSensorColor(floorSensorRight, anyAligned, cabinSensorColor);
         setSensorColor(ceilingSensorLeft, anyAligned, cabinSensorColor);
         setSensorColor(ceilingSensorRight, anyAligned, cabinSensorColor);
+
+        boolean topFault = motion.isTopLimitTripped();
+        boolean bottomFault = motion.isBottomLimitTripped();
+        if (topFault == true || bottomFault == true) {
+            boolean on = blinkOn(now);
+            FloorMarkers endFloor = floorMarkers.get(topFault ? ViewScale.floorCount - 1 : 0);
+            blinkSensor(endFloor.floorLeft(), on, shaftSensorColor);
+            blinkSensor(endFloor.floorRight(), on, shaftSensorColor);
+            blinkSensor(endFloor.ceilingLeft(), on, shaftSensorColor);
+            blinkSensor(endFloor.ceilingRight(), on, shaftSensorColor);
+            blinkSensor(floorSensorLeft, on, cabinSensorColor);
+            blinkSensor(floorSensorRight, on, cabinSensorColor);
+            blinkSensor(ceilingSensorLeft, on, cabinSensorColor);
+            blinkSensor(ceilingSensorRight, on, cabinSensorColor);
+        }
     }
 
     private void clipViewport() {
