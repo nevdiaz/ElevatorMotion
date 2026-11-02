@@ -9,6 +9,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -17,6 +18,7 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.DoubleConsumer;
 
 public class ElevatorViewController {
 
@@ -86,6 +88,16 @@ public class ElevatorViewController {
     @FXML
     private Pane world;
 
+    @FXML
+    private Label speedScaleLabel;
+
+    @FXML
+    private Slider speedSlider;
+
+    private DoubleConsumer speedHandler;   //set from Main; null means no speed control
+
+    private double speedScale = 1.0;
+
     private NumberAxis timeAxis;
 
     private NumberAxis speedAxis;
@@ -132,6 +144,7 @@ public class ElevatorViewController {
         acceleration.setText("Acceleration: 2.0 ft/s^2");
         deceleration.setText("Deceleration: 2.0 ft/s^2");
         buildSpeedChart();
+        buildSpeedControl();
         buildShaft();
         buildFloors();
         buildLevers();
@@ -156,7 +169,7 @@ public class ElevatorViewController {
                 updateSensors(now);
                 updateLabels();
                 updateCamera();
-                updateGraph(elapsed);
+                updateGraph(elapsed * speedScale);
                 previousTimeStamp = now;
             }
         };
@@ -167,6 +180,11 @@ public class ElevatorViewController {
     public void attach(MotionControllerAPI motion) {
         this.motion = motion;
         startRenderLoop();
+    }
+
+    public void setSpeedHandler(DoubleConsumer handler) {
+        this.speedHandler = handler;
+        speedSlider.setDisable(handler == null);
     }
 
     private void buildShaft() {
@@ -204,6 +222,24 @@ public class ElevatorViewController {
         speedSeries.setName("Speed");
         speedChart.getData().add(speedSeries);
         speedChart.setLegendVisible(false);
+    }
+
+    private void buildSpeedControl() {
+        speedSlider.setMin(0.5);
+        speedSlider.setMax(8.0);
+        speedSlider.setValue(1.0);
+        speedSlider.setMajorTickUnit(0.5);
+        speedSlider.setMinorTickCount(0);
+        speedSlider.setSnapToTicks(true);
+        speedSlider.setDisable(true);          // enabled once Main provides a handler
+        speedScaleLabel.setText("Animation speed: 1.0x");
+        speedSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+            speedScale = newValue.doubleValue();
+            speedScaleLabel.setText(String.format("Animation speed: %.1fx", speedScale));
+            if (speedHandler != null) {
+                speedHandler.accept(speedScale);
+            }
+        });
     }
 
     private void buildFloors() {
