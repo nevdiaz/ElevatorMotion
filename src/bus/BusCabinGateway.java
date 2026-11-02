@@ -17,6 +17,7 @@ public class BusCabinGateway {
     private final ArrayDeque<Integer> pendingFloors = new ArrayDeque<>();
     private int lastFloor = 0;
     private int lastDirection = -1;
+    private int lastFault = 0;      //0 = nothing announced
 
 
     public BusCabinGateway(MotionControllerAPI motion, TripController trip,
@@ -92,5 +93,13 @@ public class BusCabinGateway {
 
     }
 
-
+    private int currentFault() {
+        if (motion.isTopLimitTripped()) {
+            return BusCodes.FAULT_TOP_LIMIT;
+        }
+        if (motion.isBottomLimitTripped()) {
+            return BusCodes.FAULT_BOTTOM_LIMIT;
+        }
+        return 0;
+    }
 }
