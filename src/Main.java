@@ -46,6 +46,8 @@ public class Main extends Application {
             SimulationManager simulationManager =
                     new SimulationManager(tripController, motionEngine::tick);
             simulationManager.setBeforeStep(gateway::update);
+            //This will handle the speed slider
+            controller.setSpeedHandler(simulationManager::setTimeScale);
 
             //The demo route only runs in DEMO mode, scenarios drive the car over the bus.
             FloorSequencer floorSequencer = (MODE == Mode.DEMO)
