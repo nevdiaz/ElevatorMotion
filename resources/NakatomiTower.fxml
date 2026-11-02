@@ -5,6 +5,7 @@
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.Pane?>
@@ -21,14 +22,16 @@
             <Label fx:id="speed" text="speed" />
             <Label fx:id="acceleration" text="acceleration" />
             <Label fx:id="deceleration" text="deceleration" />
+            <Label fx:id="cruisingSpeed" text="cruisingSpeed" />
             <ToggleButton fx:id="viewMode" mnemonicParsing="false" text="viewMode" />
             <ComboBox fx:id="elevatorSelector" prefWidth="150.0" promptText="elevatorSelector" />
-            <Label fx:id="cruisingSpeed" text="cruisingSpeed" />
+            <Label fx:id="speedScaleLabel" text="Speed Slider" />
+            <Slider fx:id="speedSlider" orientation="VERTICAL" />
          </children>
       </VBox>
    </right>
    <bottom>
-      <LineChart fx:id="speedChart" prefHeight="200.0" BorderPane.alignment="CENTER" animated="false" createSymbols="false">
+      <LineChart fx:id="speedChart" animated="false" createSymbols="false" prefHeight="200.0" BorderPane.alignment="CENTER">
         <xAxis>
           <NumberAxis side="BOTTOM" />
         </xAxis>
