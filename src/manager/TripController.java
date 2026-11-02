@@ -35,6 +35,10 @@ public class TripController {
             System.out.println("Elevator has already arrived.");
             return;
         }
+        if (motionController.isTopLimitTripped() || motionController.isBottomLimitTripped()) {
+            System.out.println("A safety lever has tripped. The elevator is locked out.");
+            return;
+        }
         targetPosition = MotionEngine.floorPosition(floor);
         targetFloor = floor;
         tripActive = true;
