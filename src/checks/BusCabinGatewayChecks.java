@@ -1,5 +1,6 @@
 package checks;
 
+import api.Direction;
 import bus.*;
 import manager.TripController;
 import sim.MotionEngine;
@@ -147,6 +148,36 @@ public class BusCabinGatewayChecks {
         BusStandIn bus = new BusStandIn();
         checkRejects(() -> new BusCabinGateway(engine, trip, bus.connect(), 0), "elevator 0 rejected");
         checkRejects(() -> new BusCabinGateway(engine, trip, bus.connect(), 5), "elevator 5 rejected");
+    }
+
+    private static void faultChecks() {
+        Rig rig = new Rig();
+        rig.run(1);
+        rig.drain(BusCodes.CAR_POSITION);
+        rig.drain(BusCodes.CAR_DIRECTION);
+        check(rig.drain(BusCodes.CAR_FAULT).isEmpty(), "no fault is announced at start");
+
+        rig.engine.startMotor(Direction.Up);      //runaway: no trip, so nothing brakes
+        rig.run(1000);
+        check(rig.engine.isTopLimitTripped(), "the runaway car trips the top lever");
+        check(rig.drain(BusCodes.CAR_FAULT).equals(List.of((long) BusCodes.FAULT_TOP_LIMIT)),
+                "the top lever fault is announced once");
+        check(rig.drain(BusCodes.CAR_DIRECTION).equals(List.of(1L, 0L)),
+                "direction goes up, then idle after the trip");
+
+        rig.call(BusCodes.ELEVATOR_1, 5);
+        rig.run(40);
+        check(rig.drain(BusCodes.CAR_FAULT).isEmpty(), "the fault is not announced twice");
+        check(rig.drain(BusCodes.CAR_DIRECTION).isEmpty(), "a call is ignored while locked out");
+        check(rig.engine.getPosition() == MotionEngine.MAX_POSITION, "the car stays at the lever");
+
+        Rig low = new Rig();
+        low.run(1);
+        low.engine.startMotor(Direction.Down);
+        low.run(200);
+        check(low.engine.isBottomLimitTripped(), "the runaway car trips the bottom lever");
+        check(low.drain(BusCodes.CAR_FAULT).equals(List.of((long) BusCodes.FAULT_BOTTOM_LIMIT)),
+                "the bottom lever fault is announced once");
     }
 
     private static void check(boolean condition, String message) {
