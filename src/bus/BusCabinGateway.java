@@ -60,12 +60,19 @@ public class BusCabinGateway {
 
     //Send on the bus only what has changed
     private void publishChanges() {
+        int fault = currentFault();
+        if (fault != lastFault) {
+            bus.publish(BusMessage.of(BusCodes.CAR_FAULT, elevator, fault));
+            lastFault = fault;
+        }
+
         int floor = 0;
         for (int f = 1; f <= MotionEngine.FLOORS; f++) {
             if (motion.isFloorAligned(f)) {
                 floor = f;
             }
         }
+        
         //ASSUMPTION: Publish when the car enters the floor's sensor zone and not between floors
         if (floor != 0 && floor != lastFloor) {
             bus.publish(BusMessage.of(BusCodes.CAR_POSITION, elevator, floor));
