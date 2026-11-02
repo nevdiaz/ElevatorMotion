@@ -32,4 +32,9 @@ public final class BusCodes {
     //Limits
     public static final int FIRST_COMMAND = 0xF0;
     public static final int MAX_TOPIC = 0xEF;
+
+    //TODO: not on the Software Bus Codes sheet yet. Confirm with the other teams.
+    public static final int CAR_FAULT = 8;          //subtopic = elevator, body = fault code
+    public static final int FAULT_TOP_LIMIT = 1;    //cabin hit the lever above floor 10
+    public static final int FAULT_BOTTOM_LIMIT = 2; //cabin hit the lever below floor 1
 }
