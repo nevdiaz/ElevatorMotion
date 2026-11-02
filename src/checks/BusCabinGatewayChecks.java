@@ -23,6 +23,7 @@ public class BusCabinGatewayChecks {
         sameFloorChecks();
         otherElevatorChecks();
         constructorChecks();
+        faultChecks();
 
         System.out.println(checksRun + " checks run, " + checksFailed + " failed");
         if (checksFailed > 0) {
