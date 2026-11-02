@@ -1,7 +1,9 @@
+import api.Direction;
 import bus.BusCabinGateway;
 import bus.BusCodes;
 import bus.BusStandIn;
 import gui.ElevatorViewController;
+import harness.LeverStopHarness;
 import harness.TopAndBottomHarness;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -17,8 +19,8 @@ import sim.MotionEngine;
 public class Main extends Application {
 
     private static final int[] DEMO_ROUTE = {2, 10, 4, 1};
-    private enum Mode { DEMO, ROUTE_HARNESS, TOP_AND_BOTTOM }
-    private static final Mode MODE = Mode.DEMO; //TODO: Change mode to one of the enums to run it
+    private enum Mode {DEMO, ROUTE_HARNESS, TOP_BOTTOM_HARNESS, LEVER_TOP_HARNESS, LEVER_BOTTOM_HARNESS}
+    private static final Mode MODE = Mode.LEVER_TOP_HARNESS; //TODO: Change mode to one of the enums to run it
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -50,8 +52,14 @@ public class Main extends Application {
                     ? new FloorSequencer(tripController, DEMO_ROUTE, 2.0)
                     : null;
 
-            if (MODE == Mode.TOP_AND_BOTTOM) {
+            //Add additional harnesses here:
+            if (MODE == Mode.TOP_BOTTOM_HARNESS) {
                 TopAndBottomHarness scenario = new TopAndBottomHarness(bus.connect());
+                simulationManager.setBeforeStep(() -> { scenario.update(); gateway.update(); });
+            } else if (MODE == Mode.LEVER_TOP_HARNESS || MODE == Mode.LEVER_BOTTOM_HARNESS) {
+                Direction runaway = (MODE == Mode.LEVER_TOP_HARNESS) ? Direction.Up : Direction.Down;
+                LeverStopHarness scenario = new LeverStopHarness(motionEngine, bus.connect(),
+                        BusCodes.ELEVATOR_1, runaway, 40);
                 simulationManager.setBeforeStep(() -> { scenario.update(); gateway.update(); });
             } else {
                 simulationManager.setBeforeStep(gateway::update);
