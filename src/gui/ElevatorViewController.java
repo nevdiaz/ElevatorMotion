@@ -112,6 +112,12 @@ public class ElevatorViewController {
 
     private static final Color sensorsFault = Color.RED;
 
+    private static final Color leverColor = Color.DARKRED;
+
+    private Line topLever;
+
+    private Line bottomLever;
+
     private static final long blinkNanos = 400_000_000L;   // 0.4 s per on/off phase
 
     private record FloorMarkers(Rectangle floorLeft, Rectangle floorRight, Rectangle ceilingLeft, Rectangle ceilingRight) {}
@@ -128,6 +134,7 @@ public class ElevatorViewController {
         buildSpeedChart();
         buildShaft();
         buildFloors();
+        buildLevers();
         clipViewport();
         placeCabin(0);
         viewport.heightProperty().addListener((observable, oldValue, newValue)
@@ -219,6 +226,20 @@ public class ElevatorViewController {
                             buildShaftSensor(ceilingSensorLeft, floorYPosition),
                             buildShaftSensor(ceilingSensorRight, floorYPosition)));
         }
+    }
+
+    private void buildLevers() {
+        topLever = buildLever(ViewScale.floorToFeet(ViewScale.floorCount) + ViewScale.leverMargin);
+        bottomLever = buildLever(-ViewScale.leverMargin);
+    }
+
+    private Line buildLever(double feet) {
+        double y = ViewScale.feetToWorldYValue(feet);
+        Line lever = new Line(shaft.getLayoutX(), y, shaft.getLayoutX() + shaft.getWidth(), y);
+        lever.setStroke(leverColor);
+        lever.setStrokeWidth(3);
+        world.getChildren().add(0, lever);
+        return lever;
     }
 
     private double gondolaBottomOffset() {
@@ -321,6 +342,8 @@ public class ElevatorViewController {
         boolean bottomFault = motion.isBottomLimitTripped();
         if (topFault == true || bottomFault == true) {
             boolean on = blinkOn(now);
+            Line trippedLever = (topFault == true) ? topLever : bottomLever;
+            trippedLever.setStroke(on ? sensorsFault : leverColor);
             FloorMarkers endFloor = floorMarkers.get(topFault ? ViewScale.floorCount - 1 : 0);
             blinkSensor(endFloor.floorLeft(), on, shaftSensorColor);
             blinkSensor(endFloor.floorRight(), on, shaftSensorColor);

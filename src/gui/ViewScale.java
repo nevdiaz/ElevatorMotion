@@ -16,6 +16,8 @@ public final class ViewScale {
 
     public static final int pitBelowFloorOne = 4;
 
+    public static final int leverMargin = 1;   //ft past floor 1 and floor 10. Must match MotionEngine.LEVER_MARGIN
+
     public static final int totalTravelBetweenFloorOneAndTen = (floorCount - 1) * floorHeight; //126
 
     public static final int floorOneYValue =
