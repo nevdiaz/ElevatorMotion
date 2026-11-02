@@ -47,6 +47,14 @@ public class TripController {
     }
 
     public void controlStep() {
+        if (motionController.isTopLimitTripped() || motionController.isBottomLimitTripped()) {
+            if (tripActive) {
+                tripActive = false;
+                System.out.println("Trip abandoned: a safety lever tripped at "
+                        + String.format("%.2f", motionController.getPosition()) + " ft");
+            }
+            return;
+        }
         if (tripActive == false) {
             return;
         }
