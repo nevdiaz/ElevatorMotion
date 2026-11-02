@@ -12,10 +12,10 @@ public class TopAndBottomHarness {
 
     public static final int[] FLOORS = {10, 1};
 
-    private final ScriptRunner runner;
+    private final CmdCtrStandIn runner;
 
     public TopAndBottomHarness(BusMessageDispatcher commandCenter) {
-        runner = new ScriptRunner(commandCenter, BusCodes.ELEVATOR_1, FLOORS, PAUSE_TICKS);
+        runner = new CmdCtrStandIn(commandCenter, BusCodes.ELEVATOR_1, FLOORS, PAUSE_TICKS);
     }
 
     /** Call once per simulation step, from the beforeStep hook. */

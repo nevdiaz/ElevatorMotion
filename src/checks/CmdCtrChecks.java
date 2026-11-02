@@ -9,7 +9,7 @@ import sim.MotionEngine;
 
 import java.util.List;
 
-public class ScriptRunnerChecks {
+public class CmdCtrChecks {
 
     private static int checksRun = 0;
     private static int checksFailed = 0;

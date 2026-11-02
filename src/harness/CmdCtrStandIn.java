@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 /** Plays the command center: publishes one car call at a time and waits for the car to arrive. */
-public class ScriptRunner {
+public class CmdCtrStandIn {
 
     private final BusMessageDispatcher center;
     private final int elevator;
@@ -23,7 +23,7 @@ public class ScriptRunner {
     private long lastFloor = -1;     //-1 means nothing heard yet
     private long lastDirection = -1;
 
-    public ScriptRunner(BusMessageDispatcher center, int elevator, int[] floors, int pauseTicks) {
+    public CmdCtrStandIn(BusMessageDispatcher center, int elevator, int[] floors, int pauseTicks) {
         this.center = center;
         this.elevator = elevator;
         this.floors = floors;
