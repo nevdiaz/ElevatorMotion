@@ -25,6 +25,24 @@ public class SimulationManagerChecks {
 
         checkRejects(() -> manager.setBeforeStep(null), "null hook rejected");
 
+        //The following is meant to test the speed scale.
+
+        StringBuilder fastLog = new StringBuilder();
+        SimulationManager fast = new SimulationManager(new TripController(new MotionEngine()), () -> fastLog.append("T"));
+        fast.setTimeScale(2.0);
+        fast.update(0);
+        fast.update(frame);
+        check(fastLog.toString().equals("TT"), "at 2x, one 0.05 s frame runs two steps");
+
+        StringBuilder slowLog = new StringBuilder();
+        SimulationManager slow = new SimulationManager(new TripController(new MotionEngine()), () -> slowLog.append("T"));
+        slow.setTimeScale(0.5);
+        slow.update(0);
+        slow.update(frame);
+        check(slowLog.length() == 0, "at 0.5x, one frame runs no step yet");
+        slow.update(2 * frame);
+        check(slowLog.toString().equals("T"), "at 0.5x, two frames run one step");
+
         System.out.println(checksRun + " checks run, " + checksFailed + " failed");
         if (checksFailed > 0) {
             System.exit(1);
