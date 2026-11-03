@@ -3,6 +3,7 @@ import bus.BusCabinGateway;
 import bus.BusCodes;
 import bus.BusStandIn;
 import gui.ElevatorViewController;
+import harness.EveryTwoHarness;
 import harness.LeverStopHarness;
 import harness.NudgeHarness;
 import harness.TopAndBottomHarness;
@@ -20,7 +21,7 @@ import sim.MotionEngine;
 public class Main extends Application {
 
     private static final int[] DEMO_ROUTE = {2, 10, 4, 1};
-    private enum Mode {DEMO, ROUTE_HARNESS, TOP_BOTTOM_HARNESS, NUDGE_HARNESS, LEVER_TOP_HARNESS, LEVER_BOTTOM_HARNESS}
+    private enum Mode {DEMO, ROUTE_HARNESS, TOP_BOTTOM_HARNESS, NUDGE_HARNESS, LEVER_TOP_HARNESS, LEVER_BOTTOM_HARNESS, EVERY_TWO_HARNESS}
     private static final Mode MODE = Mode.LEVER_TOP_HARNESS; //TODO: Change mode to one of the enums to run it
 
     @Override
@@ -67,6 +68,12 @@ public class Main extends Application {
                 Direction runaway = (MODE == Mode.LEVER_TOP_HARNESS) ? Direction.Up : Direction.Down;
                 LeverStopHarness scenario = new LeverStopHarness(motionEngine, bus.connect(),
                         BusCodes.ELEVATOR_1, runaway, 40);
+                simulationManager.setBeforeStep(() -> {
+                    scenario.update();
+                    gateway.update();
+                });
+            } else if (MODE == Mode.EVERY_TWO_HARNESS){
+                EveryTwoHarness scenario = new EveryTwoHarness(bus.connect());
                 simulationManager.setBeforeStep(() -> { scenario.update(); gateway.update(); });
             } else {
                 simulationManager.setBeforeStep(gateway::update);
