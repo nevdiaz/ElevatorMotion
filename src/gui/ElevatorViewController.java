@@ -19,6 +19,7 @@ import javafx.scene.shape.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.DoubleConsumer;
+import java.util.function.IntSupplier;
 
 public class ElevatorViewController {
 
@@ -96,6 +97,8 @@ public class ElevatorViewController {
 
     private DoubleConsumer speedHandler;   //set from Main; null means no speed control
 
+    private IntSupplier nudgingFloorSource;   //set from Main; returns the floor being nudged, or 0
+
     private double speedScale = 1.0;
 
     private NumberAxis timeAxis;
@@ -123,6 +126,8 @@ public class ElevatorViewController {
     private static final Color cabinSensorColor = Color.ORANGE;
 
     private static final Color sensorsFault = Color.RED;
+
+    private static final Color sensorsNudging = Color.YELLOW;   //between orange and lime green
 
     private static final Color leverColor = Color.DARKRED;
 
@@ -180,6 +185,11 @@ public class ElevatorViewController {
     public void attach(MotionControllerAPI motion) {
         this.motion = motion;
         startRenderLoop();
+    }
+
+    //Has to be public so that it works in main
+    public void setNudgingFloorSource(IntSupplier source) {
+        this.nudgingFloorSource = source;
     }
 
     public void setSpeedHandler(DoubleConsumer handler) {
@@ -373,6 +383,21 @@ public class ElevatorViewController {
         setSensorColor(floorSensorRight, anyAligned, cabinSensorColor);
         setSensorColor(ceilingSensorLeft, anyAligned, cabinSensorColor);
         setSensorColor(ceilingSensorRight, anyAligned, cabinSensorColor);
+
+        //While the car is being nudged onto its target floor, show the in-between color on that
+        //floor's sensors and the cabin's sensors. They turn lime green once the car is level.
+        int nudgingFloor = (nudgingFloorSource == null) ? 0 : nudgingFloorSource.getAsInt();
+        if (nudgingFloor >= 1 && nudgingFloor <= ViewScale.floorCount) {
+            FloorMarkers target = floorMarkers.get(nudgingFloor - 1);
+            target.floorLeft().setFill(sensorsNudging);
+            target.floorRight().setFill(sensorsNudging);
+            target.ceilingLeft().setFill(sensorsNudging);
+            target.ceilingRight().setFill(sensorsNudging);
+            floorSensorLeft.setFill(sensorsNudging);
+            floorSensorRight.setFill(sensorsNudging);
+            ceilingSensorLeft.setFill(sensorsNudging);
+            ceilingSensorRight.setFill(sensorsNudging);
+        }
 
         boolean topFault = motion.isTopLimitTripped();
         boolean bottomFault = motion.isBottomLimitTripped();
