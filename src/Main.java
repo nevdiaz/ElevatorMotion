@@ -4,6 +4,7 @@ import bus.BusCodes;
 import bus.BusStandIn;
 import gui.ElevatorViewController;
 import harness.LeverStopHarness;
+import harness.NudgeHarness;
 import harness.TopAndBottomHarness;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -19,7 +20,7 @@ import sim.MotionEngine;
 public class Main extends Application {
 
     private static final int[] DEMO_ROUTE = {2, 10, 4, 1};
-    private enum Mode {DEMO, ROUTE_HARNESS, TOP_BOTTOM_HARNESS, LEVER_TOP_HARNESS, LEVER_BOTTOM_HARNESS}
+    private enum Mode {DEMO, ROUTE_HARNESS, TOP_BOTTOM_HARNESS, NUDGE_HARNESS, LEVER_TOP_HARNESS, LEVER_BOTTOM_HARNESS}
     private static final Mode MODE = Mode.LEVER_TOP_HARNESS; //TODO: Change mode to one of the enums to run it
 
     @Override
@@ -35,6 +36,7 @@ public class Main extends Application {
         primaryStage.setTitle("NakatomiTower");
         primaryStage.show();
         TripController tripController = new TripController(motionEngine);
+        controller.setNudgingFloorSource(tripController::getNudgingFloor);
         BusStandIn bus = new BusStandIn();
         BusCabinGateway gateway = new BusCabinGateway(motionEngine, tripController, bus.connect(), BusCodes.ELEVATOR_1);
 
@@ -57,6 +59,9 @@ public class Main extends Application {
             //Add additional harnesses here:
             if (MODE == Mode.TOP_BOTTOM_HARNESS) {
                 TopAndBottomHarness scenario = new TopAndBottomHarness(bus.connect());
+                simulationManager.setBeforeStep(() -> { scenario.update(); gateway.update(); });
+            } else if (MODE == Mode.NUDGE_HARNESS) {
+                NudgeHarness scenario = new NudgeHarness(bus.connect(), tripController);
                 simulationManager.setBeforeStep(() -> { scenario.update(); gateway.update(); });
             } else if (MODE == Mode.LEVER_TOP_HARNESS || MODE == Mode.LEVER_BOTTOM_HARNESS) {
                 Direction runaway = (MODE == Mode.LEVER_TOP_HARNESS) ? Direction.Up : Direction.Down;
