@@ -13,6 +13,7 @@ public class TripController {
     private int levelWait;
     private final MotionControllerAPI motionController;
     private int targetFloor;
+    private double brakeDelay = 0.0; //Feet to brake later than normal. Only scenarios change this.
 
     public TripController(MotionControllerAPI  motionController) {
         this.motionController = motionController;
@@ -20,6 +21,30 @@ public class TripController {
 
     public boolean isTripActive() {
         return tripActive;
+    }
+
+    /**
+     * Scenario hook: makes the car brake this many feet later than normal, so it passes the
+     * target floor's sensors and then has to be nudged back. 0 (the default) is normal braking.
+     * Keep it under the 1 ft lever margin or the car will trip a safety lever.
+     */
+    public void setBrakeDelay(double feet) {
+        if (Double.isNaN(feet) || feet < 0) {
+            throw new IllegalArgumentException("brake delay must be 0 or more: " + feet);
+        }
+        brakeDelay = feet;
+    }
+
+    /**
+     * The floor whose sensors are being corrected by nudging, or 0 when no nudging is happening.
+     * Nudging means a trip is active, the car has stopped, and it is not level with the target yet.
+     */
+    public int getNudgingFloor() {
+        if (tripActive && motionController.isMoving() == false
+                && Math.abs(motionController.getPosition() - targetPosition) > levelTolerance) {
+            return targetFloor;
+        }
+        return 0;
     }
 
     public void goToFloor(int floor) {
@@ -64,7 +89,7 @@ public class TripController {
         }
         if (motionController.isMoving() == true) {
             double remaining = Math.abs(targetPosition - motionController.getPosition());
-            if (remaining <= MotionEngine.brakingDistance(motionController.getVelocity())) {
+            if (remaining <= MotionEngine.brakingDistance(motionController.getVelocity()) - brakeDelay) {
                 motionController.stopMotor();
             }
         } else {
