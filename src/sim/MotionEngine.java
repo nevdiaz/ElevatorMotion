@@ -24,6 +24,8 @@ public class MotionEngine implements MotionControllerAPI {
 
     /** Distance moved in one update at cruising speed (0.2 ft). */
     public static final double STEP_SIZE = CRUISE_SPEED * TIME_STEP;
+    /** ft moved by one stepUp/stepDn, independent of cruise speed */
+    public static final double NUDGE_STEP = 0.1;
     /** Position of floor 10 (126 ft). */
     public static final double SHAFT_TOP = (FLOORS - 1) * FLOOR_HEIGHT;
     /**
@@ -94,7 +96,7 @@ public class MotionEngine implements MotionControllerAPI {
     @Override
     public synchronized void stepUpMotor() {
         if (state == MotionState.STOPPED && !isLimitTripped()) {
-            position = clamp(position + STEP_SIZE);
+            position = clamp(position + NUDGE_STEP);
         }
     }
 
@@ -102,7 +104,7 @@ public class MotionEngine implements MotionControllerAPI {
     @Override
     public synchronized void stepDnMotor() {
         if (state == MotionState.STOPPED && !isLimitTripped()) {
-            position = clamp(position - STEP_SIZE);
+            position = clamp(position - NUDGE_STEP);
         }
     }
 

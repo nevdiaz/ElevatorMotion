@@ -8,8 +8,8 @@ public class TripController {
 
     private double targetPosition;
     private boolean tripActive = false;
-    private static final double levelTolerance = 0.11; //Little over half a step (0.1 ft)
-    private static final int ticksBetweenSteps = 10; //Helps slow down the elevator stepping up and down
+    private static final double levelTolerance = MotionEngine.NUDGE_STEP / 2.0 + 0.01; //half a step, so a nudge can always land inside it
+    private static final int ticksBetweenSteps = 3; //Helps slow down the elevator stepping up and down
     private int levelWait;
     private final MotionControllerAPI motionController;
     private int targetFloor;

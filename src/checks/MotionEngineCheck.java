@@ -89,8 +89,9 @@ public class MotionEngineCheck {
         e.stopMotor();
         check(e.getState() == MotionState.STOPPED && !e.isMoving(), "stopMotor while stopped does nothing");
         e.stepUpMotor();
-        check(Math.abs(e.getPosition() - 0.2) < 1e-9, "stepUpMotor moves 0.2 ft");
-        for (int i = 0; i < 10; i++) e.stepDnMotor();
+        check(Math.abs(e.getPosition() - MotionEngine.NUDGE_STEP) < 1e-9, "stepUpMotor moves one nudge step");
+        int stepsToBottom = (int) Math.ceil((e.getPosition() - MotionEngine.MIN_POSITION) / MotionEngine.NUDGE_STEP) + 1;
+        for (int i = 0; i < stepsToBottom; i++) e.stepDnMotor();
         check(e.getPosition() == MotionEngine.MIN_POSITION, "step stops at the bottom of the shaft");
         e = new MotionEngine();
         e.startMotor(Direction.Up);
