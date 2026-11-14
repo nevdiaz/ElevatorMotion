@@ -1,5 +1,6 @@
 package checks;
 
+import api.CabinSnapshot;
 import api.Direction;
 import api.MotionControllerAPI;
 import api.MotionState;
@@ -133,6 +134,14 @@ public class MotionEngineCheck {
         check(bottom.isBottomAligned() && bottom.getCurrentFloor() == 1, "bottom aligned at floor 1");
         check(new MotionEngine(20.0).getCurrentFloor() == 0, "between zones reports floor 0");
         check(new MotionEngine(MotionEngine.floorPosition(4)).isFloorAligned(4), "aligned at floor 4");
+
+        CabinSnapshot s4 = new MotionEngine(MotionEngine.floorPosition(4)).snapshot();
+        check(s4.alignedFloor() == 4 && s4.state() == MotionState.STOPPED && s4.velocity() == 0.0,
+                "snapshot at floor 4");
+        check(!s4.topLimitTripped() && !s4.bottomLimitTripped(), "snapshot shows no lever");
+        check(new MotionEngine(20.0).snapshot().alignedFloor() == 0, "snapshot between zones is floor 0");
+        check(top.snapshot().topLimitTripped() && top.snapshot().state() == MotionState.STOPPED,
+                "snapshot shows the tripped top lever");
 
         System.out.println(failures == 0 ? "\nALL CHECKS PASSED" : "\n" + failures + " CHECK(S) FAILED");
         System.exit(failures == 0 ? 0 : 1);
