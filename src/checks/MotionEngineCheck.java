@@ -141,8 +141,8 @@ public class MotionEngineCheck {
         check(!s4.topLimitTripped() && !s4.bottomLimitTripped(), "snapshot shows no lever");
         check(new MotionEngine(20.0).snapshot().alignedFloor() == 0, "snapshot between zones is floor 0");
         check(top.snapshot().topLimitTripped() && top.snapshot().state() == MotionState.STOPPED,
-                "snapshot shows the tripped top lever"); 
-
+                "snapshot shows the tripped top lever");
+        
         System.out.println(failures == 0 ? "\nALL CHECKS PASSED" : "\n" + failures + " CHECK(S) FAILED");
         System.exit(failures == 0 ? 0 : 1);
     }
