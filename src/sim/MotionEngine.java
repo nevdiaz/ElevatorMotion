@@ -1,5 +1,6 @@
 package sim;
 
+import api.CabinSnapshot;
 import api.Direction;
 import api.MotionControllerAPI;
 import api.MotionState;
@@ -226,5 +227,11 @@ public class MotionEngine implements MotionControllerAPI {
     /** Floor whose sensor zone contains the car, or 0 between zones. For the currentFloor label. */
     public synchronized int getCurrentFloor() {
         return FloorSensors.currentFloor(position);
+    }
+
+    @Override
+    public synchronized CabinSnapshot snapshot() {
+        return new CabinSnapshot(position, speed, direction, state,
+                FloorSensors.currentFloor(position), topLimitTripped, bottomLimitTripped);
     }
 }
