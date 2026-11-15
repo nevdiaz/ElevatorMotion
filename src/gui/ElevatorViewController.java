@@ -1,6 +1,6 @@
 package gui;
 
-import api.MotionControllerAPI;
+import api.CabinAssemblyAPI;
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
@@ -115,7 +115,7 @@ public class ElevatorViewController {
 
     private final XYChart.Series<Number, Number> speedSeries = new XYChart.Series<>();
 
-    private MotionControllerAPI motion;
+    private CabinAssemblyAPI motion;   //null until show() is called
 
     private double shownFeet = 0;
 
@@ -165,6 +165,7 @@ public class ElevatorViewController {
             long previousTimeStamp = -1;
             @Override
             public void handle(long now) {
+                if (motion == null) { return; } //will skip frames until a cabin is shown
                 double elapsed = 0.0;
                 double feet = motion.getPosition();
                 shownFeet += (feet - shownFeet) * 0.3; //this should smooth out some of the jitteriness
@@ -179,17 +180,6 @@ public class ElevatorViewController {
             }
         };
         timer.start();
-    }
-
-    //Has to be public so that it works in main
-    public void attach(MotionControllerAPI motion) {
-        this.motion = motion;
-        startRenderLoop();
-    }
-
-    //Has to be public so that it works in main
-    public void setNudgingFloorSource(IntSupplier source) {
-        this.nudgingFloorSource = source;
     }
 
     public void setSpeedHandler(DoubleConsumer handler) {
