@@ -1,5 +1,6 @@
 import api.Direction;
 import assembly.CabinAssembly;
+import assembly.CabinRunner;
 import bus.BusCodes;
 import bus.BusStandIn;
 import gui.CabinView;
@@ -8,7 +9,6 @@ import harness.EveryTwoHarness;
 import harness.LeverStopHarness;
 import harness.NudgeHarness;
 import harness.TopAndBottomHarness;
-import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -48,7 +48,7 @@ public class Main extends Application {
         primaryStage.setScene(scene);
         primaryStage.setTitle("NakatomiTower");
         primaryStage.show();
-        controller.start();
+        controller.start();                 //the render loop only reads snapshots
         controller.setCabins(views);
 
         if (MODE == Mode.ROUTE_HARNESS) {
@@ -65,15 +65,7 @@ public class Main extends Application {
             }
             controller.setSpeedHandler(scale -> managers.forEach(m -> m.setTimeScale(scale)));
 
-            //The demo routes only run in DEMO mode, scenarios drive elevator 1 over the bus.
-            List<FloorSequencer> sequencers = new ArrayList<>();
-            if (MODE == Mode.DEMO) {
-                for (int i = 0; i < cars.size(); i++) {
-                    sequencers.add(new FloorSequencer(cars.get(i).trip(), DEMO_ROUTES[i], 2.0));
-                }
-            }
-
-            //Add additional harnesses here. Each one runs before elevator 1's gateway:
+            //Add additional harnesses here. Each one runs before elevator 1's gateway, on elevator 1's thread:
             SimulationManager manager1 = managers.get(0);
             Runnable gateway1 = car1.gateway()::update;
             if (MODE == Mode.TOP_BOTTOM_HARNESS) {
@@ -92,24 +84,17 @@ public class Main extends Application {
                 manager1.setBeforeStep(() -> { scenario.update(); gateway1.run(); });
             }
 
-            AnimationTimer timer = new AnimationTimer() {
-                long previousFramesTimeStamp = -1;
-                @Override
-                public void handle(long now) {
-                    double elapsedSeconds = 0;
-                    if (previousFramesTimeStamp != -1) {
-                        elapsedSeconds = (now - previousFramesTimeStamp) / 1000000000.0;
-                    }
-                    for (SimulationManager manager : managers) {
-                        manager.update(now);
-                    }
-                    for (FloorSequencer sequencer : sequencers) {
-                        sequencer.update(elapsedSeconds);
-                    }
-                    previousFramesTimeStamp = now;
-                }
-            };
-            timer.start();
+            //One thread per elevator. The demo routes only run in DEMO mode and run on the car's own thread,
+            //so each car's trip controller still has a single writer.
+            List<CabinRunner> runners = new ArrayList<>();
+            for (int i = 0; i < cars.size(); i++) {
+                FloorSequencer sequencer = (MODE == Mode.DEMO)
+                        ? new FloorSequencer(cars.get(i).trip(), DEMO_ROUTES[i], 2.0)
+                        : null;
+                runners.add(new CabinRunner("elevator-" + (i + 1), managers.get(i), sequencer));
+            }
+            primaryStage.setOnCloseRequest(event -> runners.forEach(CabinRunner::stop));
+            runners.forEach(CabinRunner::start);   //start last, after every hook is in place
         }
     }
 
