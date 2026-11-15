@@ -14,6 +14,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import java.io.IOException;
+import java.util.List;
 import java.util.function.DoubleConsumer;
 
 public class ElevatorViewController {
@@ -44,6 +45,7 @@ public class ElevatorViewController {
 
     private ShaftView shaftView;
     private CabinView view;                //null until show() is called
+    private List<CabinView> cabins = List.of();   //the cars the selector can show
 
     @FXML
     private void initialize() {
@@ -57,6 +59,12 @@ public class ElevatorViewController {
         loadShaft();
         clipViewport();
         viewport.heightProperty().addListener((observable, oldValue, newValue) -> updateCamera());
+        elevatorSelector.getSelectionModel().selectedIndexProperty().addListener((observable, oldIndex, newIndex) -> {
+            int i = newIndex.intValue();
+            if (i >= 0 && i < cabins.size()) {
+                show(cabins.get(i));
+            }
+        });
         updateCamera();
     }
 
