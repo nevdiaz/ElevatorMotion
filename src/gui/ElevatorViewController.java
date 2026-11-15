@@ -182,6 +182,23 @@ public class ElevatorViewController {
         timer.start();
     }
 
+    /** Starts the render loop once. Call after the stage is shown. */
+    public void start() {
+        startRenderLoop();
+    }
+
+    /** Switches the display to another cabin. */
+    public void show(CabinView view) {
+        this.motion = view.cabin();
+        this.nudgingFloorSource = view.nudgingFloor()::getAsInt;
+        this.shownFeet = view.cabin().getPosition();   //no glide from the previous car
+        speedSeries.getData().clear();                 //restart the speed graph
+        graphTime = 0.0;
+        nextSampleTime = 0.0;
+        timeAxis.setLowerBound(0);
+        timeAxis.setUpperBound(graphWindow);
+    }
+
     public void setSpeedHandler(DoubleConsumer handler) {
         this.speedHandler = handler;
         speedSlider.setDisable(handler == null);

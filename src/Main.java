@@ -2,6 +2,7 @@ import api.Direction;
 import bus.BusCabinGateway;
 import bus.BusCodes;
 import bus.BusStandIn;
+import gui.CabinView;
 import gui.ElevatorViewController;
 import harness.EveryTwoHarness;
 import harness.LeverStopHarness;
@@ -30,14 +31,16 @@ public class Main extends Application {
         Parent root = loader.load();
         ElevatorViewController controller = loader.getController();
         MotionEngine motionEngine = new MotionEngine();
-        controller.attach(motionEngine);
+        TripController tripController = new TripController(motionEngine);
 
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.setTitle("NakatomiTower");
         primaryStage.show();
-        TripController tripController = new TripController(motionEngine);
-        controller.setNudgingFloorSource(tripController::getNudgingFloor);
+
+        controller.start();
+        controller.show(new CabinView("Elevator 1", motionEngine, tripController::getNudgingFloor));
+
         BusStandIn bus = new BusStandIn();
         BusCabinGateway gateway = new BusCabinGateway(motionEngine, tripController, bus.connect(), BusCodes.ELEVATOR_1);
 
