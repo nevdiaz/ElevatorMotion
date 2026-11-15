@@ -2,15 +2,26 @@ package bus;
 
 import java.util.*;
 
+/**
+ * In-memory stand-in for the software bus. Safe to use from several threads.
+ * One lock guards every connection so a publish from one elevator's thread can never
+ * corrupt a queue that another elevator's thread is reading.
+ */
 public class BusStandIn {
 
     private final List<Connection> connections = new ArrayList<>();
     private static final int MAX_QUEUE_SIZE = 1024;
 
+    //One lock for the whole bus. Never one lock per connection: publish touches two connections
+    //at once, and two locks taken in opposite orders by two threads would deadlock.
+    private final Object lock = new Object();
+
     public BusMessageDispatcher connect() {
-        Connection connection = new Connection();
-        connections.add(connection);
-        return connection;
+        synchronized (lock) {
+            Connection connection = new Connection();
+            connections.add(connection);
+            return connection;
+        }
     }
 
     //Helper Methods
