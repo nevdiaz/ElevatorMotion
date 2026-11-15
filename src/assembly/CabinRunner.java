@@ -42,5 +42,35 @@ public class CabinRunner {
         });
         executor.scheduleWithFixedDelay(this::runOnce, 0, POLL_MILLIS, TimeUnit.MILLISECONDS);
     }
-    
+
+    /** Stops the car's thread. */
+    public synchronized void stop() {
+        if (executor != null) {
+            executor.shutdownNow();
+            executor = null;
+        }
+    }
+
+    /** The exception that stopped this car's thread, or null while it is healthy. */
+    public Throwable getFailure() {
+        return failure;
+    }
+
+    private void runOnce() {
+        try {
+            long now = System.nanoTime();
+            manager.update(now);
+            if (sequencer != null && lastNanos != -1) {
+                sequencer.update((now - lastNanos) / 1_000_000_000.0);
+            }
+            lastNanos = now;
+        } catch (Throwable t) {
+            //A scheduled task that throws is cancelled without a word, so record it and say it.
+            failure = t;
+            System.out.println(name + " stopped: " + t);
+            t.printStackTrace();
+            throw new RuntimeException(t);
+        }
+    }
+
 }
