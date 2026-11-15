@@ -45,7 +45,10 @@ public class BusStandIn {
                 throw new IllegalArgumentException("Invalid topic or subtopic");
             }
             //Subscribing twice must not wipe the queue, computeIfAbsent handles this
-            queues.computeIfAbsent(key(topic, subtopic), k -> new ArrayDeque<>());
+            synchronized (lock) {
+                //Subscribing twice must not wipe the queue, computeIfAbsent handles this
+                queues.computeIfAbsent(key(topic, subtopic), k -> new ArrayDeque<>());
+            }
         }
 
         @Override
@@ -53,7 +56,9 @@ public class BusStandIn {
             if (topic < 1 || topic > BusCodes.MAX_TOPIC || subtopic < 0 || subtopic > 255) {
                 throw new IllegalArgumentException("Invalid topic or subtopic");
             }
-            queues.remove(key(topic, subtopic));
+            synchronized (lock) {
+                queues.remove(key(topic, subtopic));
+            }
         }
 
         @Override
