@@ -23,7 +23,7 @@ public class Main extends Application {
 
     private static final int[] DEMO_ROUTE = {2, 10, 4, 1};
     private enum Mode {DEMO, ROUTE_HARNESS, TOP_BOTTOM_HARNESS, NUDGE_HARNESS, LEVER_TOP_HARNESS, LEVER_BOTTOM_HARNESS, EVERY_TWO_HARNESS}
-    private static final Mode MODE = Mode.EVERY_TWO_HARNESS; //TODO: Change mode to one of the enums to run it
+    private static final Mode MODE = Mode.LEVER_TOP_HARNESS; //TODO: Change mode to one of the enums to run it
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -44,7 +44,7 @@ public class Main extends Application {
         BusStandIn bus = new BusStandIn();
         BusCabinGateway gateway = new BusCabinGateway(motionEngine, tripController, bus.connect(), BusCodes.ELEVATOR_1);
 
-        if (MODE == Mode.DEMO) {
+        if (MODE == Mode.ROUTE_HARNESS) {
             harness.TestHarness testHarness = new harness.TestHarness(tripController, motionEngine::tick);
             testHarness.setBeforeStep(gateway::update);
             testHarness.start();
