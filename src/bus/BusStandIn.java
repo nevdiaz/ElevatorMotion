@@ -66,9 +66,11 @@ public class BusStandIn {
             if (message == null || message.getTopic() < 1 || message.getTopic() > BusCodes.MAX_TOPIC) {
                 throw new IllegalArgumentException("message must not be null and its topic must be 1 to " + BusCodes.MAX_TOPIC);
             }
-            for (Connection other: connections) {
-                if (other != this) {
-                    other.receive(message);
+            synchronized (lock) {
+                for (Connection other : connections) {
+                    if (other != this) {
+                        other.receive(message);
+                    }
                 }
             }
         }
@@ -102,11 +104,13 @@ public class BusStandIn {
             if (topic < 1 || topic > BusCodes.MAX_TOPIC || subtopic < 0 || subtopic > 255) {
                 throw new IllegalArgumentException("topic must be 1 to " + BusCodes.MAX_TOPIC + " and subtopic 0 to 255");
             }
-            Deque<BusMessage> queue = queues.get(key(topic, subtopic));
-            if (queue == null || queue.isEmpty()) {
-                return Optional.empty();
+            synchronized (lock) {
+                Deque<BusMessage> queue = queues.get(key(topic, subtopic));
+                if (queue == null || queue.isEmpty()) {
+                    return Optional.empty();
+                }
+                return Optional.of(queue.pollFirst());   //takes the oldest and removes it
             }
-            return Optional.of(queue.pollFirst());   //takes the oldest and removes it
         }
 
 
