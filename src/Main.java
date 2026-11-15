@@ -44,7 +44,7 @@ public class Main extends Application {
         BusStandIn bus = new BusStandIn();
         BusCabinGateway gateway = new BusCabinGateway(motionEngine, tripController, bus.connect(), BusCodes.ELEVATOR_1);
 
-        if (MODE == Mode.ROUTE_HARNESS) {
+        if (MODE == Mode.DEMO) {
             harness.TestHarness testHarness = new harness.TestHarness(tripController, motionEngine::tick);
             testHarness.setBeforeStep(gateway::update);
             testHarness.start();
