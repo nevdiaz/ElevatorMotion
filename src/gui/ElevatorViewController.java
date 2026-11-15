@@ -88,6 +88,13 @@ public class ElevatorViewController {
         timer.start();
     }
 
+    /** Gives the GUI the list of cars to choose from and shows the first one. */
+    public void setCabins(List<CabinView> cabins) {
+        this.cabins = List.copyOf(cabins);
+        elevatorSelector.getItems().setAll(cabins.stream().map(CabinView::name).toList());
+        elevatorSelector.getSelectionModel().selectFirst();
+    }
+
     /** Switches the display to another cabin. */
     public void show(CabinView view) {
         this.view = view;
