@@ -11,7 +11,7 @@ public class SimulationManager {
     private final Runnable tick;
     private long lastFramesStartTime = -1;
     private double accumulator = 0.0;
-    private double timeScale = 1.0;
+    private volatile double timeScale = 1.0;   //set from the GUI thread, read by the elevator's own thread
     private static final double longestCatchUp = 0.25;
     private Runnable beforeStep = () -> { };
 
