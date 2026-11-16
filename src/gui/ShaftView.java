@@ -62,6 +62,7 @@ public class ShaftView {
 
     /** Tells this shaft which cabin it draws. Resets the smoothing so the cabin does not glide in. */
     public void show(CabinView view) {
+        nameLabel.setText(view.name());
         nudgingFloor = view.nudgingFloor();
         shownFeet = view.cabin().getPosition();
         placeCabin(shownFeet);
