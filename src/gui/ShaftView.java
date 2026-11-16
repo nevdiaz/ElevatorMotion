@@ -47,6 +47,12 @@ public class ShaftView {
         buildFloors();
         buildLevers();
         placeCabin(0);
+
+        //The following sets up the name label and font and stays readable after world view shrinks
+        nameLabel.setStyle("-fx-font-size: 46px; -fx-font-weight: bold;");
+        nameLabel.setLayoutX(shaft.getLayoutX());
+        nameLabel.setLayoutY(20);
+        world.getChildren().add(nameLabel);
     }
 
     /** The node to put on screen. */
