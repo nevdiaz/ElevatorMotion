@@ -48,10 +48,13 @@ public class ShaftView {
         buildLevers();
         placeCabin(0);
 
-        //The following sets up the name label and font and stays readable after world view shrinks
-        nameLabel.setStyle("-fx-font-size: 46px; -fx-font-weight: bold;");
-        nameLabel.setLayoutX(shaft.getLayoutX());
-        nameLabel.setLayoutY(20);
+        // Centers the elevator's name over the shaft, just below its top edge.
+        // The width is only known after layout, so the x position is recomputed whenever it changes.
+        nameLabel.setStyle("-fx-font-size: 40px; -fx-font-weight: bold;");
+        nameLabel.setLayoutY(10);
+        double shaftCenterX = shaft.getLayoutX() + shaft.getWidth() / 2;
+        nameLabel.widthProperty().addListener((observable, oldWidth, newWidth) ->
+                nameLabel.setLayoutX(shaftCenterX - newWidth.doubleValue() / 2));
         world.getChildren().add(nameLabel);
     }
 
