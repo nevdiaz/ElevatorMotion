@@ -66,6 +66,22 @@ public class MotionEngineCheck {
         return t;
     }
 
+    /**
+     * Travel time for a trip of this many feet with the example controller above: accelerate,
+     * cruise if there is room, decelerate. A short trip never reaches cruising speed.
+     */
+    static double expectedTime(double distance) {
+        double v = MotionEngine.CRUISE_SPEED;
+        double a = MotionEngine.ACCELERATION;
+        double d = MotionEngine.DECELERATION;
+        double rampDistance = v * v / (2 * a) + v * v / (2 * d);
+        if (distance >= rampDistance) {
+            return distance / v + v / (2 * a) + v / (2 * d);   //trapezoid: the ramps plus a cruise
+        }
+        double peak = Math.sqrt(2 * distance / (1 / a + 1 / d));   //triangle: never reaches cruising speed
+        return peak / a + peak / d;
+    }
+
     public static void main(String[] args) {
         System.out.println("floors  dir   time(s)  expected  stopError(ft)  minSensorReads  endsAligned");
         for (int n = 1; n <= 9; n++) {
