@@ -1,6 +1,7 @@
 package gui;
 
 import api.CabinSnapshot;
+import api.ShaftSpec;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.layout.Pane;
@@ -23,7 +24,6 @@ public class ShaftView {
     @FXML private Rectangle floorSensorLeft;
     @FXML private Rectangle floorSensorRight;
 
-    private final javafx.scene.control.Label nameLabel = new javafx.scene.control.Label();
     private static final Color sensorsAligned = Color.LIGHTGREEN;
     private static final Color shaftSensorColor = Color.GRAY;
     private static final Color cabinSensorColor = Color.ORANGE;
@@ -36,20 +36,17 @@ public class ShaftView {
                                 Rectangle ceilingLeft, Rectangle ceilingRight) {}
 
     private final List<FloorMarkers> floorMarkers = new ArrayList<>();
+    private final javafx.scene.control.Label nameLabel = new javafx.scene.control.Label();
     private Line topLever;
     private Line bottomLever;
+    private ViewScale scale;                      //null until show() gives this shaft its specification
     private IntSupplier nudgingFloor = () -> 0;   //floor being nudged, or 0
     private double shownFeet = 0;                 //smoothed position that is actually drawn
 
     @FXML
     private void initialize() {
-        buildShaft();
-        buildFloors();
-        buildLevers();
-        placeCabin(0);
-
-        // Centers the elevator's name over the shaft, just below its top edge.
-        // The width is only known after layout, so the x position is recomputed whenever it changes.
+        //The name sits centered over the shaft, just below its top edge. The width is only known
+        //after layout, so the x position is recomputed whenever it changes.
         nameLabel.setStyle("-fx-font-size: 40px; -fx-font-weight: bold;");
         nameLabel.setLayoutY(10);
         double shaftCenterX = shaft.getLayoutX() + shaft.getWidth() / 2;
@@ -63,8 +60,14 @@ public class ShaftView {
         return world;
     }
 
-    /** Tells this shaft which cabin it draws. Resets the smoothing so the cabin does not glide in. */
+    /**
+     * Tells this shaft which cabin it draws. The first call also draws the shaft itself from the
+     * cabin's specification. Every call resets the smoothing so the cabin does not glide in.
+     */
     public void show(CabinView view) {
+        if (scale == null) {
+            build(view.spec());
+        }
         nameLabel.setText(view.name());
         nudgingFloor = view.nudgingFloor();
         shownFeet = view.cabin().getPosition();
@@ -98,14 +101,21 @@ public class ShaftView {
         world.setTranslateY(0);
     }
 
+    private void build(ShaftSpec spec) {
+        scale = new ViewScale(spec);
+        buildShaft();
+        buildFloors();
+        buildLevers();
+    }
+
     private void buildShaft() {
         shaft.setLayoutY(0);
-        shaft.setHeight(ViewScale.shaftHeight);
+        shaft.setHeight(scale.shaftHeight());
     }
 
     private void buildFloors() {
-        for (int i = 1; i <= ViewScale.floorCount; i++) {
-            double floorYPosition = ViewScale.feetToWorldYValue(ViewScale.floorToFeet(i));
+        for (int i = 1; i <= scale.floorCount(); i++) {
+            double floorYPosition = scale.feetToWorldYValue(scale.floorToFeet(i));
             Line floorLine = new Line(shaft.getLayoutX(), floorYPosition,
                     shaft.getLayoutX() + shaft.getWidth(), floorYPosition);
             floorLine.setStroke(Color.GREEN);
@@ -133,12 +143,12 @@ public class ShaftView {
     }
 
     private void buildLevers() {
-        topLever = buildLever(ViewScale.floorToFeet(ViewScale.floorCount) + ViewScale.leverMargin);
-        bottomLever = buildLever(-ViewScale.leverMargin);
+        topLever = buildLever(scale.floorToFeet(scale.floorCount()) + scale.leverMargin());
+        bottomLever = buildLever(-scale.leverMargin());
     }
 
     private Line buildLever(double feet) {
-        double y = ViewScale.feetToWorldYValue(feet);
+        double y = scale.feetToWorldYValue(feet);
         Line lever = new Line(shaft.getLayoutX(), y, shaft.getLayoutX() + shaft.getWidth(), y);
         lever.setStroke(leverColor);
         lever.setStrokeWidth(3);
@@ -151,7 +161,7 @@ public class ShaftView {
     }
 
     private void placeCabin(double feet) {
-        double floorLineY = ViewScale.feetToWorldYValue(feet);
+        double floorLineY = scale.feetToWorldYValue(feet);
         cabinAssembly.setLayoutY(floorLineY - gondolaBottomOffset());
     }
 
@@ -169,7 +179,7 @@ public class ShaftView {
 
     private void updateSensors(CabinSnapshot s, long now) {
         boolean anyAligned = s.alignedFloor() != 0;
-        for (int i = 1; i <= ViewScale.floorCount; i++) {
+        for (int i = 1; i <= scale.floorCount(); i++) {
             boolean aligned = (s.alignedFloor() == i);
             FloorMarkers markers = floorMarkers.get(i - 1);
             setSensorColor(markers.floorLeft(), aligned, shaftSensorColor);
@@ -185,7 +195,7 @@ public class ShaftView {
         //While the car is nudged onto its target floor, show the in-between color on that
         //floor's sensors and the cabin's sensors. They turn lime green once the car is level.
         int nudging = nudgingFloor.getAsInt();
-        if (nudging >= 1 && nudging <= ViewScale.floorCount) {
+        if (nudging >= 1 && nudging <= scale.floorCount()) {
             FloorMarkers target = floorMarkers.get(nudging - 1);
             target.floorLeft().setFill(sensorsNudging);
             target.floorRight().setFill(sensorsNudging);
@@ -203,7 +213,7 @@ public class ShaftView {
             boolean on = blinkOn(now);
             Line trippedLever = topFault ? topLever : bottomLever;
             trippedLever.setStroke(on ? sensorsFault : leverColor);
-            FloorMarkers endFloor = floorMarkers.get(topFault ? ViewScale.floorCount - 1 : 0);
+            FloorMarkers endFloor = floorMarkers.get(topFault ? scale.floorCount() - 1 : 0);
             blinkSensor(endFloor.floorLeft(), on, shaftSensorColor);
             blinkSensor(endFloor.floorRight(), on, shaftSensorColor);
             blinkSensor(endFloor.ceilingLeft(), on, shaftSensorColor);
