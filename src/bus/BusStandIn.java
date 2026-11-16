@@ -2,15 +2,26 @@ package bus;
 
 import java.util.*;
 
+/**
+ * In-memory stand-in for the software bus. Safe to use from several threads.
+ * One lock guards every connection so a publish from one elevator's thread can never
+ * corrupt a queue that another elevator's thread is reading.
+ */
 public class BusStandIn {
 
     private final List<Connection> connections = new ArrayList<>();
     private static final int MAX_QUEUE_SIZE = 1024;
 
+    //One lock for the whole bus. Never one lock per connection: publish touches two connections
+    //at once, and two locks taken in opposite orders by two threads would deadlock.
+    private final Object lock = new Object();
+
     public BusMessageDispatcher connect() {
-        Connection connection = new Connection();
-        connections.add(connection);
-        return connection;
+        synchronized (lock) {
+            Connection connection = new Connection();
+            connections.add(connection);
+            return connection;
+        }
     }
 
     //Helper Methods
@@ -34,7 +45,10 @@ public class BusStandIn {
                 throw new IllegalArgumentException("Invalid topic or subtopic");
             }
             //Subscribing twice must not wipe the queue, computeIfAbsent handles this
-            queues.computeIfAbsent(key(topic, subtopic), k -> new ArrayDeque<>());
+            synchronized (lock) {
+                //Subscribing twice must not wipe the queue, computeIfAbsent handles this
+                queues.computeIfAbsent(key(topic, subtopic), k -> new ArrayDeque<>());
+            }
         }
 
         @Override
@@ -42,7 +56,9 @@ public class BusStandIn {
             if (topic < 1 || topic > BusCodes.MAX_TOPIC || subtopic < 0 || subtopic > 255) {
                 throw new IllegalArgumentException("Invalid topic or subtopic");
             }
-            queues.remove(key(topic, subtopic));
+            synchronized (lock) {
+                queues.remove(key(topic, subtopic));
+            }
         }
 
         @Override
@@ -50,9 +66,11 @@ public class BusStandIn {
             if (message == null || message.getTopic() < 1 || message.getTopic() > BusCodes.MAX_TOPIC) {
                 throw new IllegalArgumentException("message must not be null and its topic must be 1 to " + BusCodes.MAX_TOPIC);
             }
-            for (Connection other: connections) {
-                if (other != this) {
-                    other.receive(message);
+            synchronized (lock) {
+                for (Connection other : connections) {
+                    if (other != this) {
+                        other.receive(message);
+                    }
                 }
             }
         }
@@ -86,11 +104,13 @@ public class BusStandIn {
             if (topic < 1 || topic > BusCodes.MAX_TOPIC || subtopic < 0 || subtopic > 255) {
                 throw new IllegalArgumentException("topic must be 1 to " + BusCodes.MAX_TOPIC + " and subtopic 0 to 255");
             }
-            Deque<BusMessage> queue = queues.get(key(topic, subtopic));
-            if (queue == null || queue.isEmpty()) {
-                return Optional.empty();
+            synchronized (lock) {
+                Deque<BusMessage> queue = queues.get(key(topic, subtopic));
+                if (queue == null || queue.isEmpty()) {
+                    return Optional.empty();
+                }
+                return Optional.of(queue.pollFirst());   //takes the oldest and removes it
             }
-            return Optional.of(queue.pollFirst());   //takes the oldest and removes it
         }
 
 

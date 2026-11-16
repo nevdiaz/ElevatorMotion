@@ -1,8 +1,10 @@
 package gui;
 
-import api.MotionControllerAPI;
+import api.CabinSnapshot;
+import api.ShaftSpec;
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
@@ -11,185 +13,128 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.DoubleConsumer;
-import java.util.function.IntSupplier;
 
 public class ElevatorViewController {
 
-    @FXML
-    private Label acceleration;
+    @FXML private Label acceleration;
+    @FXML private Label cruisingSpeed;
+    @FXML private Label currentFloor;
+    @FXML private Label deceleration;
+    @FXML private ComboBox<String> elevatorSelector;
+    @FXML private Label motionState;
+    @FXML private Label speed;
+    @FXML private LineChart<Number, Number> speedChart;
+    @FXML private ToggleButton viewMode;
+    @FXML private StackPane viewport;
+    @FXML private Label speedScaleLabel;
+    @FXML private Slider speedSlider;
 
-    @FXML
-    private Group cabinAssembly;
-
-    @FXML
-    private Rectangle ceilingSensorLeft;
-
-    @FXML
-    private Rectangle ceilingSensorRight;
-
-    @FXML
-    private Label cruisingSpeed;
-
-    @FXML
-    private Label currentFloor;
-
-    @FXML
-    private Label deceleration;
-
-    @FXML
-    private Rectangle doorLeft;
-
-    @FXML
-    private Rectangle doorOpening;
-
-    @FXML
-    private Rectangle doorRight;
-
-    @FXML
-    private ComboBox<String> elevatorSelector;
-
-    @FXML
-    private Rectangle floorSensorLeft;
-
-    @FXML
-    private Rectangle floorSensorRight;
-
-    @FXML
-    private Rectangle gondola;
-
-    @FXML
-    private Label motionState;
-
-    @FXML
-    private Rectangle motor;
-
-    @FXML
-    private Rectangle shaft;
-
-    @FXML
-    private Label speed;
-
-    @FXML
-    private LineChart<Number, Number> speedChart;
-
-    @FXML
-    private ToggleButton viewMode;
-
-    @FXML
-    private StackPane viewport;
-
-    @FXML
-    private Pane world;
-
-    @FXML
-    private Label speedScaleLabel;
-
-    @FXML
-    private Slider speedSlider;
-
+    private static final double shaftColumnWidth = 300;   //width of one shaft's pane in Shaft.fxml
     private DoubleConsumer speedHandler;   //set from Main; null means no speed control
-
-    private IntSupplier nudgingFloorSource;   //set from Main; returns the floor being nudged, or 0
-
     private double speedScale = 1.0;
-
     private NumberAxis timeAxis;
-
     private NumberAxis speedAxis;
-
-    private double graphTime = 0.0; //running elapsed time
-
+    private double graphTime = 0.0;        //running elapsed time
     private final double sampleInterval = 0.1;
-
     private double nextSampleTime = 0.0;
-
-    private final double graphWindow = 30.0; //Number of seconds the x axis shows
-
+    private final double graphWindow = 30.0;   //Number of seconds the x axis shows
     private final XYChart.Series<Number, Number> speedSeries = new XYChart.Series<>();
-
-    private MotionControllerAPI motion;
-
-    private double shownFeet = 0;
-
-    private static final Color sensorsAligned = Color.LIGHTGREEN;
-
-    private static final Color shaftSensorColor = Color.GRAY;
-
-    private static final Color cabinSensorColor = Color.ORANGE;
-
-    private static final Color sensorsFault = Color.RED;
-
-    private static final Color sensorsNudging = Color.YELLOW;   //between orange and lime green
-
-    private static final Color leverColor = Color.DARKRED;
-
-    private Line topLever;
-
-    private Line bottomLever;
-
-    private static final long blinkNanos = 400_000_000L;   // 0.4 s per on/off phase
-
-    private record FloorMarkers(Rectangle floorLeft, Rectangle floorRight, Rectangle ceilingLeft, Rectangle ceilingRight) {}
-
-    private final List<FloorMarkers> floorMarkers = new ArrayList<>();
+    private List<CabinView> cabins = List.of();                     //the cars the GUI can show
+    private final List<ShaftView> shaftViews = new ArrayList<>();   //one shaft drawing per car, same order
+    private int selectedIndex = -1;                                 //-1 until a car is selected
+    private ViewScale scale;                                        //null until setCabins() has the specification
+    private boolean worldMode = false;                              //false = single view, true = world view
+    private final HBox worldBox = new HBox();                       //the world view's row of shafts
+    private final Group worldGroup = new Group(worldBox);           //the group makes the scaled size count for layout
 
     @FXML
     private void initialize() {
         currentFloor.setText("Current Floor");
         motionState.setText("Current Motion State");
-        cruisingSpeed.setText("Cruising Speed: 4.0 ft/s");
-        acceleration.setText("Acceleration: 2.0 ft/s^2");
-        deceleration.setText("Deceleration: 2.0 ft/s^2");
+        cruisingSpeed.setText("Cruising Speed");
+        acceleration.setText("Acceleration");
+        deceleration.setText("Deceleration");
         buildSpeedChart();
         buildSpeedControl();
-        buildShaft();
-        buildFloors();
-        buildLevers();
         clipViewport();
-        placeCabin(0);
-        viewport.heightProperty().addListener((observable, oldValue, newValue)
-                -> {updateCamera();});
-        updateCamera();
+        viewport.heightProperty().addListener((observable, oldValue, newValue) -> updateCamera());
+        viewport.widthProperty().addListener((observable, oldValue, newValue) -> updateCamera());
+        elevatorSelector.getSelectionModel().selectedIndexProperty().addListener((observable, oldIndex, newIndex) -> {
+            int i = newIndex.intValue();
+            if (i >= 0 && i < shaftViews.size()) {
+                selectCabin(i);
+            }
+        });
+        viewMode.setText("World view");
+        viewMode.selectedProperty().addListener((observable, wasOn, isOn) -> {
+            worldMode = isOn;
+            viewMode.setText(isOn ? "Single view" : "World view");
+            if (selectedIndex >= 0) {
+                refreshDisplay();
+            }
+        });
     }
 
-    private void startRenderLoop() {
+    /** Starts the render loop once. Call after the stage is shown. */
+    public void start() {
         AnimationTimer timer = new AnimationTimer() {
             long previousTimeStamp = -1;
             @Override
             public void handle(long now) {
+                if (selectedIndex < 0) { return; }
                 double elapsed = 0.0;
-                double feet = motion.getPosition();
-                shownFeet += (feet - shownFeet) * 0.3; //this should smooth out some of the jitteriness
-                if (previousTimeStamp != -1) {elapsed = ((now - previousTimeStamp) / 1000000000.0);}
-                if (Math.abs(feet - shownFeet) < 0.001) { shownFeet = feet; } //checks if the gap is tiny
-                placeCabin(shownFeet);
-                updateSensors(now);
-                updateLabels();
+                if (previousTimeStamp != -1) { elapsed = (now - previousTimeStamp) / 1000000000.0; }
+                CabinSnapshot selected = cabins.get(selectedIndex).cabin().snapshot();   //one consistent read per car
+                for (int i = 0; i < shaftViews.size(); i++) {
+                    if (worldMode || i == selectedIndex) {   //hidden shafts are not drawn
+                        CabinSnapshot s = (i == selectedIndex) ? selected : cabins.get(i).cabin().snapshot();
+                        shaftViews.get(i).render(s, now);
+                    }
+                }
+                updateLabels(selected);
                 updateCamera();
-                updateGraph(elapsed * speedScale);
+                updateGraph(elapsed * speedScale, selected);
                 previousTimeStamp = now;
             }
         };
         timer.start();
     }
 
-    //Has to be public so that it works in main
-    public void attach(MotionControllerAPI motion) {
-        this.motion = motion;
-        startRenderLoop();
+    private void applySpec(ShaftSpec spec) {
+        scale = new ViewScale(spec);
+        cruisingSpeed.setText(String.format("Cruising Speed: %.1f ft/s", spec.cruiseSpeed()));
+        acceleration.setText(String.format("Acceleration: %.1f ft/s^2", spec.acceleration()));
+        deceleration.setText(String.format("Deceleration: %.1f ft/s^2", spec.deceleration()));
+        double top = Math.ceil(spec.cruiseSpeed() * 1.25);   //leave headroom above cruising speed on the chart
+        speedAxis.setUpperBound(top);
+        speedAxis.setTickUnit(Math.max(1.0, Math.ceil(top / 5.0)));
     }
 
-    //Has to be public so that it works in main
-    public void setNudgingFloorSource(IntSupplier source) {
-        this.nudgingFloorSource = source;
+    /** Gives the GUI the cars to choose from, builds one shaft per car and shows the first car. */
+    public void setCabins(List<CabinView> cabins) {
+        this.cabins = List.copyOf(cabins);
+        if (!this.cabins.isEmpty()) {
+            applySpec(this.cabins.get(0).spec());   //every car shares the same shaft specification
+        }
+        selectedIndex = -1;
+        shaftViews.clear();
+        for (int i = 0; i < this.cabins.size(); i++) {
+            ShaftView shaftView = loadShaft();
+            shaftView.show(this.cabins.get(i));
+            final int index = i;
+            //Clicking a shaft in the world view selects that car
+            shaftView.getRoot().setOnMouseClicked(event -> elevatorSelector.getSelectionModel().select(index));
+            shaftViews.add(shaftView);
+        }
+        elevatorSelector.getItems().setAll(this.cabins.stream().map(CabinView::name).toList());
+        elevatorSelector.getSelectionModel().selectFirst();
     }
 
     public void setSpeedHandler(DoubleConsumer handler) {
@@ -197,24 +142,52 @@ public class ElevatorViewController {
         speedSlider.setDisable(handler == null);
     }
 
-    private void buildShaft() {
-        shaft.setLayoutY(0);
-        shaft.setHeight(ViewScale.shaftHeight); //Height is 2840
+    /** The car at this index becomes the selected one: labels and speed graph follow it. */
+    private void selectCabin(int index) {
+        selectedIndex = index;
+        speedSeries.getData().clear();   //restart the speed graph
+        graphTime = 0.0;
+        nextSampleTime = 0.0;
+        timeAxis.setLowerBound(0);
+        timeAxis.setUpperBound(graphWindow);
+        refreshDisplay();
     }
 
-    private Rectangle buildShaftSensor(Rectangle cabinSensor, double floorLineY) {
-        double x = cabinAssembly.getLayoutX() + cabinSensor.getLayoutX();
-        double y = floorLineY + cabinSensor.getLayoutY() - gondolaBottomOffset();
-        Rectangle shaftSensor = new Rectangle(x, y, cabinSensor.getWidth(), cabinSensor.getHeight());
-        shaftSensor.setFill(Color.GRAY);
-        shaftSensor.setStroke(Color.BLACK);
-        world.getChildren().add(0, shaftSensor);
-        return shaftSensor;
+    /** Puts the right shafts on screen for the current view mode. */
+    private void refreshDisplay() {
+        viewport.getChildren().clear();
+        for (int i = 0; i < shaftViews.size(); i++) {
+            shaftViews.get(i).setSelected(worldMode && i == selectedIndex);
+        }
+        if (worldMode) {
+            worldBox.getChildren().clear();
+            for (int i = 0; i < shaftViews.size(); i++) {
+                shaftViews.get(i).resetCamera();
+                shaftViews.get(i).show(cabins.get(i));   //no glide from a stale position
+                worldBox.getChildren().add(shaftViews.get(i).getRoot());
+            }
+            viewport.getChildren().add(worldGroup);
+        } else {
+            worldBox.getChildren().clear();              //take the shafts out of the row first
+            ShaftView selected = shaftViews.get(selectedIndex);
+            selected.show(cabins.get(selectedIndex));
+            viewport.getChildren().add(selected.getRoot());
+        }
+        updateCamera();
+    }
+
+    private ShaftView loadShaft() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Shaft.fxml"));
+            loader.load();
+            return loader.getController();
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not load Shaft.fxml", e);
+        }
     }
 
     private void buildSpeedChart() {
         timeAxis = (NumberAxis) speedChart.getXAxis();
-
         speedAxis = (NumberAxis) speedChart.getYAxis();
 
         timeAxis.setAutoRanging(false);
@@ -252,107 +225,27 @@ public class ElevatorViewController {
         });
     }
 
-    private void buildFloors() {
-        double feet;
-        double floorYPosition;
-        for (int i = 1; i <= ViewScale.floorCount; i++) {
-            feet = ViewScale.floorToFeet(i);
-            floorYPosition = ViewScale.feetToWorldYValue(feet);
-            Line floorLine = new Line(shaft.getLayoutX(), floorYPosition, shaft.getLayoutX() + shaft.getWidth(), floorYPosition);
-            floorLine.setStroke(Color.GREEN);
-            Label floorNumber = new Label(String.valueOf(i));
-            floorNumber.setLayoutX(shaft.getLayoutX() - 35);
-            floorNumber.setLayoutY(floorYPosition - 10);
-            world.getChildren().add(0, floorLine);
-            world.getChildren().add(0, floorNumber);
-            floorMarkers.add(
-                    new FloorMarkers(
-                            buildShaftSensor(floorSensorLeft, floorYPosition),
-                            buildShaftSensor(floorSensorRight, floorYPosition),
-                            buildShaftSensor(ceilingSensorLeft, floorYPosition),
-                            buildShaftSensor(ceilingSensorRight, floorYPosition)));
-        }
-    }
-
-    private void buildLevers() {
-        topLever = buildLever(ViewScale.floorToFeet(ViewScale.floorCount) + ViewScale.leverMargin);
-        bottomLever = buildLever(-ViewScale.leverMargin);
-    }
-
-    private Line buildLever(double feet) {
-        double y = ViewScale.feetToWorldYValue(feet);
-        Line lever = new Line(shaft.getLayoutX(), y, shaft.getLayoutX() + shaft.getWidth(), y);
-        lever.setStroke(leverColor);
-        lever.setStrokeWidth(3);
-        world.getChildren().add(0, lever);
-        return lever;
-    }
-
-    private double gondolaBottomOffset() {
-        return gondola.getLayoutY() + gondola.getHeight();
-    }
-
-    private void placeCabin(double feet) {
-        double floorLineY = ViewScale.feetToWorldYValue(feet);
-        cabinAssembly.setLayoutY(floorLineY - gondolaBottomOffset());
-    }
-
-    private void setSensorColor(Rectangle sensor, boolean lit, Color offColor) {
-        if (lit == true) {
-            sensor.setFill(sensorsAligned);
-        } else {
-            sensor.setFill(offColor);
-        }
-    }
-
-    private boolean blinkOn(long nowNanos) {
-        return (nowNanos / blinkNanos) % 2 == 0;
-    }
-
-    private void blinkSensor(Rectangle sensor, boolean on, Color offColor) {
-        if (on == true) {
-            sensor.setFill(sensorsFault);
-        } else {
-            sensor.setFill(offColor);
-        }
-    }
-
-    private void updateLabels() {
-        int floor = 0;
-        for (int i = 1; i <= ViewScale.floorCount; i++) {
-            if (motion.isFloorAligned(i) == true) {
-                floor = i;
-            }
-        }
-
-        if (floor == 0) {
-            currentFloor.setText("-");
-        } else {
-            currentFloor.setText(floor + "");
-        }
-
-        speed.setText(String.format("%.2f ft/s", Math.abs(motion.getVelocity())));
-
-        if (motion.isTopLimitTripped() == true || motion.isBottomLimitTripped() == true) {
+    private void updateLabels(CabinSnapshot s) {
+        currentFloor.setText(s.alignedFloor() == 0 ? "-" : String.valueOf(s.alignedFloor()));
+        speed.setText(String.format("%.2f ft/s", Math.abs(s.velocity())));
+        if (s.topLimitTripped() || s.bottomLimitTripped()) {
             motionState.setText("EMERGENCY STOP");
             motionState.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
         } else {
-            motionState.setText(motion.getState().name());
+            motionState.setText(s.state().name());
             motionState.setStyle("");
         }
     }
 
-    private void updateGraph(double elapsedSeconds) {
+    private void updateGraph(double elapsedSeconds, CabinSnapshot s) {
         graphTime += elapsedSeconds;
         if (graphTime >= nextSampleTime) {
-            speedSeries.getData().add(new XYChart.Data<>(graphTime, Math.abs(motion.getVelocity())));
+            speedSeries.getData().add(new XYChart.Data<>(graphTime, Math.abs(s.velocity())));
             nextSampleTime += sampleInterval;
         }
-
         if (graphTime > graphWindow) {
             timeAxis.setUpperBound(graphTime);
             timeAxis.setLowerBound(graphTime - graphWindow);
-
             while (!speedSeries.getData().isEmpty()
                     && speedSeries.getData().get(0).getXValue().doubleValue() < timeAxis.getLowerBound()) {
                 speedSeries.getData().remove(0);
@@ -360,60 +253,19 @@ public class ElevatorViewController {
         }
     }
 
+    /** Single view: scroll the shaft so the cabin stays centered. World view: scale all shafts to fit. */
     private void updateCamera() {
-        double liveHeight = viewport.getHeight()/2;
-        double gondolaView = cabinAssembly.getLayoutY() + gondola.getLayoutY() + gondola.getHeight()/2;
-        world.setTranslateY(liveHeight - gondolaView);
-    }
-
-    private void updateSensors(long now) {
-        boolean anyAligned = false;
-        for (int i = 1; i <= ViewScale.floorCount; i++) {
-            boolean aligned = motion.isFloorAligned(i);
-            FloorMarkers markers = floorMarkers.get(i-1);
-            setSensorColor(markers.floorLeft(), aligned, shaftSensorColor);
-            setSensorColor(markers.floorRight(), aligned, shaftSensorColor);
-            setSensorColor(markers.ceilingLeft(), aligned, shaftSensorColor);
-            setSensorColor(markers.ceilingRight(), aligned, shaftSensorColor);
-            if (aligned == true) {
-                anyAligned = true;
-            }
+        if (selectedIndex < 0) {
+            return;
         }
-        setSensorColor(floorSensorLeft, anyAligned, cabinSensorColor);
-        setSensorColor(floorSensorRight, anyAligned, cabinSensorColor);
-        setSensorColor(ceilingSensorLeft, anyAligned, cabinSensorColor);
-        setSensorColor(ceilingSensorRight, anyAligned, cabinSensorColor);
-
-        //While the car is being nudged onto its target floor, show the in-between color on that
-        //floor's sensors and the cabin's sensors. They turn lime green once the car is level.
-        int nudgingFloor = (nudgingFloorSource == null) ? 0 : nudgingFloorSource.getAsInt();
-        if (nudgingFloor >= 1 && nudgingFloor <= ViewScale.floorCount) {
-            FloorMarkers target = floorMarkers.get(nudgingFloor - 1);
-            target.floorLeft().setFill(sensorsNudging);
-            target.floorRight().setFill(sensorsNudging);
-            target.ceilingLeft().setFill(sensorsNudging);
-            target.ceilingRight().setFill(sensorsNudging);
-            floorSensorLeft.setFill(sensorsNudging);
-            floorSensorRight.setFill(sensorsNudging);
-            ceilingSensorLeft.setFill(sensorsNudging);
-            ceilingSensorRight.setFill(sensorsNudging);
-        }
-
-        boolean topFault = motion.isTopLimitTripped();
-        boolean bottomFault = motion.isBottomLimitTripped();
-        if (topFault == true || bottomFault == true) {
-            boolean on = blinkOn(now);
-            Line trippedLever = (topFault == true) ? topLever : bottomLever;
-            trippedLever.setStroke(on ? sensorsFault : leverColor);
-            FloorMarkers endFloor = floorMarkers.get(topFault ? ViewScale.floorCount - 1 : 0);
-            blinkSensor(endFloor.floorLeft(), on, shaftSensorColor);
-            blinkSensor(endFloor.floorRight(), on, shaftSensorColor);
-            blinkSensor(endFloor.ceilingLeft(), on, shaftSensorColor);
-            blinkSensor(endFloor.ceilingRight(), on, shaftSensorColor);
-            blinkSensor(floorSensorLeft, on, cabinSensorColor);
-            blinkSensor(floorSensorRight, on, cabinSensorColor);
-            blinkSensor(ceilingSensorLeft, on, cabinSensorColor);
-            blinkSensor(ceilingSensorRight, on, cabinSensorColor);
+        if (worldMode) {
+            double fit = Math.min(viewport.getHeight() / scale.shaftHeight(),
+                    viewport.getWidth() / (shaftViews.size() * shaftColumnWidth));
+            double scale = Math.max(fit, 0.01);   //never zero: a zero scale cannot be inverted
+            worldBox.setScaleX(scale);
+            worldBox.setScaleY(scale);
+        } else {
+            shaftViews.get(selectedIndex).centerOn(viewport.getHeight());
         }
     }
 
@@ -423,5 +275,4 @@ public class ElevatorViewController {
         clip.heightProperty().bind(viewport.heightProperty());
         viewport.setClip(clip);
     }
-
 }

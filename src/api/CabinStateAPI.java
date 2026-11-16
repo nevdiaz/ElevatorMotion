@@ -7,5 +7,6 @@ public interface CabinStateAPI {
     Direction getDirection();
     boolean isMoving();
     MotionState getState();
+    CabinSnapshot snapshot();
 
 }

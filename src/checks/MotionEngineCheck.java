@@ -1,8 +1,10 @@
 package checks;
 
+import api.CabinSnapshot;
 import api.Direction;
 import api.MotionControllerAPI;
 import api.MotionState;
+import sim.FloorSensors;
 import sim.MotionEngine;
 
 /** checks for MotionEngine */
@@ -65,6 +67,22 @@ public class MotionEngineCheck {
         return t;
     }
 
+    /**
+     * Travel time for a trip of this many feet with the example controller above: accelerate,
+     * cruise if there is room, decelerate. A short trip never reaches cruising speed.
+     */
+    static double expectedTime(double distance) {
+        double v = MotionEngine.CRUISE_SPEED;
+        double a = MotionEngine.ACCELERATION;
+        double d = MotionEngine.DECELERATION;
+        double rampDistance = v * v / (2 * a) + v * v / (2 * d);
+        if (distance >= rampDistance) {
+            return distance / v + v / (2 * a) + v / (2 * d);   //trapezoid: the ramps plus a cruise
+        }
+        double peak = Math.sqrt(2 * distance / (1 / a + 1 / d));   //triangle: never reaches cruising speed
+        return peak / a + peak / d;
+    }
+
     public static void main(String[] args) {
         System.out.println("floors  dir   time(s)  expected  stopError(ft)  minSensorReads  endsAligned");
         for (int n = 1; n <= 9; n++) {
@@ -72,14 +90,20 @@ public class MotionEngineCheck {
                 int from = up == 0 ? 1 : 10;
                 int to = up == 0 ? 1 + n : 10 - n;
                 Trip t = run(from, to);
-                double expected = n * MotionEngine.FLOOR_HEIGHT / MotionEngine.CRUISE_SPEED + 2.0;
+                double expected = expectedTime(n * MotionEngine.FLOOR_HEIGHT);
                 String label = n + (up == 0 ? " up" : " down");
                 System.out.printf("%-7d %-5s %-8.2f %-9.1f %-14.2f %-15d %s%n",
                         n, up == 0 ? "up" : "down", t.time, expected, t.stopError, t.minReads, t.endedAligned);
-                check(Math.abs(t.time - expected) <= 0.15, "time " + label);
-                check(Math.abs(t.stopError) <= 0.2 + 1e-9, "stop error " + label);
+                check(Math.abs(t.time - expected) <= Math.max(0.15, 3 * MotionEngine.TIME_STEP), "time " + label);
+                /**
+                Braking is decided once per tick, so the car can stop a little past the floor, more at
+                high speeds. It must always stop short of the safety lever; TripController then nudges it
+                level, and TripChecks checks the final position.
+                 */
+                check(Math.abs(t.stopError) < MotionEngine.LEVER_MARGIN, "stop error " + label);
                 check(t.minReads >= 2, "sensor reads " + label);
-                check(t.endedAligned, "ends aligned " + label);
+                check(t.endedAligned == (Math.abs(t.stopError) <= FloorSensors.ZONE_HEIGHT / 2.0 + 1e-9),
+                        "the sensor agrees with where the car stopped " + label);
                 check(!t.leverTripped, "no lever tripped on a normal trip " + label);
             }
         }
@@ -101,19 +125,25 @@ public class MotionEngineCheck {
         double before = e.getPosition();
         e.stepUpMotor();
         check(e.getPosition() == before, "step ignored while moving");
-        for (int i = 0; i < 20; i++) e.tick();           // 1 s: speed 2 ft/s
-        check(e.getState() == MotionState.ACCELERATING, "still accelerating at 2 ft/s");
-        check(Math.abs(e.getVelocity() - 2.0) < 1e-6, "velocity is 2 ft/s after 1 s");
+        //Half of the acceleration phase, or less when the shaft is too short for that at high speeds:
+        //the speed is ACCELERATION * elapsed time, and the car is still accelerating
+        double seconds = Math.min(0.5 * MotionEngine.CRUISE_SPEED / MotionEngine.ACCELERATION,
+                Math.sqrt(MotionEngine.SHAFT_TOP / MotionEngine.ACCELERATION));
+        int halfwayTicks = (int) Math.round(seconds / MotionEngine.TIME_STEP);
+        for (int i = 0; i < halfwayTicks; i++) e.tick();
+        check(e.getState() == MotionState.ACCELERATING, "still accelerating before cruising speed");
+        check(Math.abs(e.getVelocity() - MotionEngine.ACCELERATION * halfwayTicks * MotionEngine.TIME_STEP) < 1e-6,
+                "velocity is acceleration times elapsed time");
         e.stopMotor();
         int guard = 0;
-        while (e.isMoving() && guard++ < 1000) e.tick();
+        while (e.isMoving() && guard++ < CheckTime.runaway()) e.tick();
         check(e.getState() == MotionState.STOPPED && e.getVelocity() == 0.0, "stopMotor during acceleration reaches stopped");
 
         // Top and bottom limits
         MotionEngine top = new MotionEngine(MotionEngine.SHAFT_TOP - 1.0);
         top.startMotor(Direction.Up);
         guard = 0;
-        while (top.isMoving() && guard++ < 5000) top.tick();
+        while (top.isMoving() && guard++ < CheckTime.runaway()) top.tick();
         check(top.getPosition() == MotionEngine.MAX_POSITION, "car cannot pass the top of the shaft");
         check(top.isTopLimitTripped() && !top.isBottomLimitTripped(), "top lever trips at the top of the shaft");
         check(top.getVelocity() == 0.0 && !top.isMoving(), "car stops dead at the lever");
@@ -125,7 +155,7 @@ public class MotionEngineCheck {
         MotionEngine low = new MotionEngine();
         low.startMotor(Direction.Down);
         guard = 0;
-        while (low.isMoving() && guard++ < 5000) low.tick();
+        while (low.isMoving() && guard++ < CheckTime.runaway()) low.tick();
         check(low.isBottomLimitTripped() && !low.isTopLimitTripped(), "bottom lever trips below floor 1");
         check(low.getPosition() == MotionEngine.MIN_POSITION, "car stops at the bottom lever");
 
@@ -133,6 +163,14 @@ public class MotionEngineCheck {
         check(bottom.isBottomAligned() && bottom.getCurrentFloor() == 1, "bottom aligned at floor 1");
         check(new MotionEngine(20.0).getCurrentFloor() == 0, "between zones reports floor 0");
         check(new MotionEngine(MotionEngine.floorPosition(4)).isFloorAligned(4), "aligned at floor 4");
+
+        CabinSnapshot s4 = new MotionEngine(MotionEngine.floorPosition(4)).snapshot();
+        check(s4.alignedFloor() == 4 && s4.state() == MotionState.STOPPED && s4.velocity() == 0.0,
+                "snapshot at floor 4");
+        check(!s4.topLimitTripped() && !s4.bottomLimitTripped(), "snapshot shows no lever");
+        check(new MotionEngine(20.0).snapshot().alignedFloor() == 0, "snapshot between zones is floor 0");
+        check(top.snapshot().topLimitTripped() && top.snapshot().state() == MotionState.STOPPED,
+                "snapshot shows the tripped top lever");
 
         System.out.println(failures == 0 ? "\nALL CHECKS PASSED" : "\n" + failures + " CHECK(S) FAILED");
         System.exit(failures == 0 ? 0 : 1);

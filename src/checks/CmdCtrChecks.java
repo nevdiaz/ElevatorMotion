@@ -31,7 +31,7 @@ public class CmdCtrChecks {
         TopAndBottomHarness scenario = new TopAndBottomHarness(bus.connect());
 
         int ticks = 0;
-        while (scenario.isFinished() == false && ticks < 40000) {
+        while (scenario.isFinished() == false && ticks < CheckTime.scaled(40000)) {
             scenario.update();
             gateway.update();
             trip.controlStep();

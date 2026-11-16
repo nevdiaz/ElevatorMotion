@@ -1,9 +1,10 @@
-package harness;
+package checks;
 
 import api.Direction;
 import bus.BusCabinGateway;
 import bus.BusCodes;
 import bus.BusStandIn;
+import harness.LeverStopHarness;
 import manager.TripController;
 import sim.MotionEngine;
 
@@ -30,7 +31,7 @@ public class LeverStopHarnessChecks {
         LeverStopHarness scenario = new LeverStopHarness(engine, bus.connect(), BusCodes.ELEVATOR_1, runaway, 20);
 
         int ticks = 0;
-        while (scenario.isFinished() == false && ticks < 5000) {
+        while (scenario.isFinished() == false && ticks < CheckTime.runaway()) {
             scenario.update();
             gateway.update();
             trip.controlStep();

@@ -39,7 +39,8 @@ public class LeverStopHarness {
         ticks += 1;
         if (started == false && ticks >= delayTicks) {
             started = true;
-            System.out.println("Scenario: runaway cabin " + runaway + ", tripped lever signal auto braking the cabin.");
+            System.out.println("Scenario started: runaway cabin " + runaway + ", " +
+                    " waiting for lever to trip to signal auto braking the cabin.");
             car.startMotor(runaway);
         }
         Optional<BusMessage> message = listener.get(BusCodes.CAR_FAULT, elevator);

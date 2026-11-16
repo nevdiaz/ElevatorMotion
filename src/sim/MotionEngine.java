@@ -1,5 +1,6 @@
 package sim;
 
+import api.CabinSnapshot;
 import api.Direction;
 import api.MotionControllerAPI;
 import api.MotionState;
@@ -18,9 +19,15 @@ public class MotionEngine implements MotionControllerAPI {
     public static final double ACCELERATION = 2.0;    // ft/s^2
     public static final double DECELERATION = 2.0;    // ft/s^2
     public static final double CRUISE_SPEED = 4.0;    // ft/s
-    public static final double TIME_STEP = 0.05;      // s
     public static final double FLOOR_HEIGHT = 14.0;   // ft
     public static final int FLOORS = 10;
+
+    /**
+     * Longest simulation step, in seconds: 0.05 s, or less when the cruise speed is high.
+     * One step at cruising speed must not move the car more than half a sensor zone (0.25 ft),
+     * or the car could jump over a floor's sensor zone between two ticks.
+     */
+    public static final double TIME_STEP = Math.min(0.05, (FloorSensors.ZONE_HEIGHT / 2.0) / CRUISE_SPEED);   // s
 
     /** Distance moved in one update at cruising speed (0.2 ft). */
     public static final double STEP_SIZE = CRUISE_SPEED * TIME_STEP;
@@ -226,5 +233,11 @@ public class MotionEngine implements MotionControllerAPI {
     /** Floor whose sensor zone contains the car, or 0 between zones. For the currentFloor label. */
     public synchronized int getCurrentFloor() {
         return FloorSensors.currentFloor(position);
+    }
+
+    @Override
+    public synchronized CabinSnapshot snapshot() {
+        return new CabinSnapshot(position, speed, direction, state,
+                FloorSensors.currentFloor(position), topLimitTripped, bottomLimitTripped);
     }
 }

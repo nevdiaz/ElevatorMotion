@@ -3,6 +3,7 @@ package harness;
 import bus.BusCodes;
 import bus.BusMessageDispatcher;
 import manager.TripController;
+import sim.MotionEngine;
 
 import java.util.List;
 
@@ -14,9 +15,9 @@ import java.util.List;
 public class NudgeHarness {
 
     /** How much later than normal the car brakes. It ends up about 0.8 ft past the floor. */
-    public static final double BRAKE_DELAY_FEET = 0.6;
+    public static final double BRAKE_DELAY_FEET = Math.min(0.6, 0.25 * MotionEngine.brakingDistance(MotionEngine.CRUISE_SPEED));
 
-    private static final int PAUSE_TICKS = 40;   // 2 seconds at 0.05 s per step
+    private static final int PAUSE_TICKS = (int) Math.ceil(2.0 / MotionEngine.TIME_STEP);   // 2 seconds
 
     /** Skips floors 1 and 10 so the overshoot stays inside the 1 ft lever margin. */
     public static final int[] FLOORS = {4, 8, 3, 6};

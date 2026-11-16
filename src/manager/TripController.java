@@ -8,7 +8,7 @@ public class TripController {
 
     private double targetPosition;
     private boolean tripActive = false;
-    private static final double levelTolerance = MotionEngine.NUDGE_STEP / 2.0 + 0.01; //half a step, so a nudge can always land inside it
+    public static final double levelTolerance = MotionEngine.NUDGE_STEP / 2.0 + 0.01; //half a step, so a nudge can always land inside it
     private static final int ticksBetweenSteps = 3; //Helps slow down the elevator stepping up and down
     private int levelWait;
     private final MotionControllerAPI motionController;
@@ -19,7 +19,7 @@ public class TripController {
         this.motionController = motionController;
     }
 
-    public boolean isTripActive() {
+    public synchronized boolean isTripActive() {
         return tripActive;
     }
 
@@ -28,7 +28,7 @@ public class TripController {
      * target floor's sensors and then has to be nudged back. 0 (the default) is normal braking.
      * Keep it under the 1 ft lever margin or the car will trip a safety lever.
      */
-    public void setBrakeDelay(double feet) {
+    public synchronized void setBrakeDelay(double feet) {
         if (Double.isNaN(feet) || feet < 0) {
             throw new IllegalArgumentException("brake delay must be 0 or more: " + feet);
         }
@@ -39,7 +39,7 @@ public class TripController {
      * The floor whose sensors are being corrected by nudging, or 0 when no nudging is happening.
      * Nudging means a trip is active, the car has stopped, and it is not level with the target yet.
      */
-    public int getNudgingFloor() {
+    public synchronized int getNudgingFloor() {
         if (tripActive && motionController.isMoving() == false
                 && Math.abs(motionController.getPosition() - targetPosition) > levelTolerance) {
             return targetFloor;
@@ -47,7 +47,7 @@ public class TripController {
         return 0;
     }
 
-    public void goToFloor(int floor) {
+    public synchronized void goToFloor(int floor) {
         if (floor < 1 || floor > MotionEngine.FLOORS) {
             System.out.println("Floor must be 1 through 10.");
             return;
@@ -75,7 +75,7 @@ public class TripController {
         }
     }
 
-    public void controlStep() {
+    public synchronized void controlStep() {
         if (motionController.isTopLimitTripped() || motionController.isBottomLimitTripped()) {
             if (tripActive) {
                 tripActive = false;

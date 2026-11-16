@@ -15,7 +15,7 @@ public class SimulationManagerChecks {
         SimulationManager manager = new SimulationManager(new TripController(engine), () -> log.append("T"));
         manager.setBeforeStep(() -> log.append("H"));
 
-        long frame = 50_000_000L;            //0.05 s, exactly one step
+        long frame = (long) Math.ceil(MotionEngine.TIME_STEP * 1e9);   //one step, rounded up to a whole nanosecond
         manager.update(0);                   //first call only records the time
         check(log.length() == 0, "no step on the first update");
         manager.update(frame);
@@ -32,7 +32,7 @@ public class SimulationManagerChecks {
         fast.setTimeScale(2.0);
         fast.update(0);
         fast.update(frame);
-        check(fastLog.toString().equals("TT"), "at 2x, one 0.05 s frame runs two steps");
+        check(fastLog.toString().equals("TT"), "0.05 s frame\" to \"step-sized frame");
 
         StringBuilder slowLog = new StringBuilder();
         SimulationManager slow = new SimulationManager(new TripController(new MotionEngine()), () -> slowLog.append("T"));

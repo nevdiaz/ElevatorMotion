@@ -1,13 +1,15 @@
 import api.Direction;
-import bus.BusCabinGateway;
+import api.ShaftSpec;
+import assembly.CabinAssembly;
+import assembly.CabinRunner;
 import bus.BusCodes;
 import bus.BusStandIn;
+import gui.CabinView;
 import gui.ElevatorViewController;
 import harness.EveryTwoHarness;
 import harness.LeverStopHarness;
 import harness.NudgeHarness;
 import harness.TopAndBottomHarness;
-import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -15,87 +17,88 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import manager.FloorSequencer;
 import manager.SimulationManager;
-import manager.TripController;
 import sim.MotionEngine;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main extends Application {
 
-    private static final int[] DEMO_ROUTE = {2, 10, 4, 1};
+    //Elevator 1 uses the first route, the others use the rest, so every car moves in DEMO mode
+    private static final int[][] DEMO_ROUTES = {{2, 10, 4, 1}, {5, 1, 8}, {10, 3}, {7, 2, 9}};
     private enum Mode {DEMO, ROUTE_HARNESS, TOP_BOTTOM_HARNESS, NUDGE_HARNESS, LEVER_TOP_HARNESS, LEVER_BOTTOM_HARNESS, EVERY_TWO_HARNESS}
-    private static final Mode MODE = Mode.EVERY_TWO_HARNESS; //TODO: Change mode to one of the enums to run it
+    private static final Mode MODE = Mode.DEMO; //TODO: Change mode to one of the enums to run it
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/NakatomiTower.fxml"));
         Parent root = loader.load();
         ElevatorViewController controller = loader.getController();
-        MotionEngine motionEngine = new MotionEngine();
-        controller.attach(motionEngine);
+
+        //Four cars on one bus; each has its own view for the GUI
+        BusStandIn bus = new BusStandIn();
+        List<CabinAssembly> cars = new ArrayList<>();
+        List<CabinView> views = new ArrayList<>();
+        ShaftSpec spec = new ShaftSpec(MotionEngine.FLOORS, MotionEngine.FLOOR_HEIGHT, MotionEngine.LEVER_MARGIN,
+                MotionEngine.CRUISE_SPEED, MotionEngine.ACCELERATION, MotionEngine.DECELERATION);
+        for (int n = BusCodes.ELEVATOR_1; n <= BusCodes.ELEVATOR_4; n++) {
+            CabinAssembly car = new CabinAssembly(n, bus.connect());
+            cars.add(car);
+            views.add(new CabinView("Elevator " + n, car.engine(), car.trip()::getNudgingFloor, spec));
+        }
+        CabinAssembly car1 = cars.get(0);   //the scenarios drive elevator 1
 
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.setTitle("NakatomiTower");
         primaryStage.show();
-        TripController tripController = new TripController(motionEngine);
-        controller.setNudgingFloorSource(tripController::getNudgingFloor);
-        BusStandIn bus = new BusStandIn();
-        BusCabinGateway gateway = new BusCabinGateway(motionEngine, tripController, bus.connect(), BusCodes.ELEVATOR_1);
+        controller.start();                 //the render loop only reads snapshots
+        controller.setCabins(views);
 
         if (MODE == Mode.ROUTE_HARNESS) {
-            harness.TestHarness testHarness = new harness.TestHarness(tripController, motionEngine::tick);
-            testHarness.setBeforeStep(gateway::update);
+            harness.TestHarness testHarness = new harness.TestHarness(car1.trip(), car1.engine()::tick);
+            testHarness.setBeforeStep(car1.gateway()::update);
             testHarness.start();
         } else {
-            SimulationManager simulationManager =
-                    new SimulationManager(tripController, motionEngine::tick);
-            simulationManager.setBeforeStep(gateway::update);
-            //This will handle the speed slider
-            controller.setSpeedHandler(simulationManager::setTimeScale);
+            //One simulation manager per car; the slider sets the speed of all of them
+            List<SimulationManager> managers = new ArrayList<>();
+            for (CabinAssembly car : cars) {
+                SimulationManager manager = new SimulationManager(car.trip(), car.engine()::tick);
+                manager.setBeforeStep(car.gateway()::update);
+                managers.add(manager);
+            }
+            controller.setSpeedHandler(scale -> managers.forEach(m -> m.setTimeScale(scale)));
 
-            //The demo route only runs in DEMO mode, scenarios drive the car over the bus.
-            FloorSequencer floorSequencer = (MODE == Mode.DEMO)
-                    ? new FloorSequencer(tripController, DEMO_ROUTE, 2.0)
-                    : null;
-
-            //Add additional harnesses here:
+            //Add additional harnesses here. Each one runs before elevator 1's gateway, on elevator 1's thread:
+            SimulationManager manager1 = managers.get(0);
+            Runnable gateway1 = car1.gateway()::update;
             if (MODE == Mode.TOP_BOTTOM_HARNESS) {
                 TopAndBottomHarness scenario = new TopAndBottomHarness(bus.connect());
-                simulationManager.setBeforeStep(() -> { scenario.update(); gateway.update(); });
+                manager1.setBeforeStep(() -> { scenario.update(); gateway1.run(); });
             } else if (MODE == Mode.NUDGE_HARNESS) {
-                NudgeHarness scenario = new NudgeHarness(bus.connect(), tripController);
-                simulationManager.setBeforeStep(() -> { scenario.update(); gateway.update(); });
+                NudgeHarness scenario = new NudgeHarness(bus.connect(), car1.trip());
+                manager1.setBeforeStep(() -> { scenario.update(); gateway1.run(); });
             } else if (MODE == Mode.LEVER_TOP_HARNESS || MODE == Mode.LEVER_BOTTOM_HARNESS) {
                 Direction runaway = (MODE == Mode.LEVER_TOP_HARNESS) ? Direction.Up : Direction.Down;
-                LeverStopHarness scenario = new LeverStopHarness(motionEngine, bus.connect(),
+                LeverStopHarness scenario = new LeverStopHarness(car1.engine(), bus.connect(),
                         BusCodes.ELEVATOR_1, runaway, 40);
-                simulationManager.setBeforeStep(() -> {
-                    scenario.update();
-                    gateway.update();
-                });
-            } else if (MODE == Mode.EVERY_TWO_HARNESS){
+                manager1.setBeforeStep(() -> { scenario.update(); gateway1.run(); });
+            } else if (MODE == Mode.EVERY_TWO_HARNESS) {
                 EveryTwoHarness scenario = new EveryTwoHarness(bus.connect());
-                simulationManager.setBeforeStep(() -> { scenario.update(); gateway.update(); });
-            } else {
-                simulationManager.setBeforeStep(gateway::update);
+                manager1.setBeforeStep(() -> { scenario.update(); gateway1.run(); });
             }
 
-
-            AnimationTimer timer = new AnimationTimer() {
-                long previousFramesTimeStamp = -1;
-                @Override
-                public void handle(long now) {
-                    double elapsedSeconds = 0;
-                    if (previousFramesTimeStamp != -1) {
-                        elapsedSeconds = (now - previousFramesTimeStamp) / 1000000000.0;
-                    }
-                    simulationManager.update(now);
-                    if (floorSequencer != null) {
-                        floorSequencer.update(elapsedSeconds);
-                    }
-                    previousFramesTimeStamp = now;
-                }
-            };
-            timer.start();
+            //One thread per elevator. The demo routes only run in DEMO mode and run on the car's own thread,
+            //so each car's trip controller still has a single writer.
+            List<CabinRunner> runners = new ArrayList<>();
+            for (int i = 0; i < cars.size(); i++) {
+                FloorSequencer sequencer = (MODE == Mode.DEMO)
+                        ? new FloorSequencer(cars.get(i).trip(), DEMO_ROUTES[i], 2.0)
+                        : null;
+                runners.add(new CabinRunner("elevator-" + (i + 1), managers.get(i), sequencer));
+            }
+            primaryStage.setOnCloseRequest(event -> runners.forEach(CabinRunner::stop));
+            runners.forEach(CabinRunner::start);   //start last, after every hook is in place
         }
     }
 
