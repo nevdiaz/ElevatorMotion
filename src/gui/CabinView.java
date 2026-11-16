@@ -1,9 +1,8 @@
 package gui;
 
 import api.CabinAssemblyAPI;
-
+import api.ShaftSpec;
 import java.util.function.IntSupplier;
 
-/** This will allow the GUI to access everything it needs for one cabin. */
-public record CabinView(String name, CabinAssemblyAPI cabin, IntSupplier nudgingFloor) {
-}
+/** Everything the GUI needs to draw one cabin. Read-only. */
+public record CabinView(String name, CabinAssemblyAPI cabin, IntSupplier nudgingFloor, ShaftSpec spec) {}

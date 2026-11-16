@@ -1,38 +1,45 @@
 package gui;
 
+import api.ShaftSpec;
+
+/** Turns feet along the shaft into pixels in the drawing, for one shaft specification. */
 public final class ViewScale {
 
-    private ViewScale() {}
+    public static final double pixelsPerFoot = 20;
+    public static final double cabinSize = 8;
+    public static final double headroomAboveTopFloor = 12;   //ft of shaft drawn above the top floor
+    public static final double pitBelowFloorOne = 4;         //ft of shaft drawn below floor 1
 
-    public static final int pixelsPerFoot = 20;
+    private final ShaftSpec spec;
+    private final double floorOneYValue;
+    private final double shaftHeight;
 
-    public static final int floorHeight = 14;
-
-    public static final int floorCount = 10;
-
-    public static final int cabinSize = 8;
-
-    public static final int headroomAboveFloorTen = 12;
-
-    public static final int pitBelowFloorOne = 4;
-
-    public static final int leverMargin = 1;   //ft past floor 1 and floor 10. Must match MotionEngine.LEVER_MARGIN
-
-    public static final int totalTravelBetweenFloorOneAndTen = (floorCount - 1) * floorHeight; //126
-
-    public static final int floorOneYValue =
-            (totalTravelBetweenFloorOneAndTen + headroomAboveFloorTen) * pixelsPerFoot; //2760
-
-    public static final int shaftHeight =
-            ((headroomAboveFloorTen + totalTravelBetweenFloorOneAndTen + pitBelowFloorOne) * pixelsPerFoot); //2840
-
-    public static double floorToFeet(int floorNumber) {
-        return (floorNumber - 1) * floorHeight;
+    public ViewScale(ShaftSpec spec) {
+        this.spec = spec;
+        double travel = spec.floorPosition(spec.floors());   //feet between floor 1 and the top floor
+        this.floorOneYValue = (travel + headroomAboveTopFloor) * pixelsPerFoot;
+        this.shaftHeight = (headroomAboveTopFloor + travel + pitBelowFloorOne) * pixelsPerFoot;
     }
 
-    public static double feetToWorldYValue(double feet) {
+    public int floorCount() {
+        return spec.floors();
+    }
+
+    /** Feet past floor 1 and the top floor where the safety levers sit. */
+    public double leverMargin() {
+        return spec.leverMargin();
+    }
+
+    /** Height of the whole drawn shaft in pixels. */
+    public double shaftHeight() {
+        return shaftHeight;
+    }
+
+    public double floorToFeet(int floorNumber) {
+        return spec.floorPosition(floorNumber);
+    }
+
+    public double feetToWorldYValue(double feet) {
         return floorOneYValue - feet * pixelsPerFoot;
     }
-
-
 }
