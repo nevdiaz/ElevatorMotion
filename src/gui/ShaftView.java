@@ -90,6 +90,11 @@ public class ShaftView {
         shaft.setStrokeWidth(selected ? 14 : 1);
     }
 
+    /** Puts the shaft back where it was drawn; the world view does not scroll. */
+    public void resetCamera() {
+        world.setTranslateY(0);
+    }
+
     private void buildShaft() {
         shaft.setLayoutY(0);
         shaft.setHeight(ViewScale.shaftHeight);
