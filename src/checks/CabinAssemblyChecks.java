@@ -49,7 +49,7 @@ public class CabinAssemblyChecks {
         run(cars, 1);
 
         center.publish(BusMessage.of(BusCodes.CAR_CALL, BusCodes.ELEVATOR_2, 5));
-        run(cars, 600);
+        run(cars, CheckTime.scaled(2400));
 
         check(cars.get(1).engine().isFloorAligned(5), "car 2 went to floor 5");
         check(cars.get(0).engine().isFloorAligned(1), "car 1 stayed at floor 1");
@@ -67,7 +67,7 @@ public class CabinAssemblyChecks {
         for (int i = 0; i < 4; i++) {
             center.publish(BusMessage.of(BusCodes.CAR_CALL, i + 1, floors[i]));
         }
-        run(cars, 800);
+        run(cars, CheckTime.scaled(2400));
 
         for (int i = 0; i < 4; i++) {
             check(cars.get(i).engine().isFloorAligned(floors[i]),

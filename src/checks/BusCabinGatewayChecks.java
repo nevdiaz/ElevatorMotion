@@ -85,7 +85,7 @@ public class BusCabinGatewayChecks {
         rig.drain(BusCodes.CAR_DIRECTION);
 
         rig.call(BusCodes.ELEVATOR_1, 5);
-        rig.run(2000);
+        rig.run(CheckTime.scaled(2000));
         check(rig.engine.isFloorAligned(5), "a car call for floor 5 takes the car to floor 5");
         check(rig.drain(BusCodes.CAR_POSITION).equals(List.of(2L, 3L, 4L, 5L)),
                 "floors 2, 3, 4 and 5 are published in order");
@@ -102,7 +102,7 @@ public class BusCabinGatewayChecks {
         rig.call(BusCodes.ELEVATOR_1, 3);
         rig.call(BusCodes.ELEVATOR_1, 2);
         rig.call(BusCodes.ELEVATOR_1, 4);
-        rig.run(4000);
+        rig.run(CheckTime.scaled(4000));
         check(rig.engine.isFloorAligned(4), "three calls are served and the car ends at floor 4");
         check(rig.drain(BusCodes.CAR_POSITION).equals(List.of(2L, 3L, 2L, 3L, 4L)),
                 "calls are served in the order they arrived (3, then 2, then 4)");
@@ -118,7 +118,7 @@ public class BusCabinGatewayChecks {
         rig.call(BusCodes.ELEVATOR_1, 11);
         rig.call(BusCodes.ELEVATOR_1, 99999999999L);
         rig.call(BusCodes.ELEVATOR_1, 2);
-        rig.run(2000);
+        rig.run(CheckTime.scaled(2000));
         check(rig.engine.isFloorAligned(2), "invalid floors are skipped and the valid call is still served");
     }
 
@@ -129,7 +129,7 @@ public class BusCabinGatewayChecks {
         rig.drain(BusCodes.CAR_DIRECTION);
 
         rig.call(BusCodes.ELEVATOR_1, 1);
-        rig.run(200);
+        rig.run(CheckTime.scaled(200));
         check(rig.engine.isFloorAligned(1), "a call for the current floor does not move the car");
         check(rig.drain(BusCodes.CAR_DIRECTION).isEmpty(), "a call for the current floor publishes no direction change");
     }
@@ -139,7 +139,7 @@ public class BusCabinGatewayChecks {
         rig.run(1);
 
         rig.call(BusCodes.ELEVATOR_2, 5);
-        rig.run(200);
+        rig.run(CheckTime.scaled(200));
         check(rig.engine.isFloorAligned(1), "a call for elevator 2 is ignored by elevator 1");
     }
 
@@ -159,7 +159,7 @@ public class BusCabinGatewayChecks {
         check(rig.drain(BusCodes.CAR_FAULT).isEmpty(), "no fault is announced at start");
 
         rig.engine.startMotor(Direction.Up);      //runaway: no trip, so nothing brakes
-        rig.run(1000);
+        rig.run(CheckTime.runaway());
         check(rig.engine.isTopLimitTripped(), "the runaway car trips the top lever");
         check(rig.drain(BusCodes.CAR_FAULT).equals(List.of((long) BusCodes.FAULT_TOP_LIMIT)),
                 "the top lever fault is announced once");
@@ -175,7 +175,7 @@ public class BusCabinGatewayChecks {
         Rig low = new Rig();
         low.run(1);
         low.engine.startMotor(Direction.Down);
-        low.run(200);
+        low.run(CheckTime.scaled(200));
         check(low.engine.isBottomLimitTripped(), "the runaway car trips the bottom lever");
         check(low.drain(BusCodes.CAR_FAULT).equals(List.of((long) BusCodes.FAULT_BOTTOM_LIMIT)),
                 "the bottom lever fault is announced once");
