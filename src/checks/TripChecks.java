@@ -64,12 +64,12 @@ public class TripChecks {
         String label = "trip to floor " + floor + ": ";
         int[] reads = new int[MotionEngine.FLOORS + 1];
         double startPos = engine.getPosition();
-        boolean finished = runTrip(controller, engine, tick, floor, 5000, reads);
+        boolean finished = runTrip(controller, engine, tick, floor, CheckTime.scaled(5000), reads);
         check(finished, label + "finishes");
         check(engine.getState() == MotionState.STOPPED, label + "state is STOPPED");
         check(!engine.isMoving(), label + "not moving");
-        check(Math.abs(engine.getPosition() - MotionEngine.floorPosition(floor)) < 0.05,
-                label + "position within 0.05 ft of the floor");
+        check(Math.abs(engine.getPosition() - MotionEngine.floorPosition(floor)) <= TripController.levelTolerance + 1e-9,
+                label + "position within the level tolerance of the floor");
         check(engine.isFloorAligned(floor), label + "aligned with target floor");
         for (int other = 1; other <= MotionEngine.FLOORS; other++) {
             if (other != floor) {
@@ -82,7 +82,8 @@ public class TripChecks {
         double highPos = Math.max(startPos, target);
         for (int f = 1; f <= MotionEngine.FLOORS; f++) {
             double p = MotionEngine.floorPosition(f);
-            if (p >= lowPos - 0.01 && p <= highPos + 0.01) {
+            double slack = TripController.levelTolerance + 1e-9;   //the car starts and ends within the tolerance of a floor
+            if (p >= lowPos - slack && p <= highPos + slack) {
                 check(reads[f] >= 2, label + "floor " + f + " sensor read at least twice (read " + reads[f] + ")");
             } else {
                 check(reads[f] == 0, label + "floor " + f + " sensor never read outside the trip");
@@ -97,7 +98,7 @@ public class TripChecks {
         TripController trip = new TripController(engine);
         trip.goToFloor(10);
         int guard = 0;
-        while (engine.isMoving() && guard++ < 5000) {
+        while (engine.isMoving() && guard++ < CheckTime.runaway()) {
             engine.tick();                    // no controlStep(), so nothing brakes
         }
         check(engine.isTopLimitTripped(), "a runaway car reaches the top lever");
@@ -118,7 +119,7 @@ public class TripChecks {
         TripController controller = new TripController(engine);
 
         // 1. Requesting the floor we're already on does nothing
-        runTrip(controller, engine, tick, 3, 5000, null);
+        runTrip(controller, engine, tick, 3, CheckTime.scaled(5000), null);
         double before = engine.getPosition();
         controller.goToFloor(3);
         check(!controller.isTripActive(), "same-floor request starts no trip");
@@ -139,28 +140,16 @@ public class TripChecks {
         check(controller.isTripActive(), "trip to 8 still under way");
         controller.goToFloor(2);
         int ticks = 0;
-        while (controller.isTripActive() && ticks < 5000) {
+        while (controller.isTripActive() && ticks < CheckTime.scaled(5000)) {
             controller.controlStep();
             tick.run();
             ticks++;
         }
         check(engine.isFloorAligned(8), "second request ignored, car ends at floor 8");
 
-        // 4. Start a trip from a position that is not a floor
-        controller = new TripController(engine);
-        controller.goToFloor(2);
-        for (int i = 0; i < 60; i++) {
-            controller.controlStep();
-            tick.run();
-        }
-        engine.stopMotor();
-        ticks = 0;
-        while (engine.getState() != MotionState.STOPPED && ticks < 5000) {
-            tick.run();
-            ticks++;
-        }
-        check(engine.getState() == MotionState.STOPPED, "car stopped mid-flight");
-        controller = new TripController(engine);
-        verifyTrip(engine, controller, tick, 6);
+        // 4. Start a trip from a position that is not a floor: halfway between floors 3 and 4
+        MotionEngine between = new MotionEngine(MotionEngine.floorPosition(3) + MotionEngine.FLOOR_HEIGHT / 2.0);
+        check(between.getCurrentFloor() == 0, "the start position is between floor zones");
+        verifyTrip(between, new TripController(between), between::tick, 6);
     }
 }
