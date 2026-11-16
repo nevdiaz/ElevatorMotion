@@ -1,6 +1,7 @@
 package gui;
 
 import api.CabinSnapshot;
+import api.ShaftSpec;
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -45,20 +46,21 @@ public class ElevatorViewController {
     private double nextSampleTime = 0.0;
     private final double graphWindow = 30.0;   //Number of seconds the x axis shows
     private final XYChart.Series<Number, Number> speedSeries = new XYChart.Series<>();
-    private List<CabinView> cabins = List.of();                  //the cars the GUI can show
-    private final List<ShaftView> shaftViews = new ArrayList<>(); //one shaft drawing per car, same order
-    private int selectedIndex = -1;                               //-1 until a car is selected
-    private boolean worldMode = false;                            //false = single view, true = world view
-    private final HBox worldBox = new HBox();                     //the world view's row of shafts
-    private final Group worldGroup = new Group(worldBox);         //the group makes the scaled size count for layout
+    private List<CabinView> cabins = List.of();                     //the cars the GUI can show
+    private final List<ShaftView> shaftViews = new ArrayList<>();   //one shaft drawing per car, same order
+    private int selectedIndex = -1;                                 //-1 until a car is selected
+    private ViewScale scale;                                        //null until setCabins() has the specification
+    private boolean worldMode = false;                              //false = single view, true = world view
+    private final HBox worldBox = new HBox();                       //the world view's row of shafts
+    private final Group worldGroup = new Group(worldBox);           //the group makes the scaled size count for layout
 
     @FXML
     private void initialize() {
         currentFloor.setText("Current Floor");
         motionState.setText("Current Motion State");
-        cruisingSpeed.setText("Cruising Speed: 4.0 ft/s");
-        acceleration.setText("Acceleration: 2.0 ft/s^2");
-        deceleration.setText("Deceleration: 2.0 ft/s^2");
+        cruisingSpeed.setText("Cruising Speed");
+        acceleration.setText("Acceleration");
+        deceleration.setText("Deceleration");
         buildSpeedChart();
         buildSpeedControl();
         clipViewport();
@@ -105,9 +107,22 @@ public class ElevatorViewController {
         timer.start();
     }
 
+    private void applySpec(ShaftSpec spec) {
+        scale = new ViewScale(spec);
+        cruisingSpeed.setText(String.format("Cruising Speed: %.1f ft/s", spec.cruiseSpeed()));
+        acceleration.setText(String.format("Acceleration: %.1f ft/s^2", spec.acceleration()));
+        deceleration.setText(String.format("Deceleration: %.1f ft/s^2", spec.deceleration()));
+        double top = Math.ceil(spec.cruiseSpeed() * 1.25);   //leave headroom above cruising speed on the chart
+        speedAxis.setUpperBound(top);
+        speedAxis.setTickUnit(Math.max(1.0, Math.ceil(top / 5.0)));
+    }
+
     /** Gives the GUI the cars to choose from, builds one shaft per car and shows the first car. */
     public void setCabins(List<CabinView> cabins) {
         this.cabins = List.copyOf(cabins);
+        if (!this.cabins.isEmpty()) {
+            applySpec(this.cabins.get(0).spec());   //every car shares the same shaft specification
+        }
         selectedIndex = -1;
         shaftViews.clear();
         for (int i = 0; i < this.cabins.size(); i++) {
@@ -244,7 +259,7 @@ public class ElevatorViewController {
             return;
         }
         if (worldMode) {
-            double fit = Math.min(viewport.getHeight() / ViewScale.shaftHeight,
+            double fit = Math.min(viewport.getHeight() / scale.shaftHeight(),
                     viewport.getWidth() / (shaftViews.size() * shaftColumnWidth));
             double scale = Math.max(fit, 0.01);   //never zero: a zero scale cannot be inverted
             worldBox.setScaleX(scale);
