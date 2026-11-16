@@ -84,6 +84,12 @@ public class ShaftView {
         world.setTranslateY(viewportHeight / 2 - gondolaMiddle);
     }
 
+    /** Outlines the shaft in gold when this car is the selected one in the world view. */
+    public void setSelected(boolean selected) {
+        shaft.setStroke(selected ? Color.GOLD : Color.BLACK);
+        shaft.setStrokeWidth(selected ? 14 : 1);
+    }
+
     private void buildShaft() {
         shaft.setLayoutY(0);
         shaft.setHeight(ViewScale.shaftHeight);
