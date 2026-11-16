@@ -2,6 +2,7 @@ package harness;
 
 import manager.FloorSequencer;
 import manager.TripController;
+import sim.MotionEngine;
 
 
 import java.util.concurrent.Executors;
@@ -17,7 +18,7 @@ public class TestHarness {
 
     private static final int[] ROUTE = {2, 10, 4, 1};
     private static final double PAUSE_SECONDS = 2.0;
-    private static final long TIME_STEP = 50; // milliseconds (0.05 s)
+    private static final long STEP_MICROS = Math.round(MotionEngine.TIME_STEP * 1_000_000);   // one simulation step in real time
     private final TripController controller;
     private final FloorSequencer sequencer;
     private final Runnable updateTimeStep;
@@ -39,7 +40,7 @@ public class TestHarness {
     }
 
     public void start() {
-        clock.scheduleAtFixedRate(this::onUpdate, 0, TIME_STEP, TimeUnit.MILLISECONDS);
+        clock.scheduleAtFixedRate(this::onUpdate, 0, STEP_MICROS, TimeUnit.MICROSECONDS);
     }
 
     public void setBeforeStep(Runnable beforeStep) {
@@ -52,7 +53,7 @@ public class TestHarness {
     void onUpdate() {
         try {
             beforeStep.run();
-            sequencer.update(TIME_STEP / 1000.0);
+            sequencer.update(MotionEngine.TIME_STEP);
             controller.controlStep();
             updateTimeStep.run();
         } catch (RuntimeException e) {
