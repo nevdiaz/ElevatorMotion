@@ -23,6 +23,7 @@ public class ShaftView {
     @FXML private Rectangle floorSensorLeft;
     @FXML private Rectangle floorSensorRight;
 
+    private final javafx.scene.control.Label nameLabel = new javafx.scene.control.Label();
     private static final Color sensorsAligned = Color.LIGHTGREEN;
     private static final Color shaftSensorColor = Color.GRAY;
     private static final Color cabinSensorColor = Color.ORANGE;
