@@ -1,4 +1,5 @@
 import api.Direction;
+import api.ShaftSpec;
 import assembly.CabinAssembly;
 import assembly.CabinRunner;
 import bus.BusCodes;
@@ -16,6 +17,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import manager.FloorSequencer;
 import manager.SimulationManager;
+import sim.MotionEngine;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,10 +39,12 @@ public class Main extends Application {
         BusStandIn bus = new BusStandIn();
         List<CabinAssembly> cars = new ArrayList<>();
         List<CabinView> views = new ArrayList<>();
+        ShaftSpec spec = new ShaftSpec(MotionEngine.FLOORS, MotionEngine.FLOOR_HEIGHT, MotionEngine.LEVER_MARGIN,
+                MotionEngine.CRUISE_SPEED, MotionEngine.ACCELERATION, MotionEngine.DECELERATION);
         for (int n = BusCodes.ELEVATOR_1; n <= BusCodes.ELEVATOR_4; n++) {
             CabinAssembly car = new CabinAssembly(n, bus.connect());
             cars.add(car);
-            views.add(new CabinView("Elevator " + n, car.engine(), car.trip()::getNudgingFloor));
+            views.add(new CabinView("Elevator " + n, car.engine(), car.trip()::getNudgingFloor, spec));
         }
         CabinAssembly car1 = cars.get(0);   //the scenarios drive elevator 1
 
