@@ -147,7 +147,7 @@ public class BusStandInChecks {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
         BusMessageDispatcher listener = bus.connect();
-        int topic = BusCodes.HALL_CALL;
+        int topic = BusCodes.UP_CALL;
 
         listener.subscribe(topic, BusCodes.ALL);
         for (int i = 0; i < 1100; i++) {

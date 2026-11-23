@@ -18,7 +18,7 @@ public final class BusCodes {
     public static final int MODE = 2;
     public static final int CABIN_STATUS = 3;
     public static final int CAR_DIRECTION = 4;
-    public static final int HALL_CALL = 5;
+    public static final int UP_CALL = 5;
     public static final int CABIN_CALL = 6;
     public static final int DOOR_STATE = 7;
 
