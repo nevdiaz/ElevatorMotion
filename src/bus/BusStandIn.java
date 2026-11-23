@@ -1,6 +1,7 @@
 package bus;
 
 import java.util.*;
+import Utilities.Message;
 
 /**
  * In-memory stand-in for the software bus. Safe to use from several threads.
@@ -31,7 +32,7 @@ public class BusStandIn {
 
     private class Connection implements BusMessageDispatcher {
 
-        private final Map<Integer, Deque<BusMessage>> queues = new HashMap<>();
+        private final Map<Integer, Deque<Message>> queues = new HashMap<>();
 
 
         @Override
@@ -62,8 +63,8 @@ public class BusStandIn {
         }
 
         @Override
-        public void publish(BusMessage message) {
-            if (message == null || message.getTopic() < 1 || message.getTopic() > BusCodes.MAX_TOPIC) {
+        public void publish(Message message) {
+            if (message == null || message.topic() < 1 || message.topic() > BusCodes.MAX_TOPIC) {
                 throw new IllegalArgumentException("message must not be null and its topic must be 1 to " + BusCodes.MAX_TOPIC);
             }
             synchronized (lock) {
@@ -82,11 +83,11 @@ public class BusStandIn {
          * A subscription on subtopic 0 gets every elevator
          * A message published with subtopic 0 reaches every subscription of that topic.
          */
-        private void receive(BusMessage message) {
-            int topic = message.getTopic();
-            int subtopic = message.getSubtopic();
+        private void receive(Message message) {
+            int topic = message.topic();
+            int subtopic = message.subtopic();
 
-            for (Map.Entry<Integer, Deque<BusMessage>> entry : queues.entrySet()) {
+            for (Map.Entry<Integer, Deque<Message>> entry : queues.entrySet()) {
                 int queueTopic = entry.getKey() / 256;
                 int queueSubtopic = entry.getKey() % 256;
                 if (queueTopic == topic
@@ -97,7 +98,7 @@ public class BusStandIn {
         }
 
         //Same as Team03's bus: when a queue is full the oldest message is thrown away to make room for the new one
-        private void addDroppingOldest(Deque<BusMessage> queue, BusMessage message) {
+        private void addDroppingOldest(Deque<Message> queue, Message message) {
             while (queue.size() >= MAX_QUEUE_SIZE) {
                 queue.pollFirst();
             }
@@ -105,12 +106,12 @@ public class BusStandIn {
         }
 
         @Override
-        public Optional<BusMessage> get(int topic, int subtopic) {
+        public Optional<Message> get(int topic, int subtopic) {
             if (topic < 1 || topic > BusCodes.MAX_TOPIC || subtopic < 0 || subtopic > 255) {
                 throw new IllegalArgumentException("topic must be 1 to " + BusCodes.MAX_TOPIC + " and subtopic 0 to 255");
             }
             synchronized (lock) {
-                Deque<BusMessage> queue = queues.get(key(topic, subtopic));
+                Deque<Message> queue = queues.get(key(topic, subtopic));
                 if (queue == null || queue.isEmpty()) {
                     return Optional.empty();
                 }

@@ -2,9 +2,9 @@ package checks;
 
 import SoftwareBus.MessageBus;
 import SoftwareBus.SoftwareBusServer;
+import Utilities.Message;
 import bus.BusCabinGateway;
 import bus.BusCodes;
-import bus.BusMessage;
 import bus.SocketBusDispatcher;
 import manager.TripController;
 import sim.MotionEngine;
@@ -74,23 +74,23 @@ public class SocketBusChecks {
             center.register();
             car.subscribe(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1);
 
-            center.publish(BusMessage.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1, 5));
-            Optional<BusMessage> call = await(car, BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1);
+            center.publish(Message.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1, 5));
+            Optional<Message> call = await(car, BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1);
             check(call.isPresent(), "a published message reaches the subscriber");
             check(call.isPresent() && call.get().payload(1) == 5, "payload byte 1 (the floor) survives the bus");
-            check(call.isPresent() && call.get().getTopic() == BusCodes.CABIN_CALL
-                    && call.get().getSubtopic() == BusCodes.ELEVATOR_1, "topic and subtopic survive the bus");
+            check(call.isPresent() && call.get().topic() == BusCodes.CABIN_CALL
+                    && call.get().subtopic() == BusCodes.ELEVATOR_1, "topic and subtopic survive the bus");
             check(car.get(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1).isEmpty(), "get removes the message");
 
             //The bus does not give a connection its own messages back
             center.subscribe(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1);
-            center.publish(BusMessage.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1, 6));
+            center.publish(Message.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1, 6));
             check(await(car, BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1).isPresent(), "the other connection still gets it");
             pause(200);
             check(center.get(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1).isEmpty(), "the publisher does not get its own message");
 
             //A topic nobody subscribed to
-            center.publish(BusMessage.ofPayload(BusCodes.GOTO, BusCodes.ELEVATOR_1, 7));
+            center.publish(Message.ofPayload(BusCodes.GOTO, BusCodes.ELEVATOR_1, 7));
             pause(200);
             check(car.get(BusCodes.GOTO, BusCodes.ELEVATOR_1).isEmpty(), "no message without a subscription");
             check(car.get(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_2).isEmpty(), "get on a topic never subscribed is empty");
@@ -105,18 +105,18 @@ public class SocketBusChecks {
             listener.subscribe(BusCodes.FIRE, BusCodes.ALL);
             listener.subscribe(BusCodes.ALIGN, BusCodes.ELEVATOR_2);
 
-            sender.publish(BusMessage.ofPayload(BusCodes.CABIN_STATUS, BusCodes.ELEVATOR_3, 1, 4, 0));
-            Optional<BusMessage> status = await(listener, BusCodes.CABIN_STATUS, BusCodes.ALL);
+            sender.publish(Message.ofPayload(BusCodes.CABIN_STATUS, BusCodes.ELEVATOR_3, 1, 4, 0));
+            Optional<Message> status = await(listener, BusCodes.CABIN_STATUS, BusCodes.ALL);
             check(status.isPresent() && status.get().payload(2) == 4,
                     "a subscription on subtopic 0 gets a message for elevator 3");
 
-            sender.publish(BusMessage.ofPayload(BusCodes.FIRE, BusCodes.ALL, 1));
-            Optional<BusMessage> fire = await(listener, BusCodes.FIRE, BusCodes.ALL);
+            sender.publish(Message.ofPayload(BusCodes.FIRE, BusCodes.ALL, 1));
+            Optional<Message> fire = await(listener, BusCodes.FIRE, BusCodes.ALL);
             check(fire.isPresent() && fire.get().flag(1), "a building-wide FIRE message (subtopic 0) arrives");
 
             //A message published with subtopic 0 reaches a subscription for one elevator
-            sender.publish(BusMessage.ofPayload(BusCodes.ALIGN, BusCodes.ALL, BusCodes.ALIGN_TOP));
-            Optional<BusMessage> align = await(listener, BusCodes.ALIGN, BusCodes.ELEVATOR_2);
+            sender.publish(Message.ofPayload(BusCodes.ALIGN, BusCodes.ALL, BusCodes.ALIGN_TOP));
+            Optional<Message> align = await(listener, BusCodes.ALIGN, BusCodes.ELEVATOR_2);
             check(align.isPresent() && align.get().payload(1) == BusCodes.ALIGN_TOP,
                     "a message published with subtopic 0 reaches an elevator 2 subscription");
         }
@@ -129,11 +129,11 @@ public class SocketBusChecks {
             listener.subscribe(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_4);
 
             for (int floor = 1; floor <= 10; floor++) {
-                sender.publish(BusMessage.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_4, floor));
+                sender.publish(Message.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_4, floor));
             }
             boolean inOrder = true;
             for (int floor = 1; floor <= 10; floor++) {
-                Optional<BusMessage> next = await(listener, BusCodes.CABIN_CALL, BusCodes.ELEVATOR_4);
+                Optional<Message> next = await(listener, BusCodes.CABIN_CALL, BusCodes.ELEVATOR_4);
                 if (next.isEmpty() || next.get().payload(1) != floor) {
                     inOrder = false;
                 }
@@ -141,7 +141,7 @@ public class SocketBusChecks {
             check(inOrder, "ten messages arrive in the order they were sent");
 
             listener.unsubscribe(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_4);
-            sender.publish(BusMessage.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_4, 3));
+            sender.publish(Message.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_4, 3));
             pause(200);
             check(listener.get(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_4).isEmpty(), "nothing arrives after unsubscribing");
 
@@ -150,7 +150,7 @@ public class SocketBusChecks {
             checkRejects(() -> listener.subscribe(BusCodes.FIRST_COMMAND, 1), "subscribe a command-range topic rejected");
             checkRejects(() -> listener.get(5, 256), "get subtopic 256 rejected");
             checkRejects(() -> listener.publish(null), "publish null rejected");
-            checkRejects(() -> listener.publish(BusMessage.of(BusCodes.FIRST_COMMAND, 1, 1)), "publish a command-range topic rejected");
+            checkRejects(() -> listener.publish(Message.of(BusCodes.FIRST_COMMAND, 1, 1)), "publish a command-range topic rejected");
         }
     }
 
@@ -170,7 +170,7 @@ public class SocketBusChecks {
         closing.subscribe(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1);
         closing.close();
         check(!closing.isConnected(), "a closed dispatcher is not connected");
-        closing.publish(BusMessage.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1, 2));
+        closing.publish(Message.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1, 2));
         check(closing.get(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1).isEmpty(), "a closed dispatcher returns nothing");
     }
 
@@ -194,14 +194,14 @@ public class SocketBusChecks {
             }
             check(heardStart, "the cabin announces it is stopped at floor 1 over the real bus");
 
-            center.publish(BusMessage.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1, 3));
+            center.publish(Message.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1, 3));
             int arrivedAt = 0;
             for (int tick = 0; tick < 3000 && arrivedAt == 0; tick++) {
                 gateway.update();
                 trip.controlStep();
                 engine.tick();
                 pause(1);
-                Optional<BusMessage> status = center.get(BusCodes.CABIN_STATUS, BusCodes.ELEVATOR_1);
+                Optional<Message> status = center.get(BusCodes.CABIN_STATUS, BusCodes.ELEVATOR_1);
                 if (status.isPresent() && status.get().flag(1)) {
                     arrivedAt = status.get().payload(2);
                 }
@@ -213,9 +213,9 @@ public class SocketBusChecks {
     }
 
     //Polls get() until a message comes or about 3 s pass
-    private static Optional<BusMessage> await(SocketBusDispatcher d, int topic, int subtopic) throws InterruptedException {
+    private static Optional<Message> await(SocketBusDispatcher d, int topic, int subtopic) throws InterruptedException {
         for (int i = 0; i < 600; i++) {
-            Optional<BusMessage> m = d.get(topic, subtopic);
+            Optional<Message> m = d.get(topic, subtopic);
             if (m.isPresent()) {
                 return m;
             }

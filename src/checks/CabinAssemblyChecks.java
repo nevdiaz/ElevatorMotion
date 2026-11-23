@@ -1,8 +1,8 @@
 package checks;
 
+import Utilities.Message;
 import assembly.CabinAssembly;
 import bus.BusCodes;
-import bus.BusMessage;
 import bus.BusMessageDispatcher;
 import bus.BusStandIn;
 
@@ -48,7 +48,7 @@ public class CabinAssemblyChecks {
         BusMessageDispatcher center = bus.connect();
         run(cars, 1);
 
-        center.publish(BusMessage.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_2, 5));
+        center.publish(Message.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_2, 5));
         run(cars, CheckTime.scaled(2400));
 
         check(cars.get(1).engine().isFloorAligned(5), "car 2 went to floor 5");
@@ -65,7 +65,7 @@ public class CabinAssemblyChecks {
 
         int[] floors = {3, 6, 9, 2};
         for (int i = 0; i < 4; i++) {
-            center.publish(BusMessage.ofPayload(BusCodes.CABIN_CALL, i + 1, floors[i]));
+            center.publish(Message.ofPayload(BusCodes.CABIN_CALL, i + 1, floors[i]));
         }
         run(cars, CheckTime.scaled(2400));
 

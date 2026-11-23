@@ -1,9 +1,9 @@
 package harness;
 
+import Utilities.Message;
 import api.Direction;
 import api.MotionControllerAPI;
 import bus.BusCodes;
-import bus.BusMessage;
 import bus.BusMessageDispatcher;
 
 import java.util.Optional;
@@ -43,7 +43,7 @@ public class LeverStopHarness {
                     " waiting for lever to trip to signal auto braking the cabin.");
             car.startMotor(runaway);
         }
-        Optional<BusMessage> message = listener.get(BusCodes.CAR_FAULT, elevator);
+        Optional<Message> message = listener.get(BusCodes.CAR_FAULT, elevator);
         while (message.isPresent()) {
             fault = message.get().payload(1);
             System.out.println("EMERGENCY on the bus: " + describe(fault));

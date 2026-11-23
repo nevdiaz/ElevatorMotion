@@ -3,7 +3,7 @@ package bus;
 import api.MotionControllerAPI;
 import manager.TripController;
 import sim.MotionEngine;
-
+import Utilities.Message;
 import java.util.ArrayDeque;
 import java.util.Optional;
 
@@ -49,7 +49,7 @@ public class BusCabinGateway {
 
         //Calls from different topics are read one topic after the other, not in the order they were sent
         for (int topic : CALL_TOPICS) {
-            Optional<BusMessage> call = bus.get(topic, elevator);
+            Optional<Message> call = bus.get(topic, elevator);
             //Removes the oldest message each time until empty
             while (call.isPresent()) {
                 int floor = call.get().payload(1);
@@ -75,7 +75,7 @@ public class BusCabinGateway {
     private void publishChanges() {
         int fault = currentFault();
         if (fault != lastFault) {
-            bus.publish(BusMessage.ofPayload(BusCodes.CAR_FAULT, elevator, fault));
+            bus.publish(Message.ofPayload(BusCodes.CAR_FAULT, elevator, fault));
             lastFault = fault;
         }
 
@@ -88,7 +88,7 @@ public class BusCabinGateway {
             alignment += BusCodes.ALIGN_TOP;
         }
         if (alignment != lastAlignment) {
-            bus.publish(BusMessage.ofPayload(BusCodes.ALIGN, elevator, alignment));
+            bus.publish(Message.ofPayload(BusCodes.ALIGN, elevator, alignment));
             lastAlignment = alignment;
         }
 
@@ -108,7 +108,7 @@ public class BusCabinGateway {
         }
         //A car stopped between floors (a tripped safety lever) has no floor to report
         if (floor != 0) {
-            bus.publish(BusMessage.ofPayload(BusCodes.CABIN_STATUS, elevator, 1, floor, BusCodes.DIR_IDLE));
+            bus.publish(Message.ofPayload(BusCodes.CABIN_STATUS, elevator, 1, floor, BusCodes.DIR_IDLE));
             statusAnnounced = true;
         }
     }

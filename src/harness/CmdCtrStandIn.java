@@ -1,7 +1,7 @@
 package harness;
 
+import Utilities.Message;
 import bus.BusCodes;
-import bus.BusMessage;
 import bus.BusMessageDispatcher;
 
 import java.util.ArrayList;
@@ -51,7 +51,7 @@ public class CmdCtrStandIn {
         if (next < floors.length) {
             waitingFor = floors[next];
             next += 1;
-            center.publish(BusMessage.ofPayload(BusCodes.CABIN_CALL, elevator, waitingFor));
+            center.publish(Message.ofPayload(BusCodes.CABIN_CALL, elevator, waitingFor));
         }
     }
 
@@ -65,7 +65,7 @@ public class CmdCtrStandIn {
 
     /** Reads everything queued for CABIN_STATUS and keeps the newest one. */
     private void readStatus() {
-        Optional<BusMessage> m = center.get(BusCodes.CABIN_STATUS, elevator);
+        Optional<Message> m = center.get(BusCodes.CABIN_STATUS, elevator);
         while (m.isPresent()) {
             lastStopped = m.get().flag(1);
             lastFloor = m.get().payload(2);

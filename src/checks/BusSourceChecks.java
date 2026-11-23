@@ -2,8 +2,8 @@ package checks;
 
 import SoftwareBus.MessageBus;
 import SoftwareBus.SoftwareBusServer;
+import Utilities.Message;
 import bus.BusCodes;
-import bus.BusMessage;
 import bus.BusMessageDispatcher;
 import bus.BusSource;
 import bus.SocketBusDispatcher;
@@ -59,8 +59,8 @@ public class BusSourceChecks {
         BusMessageDispatcher a = source.open();
         BusMessageDispatcher b = source.open();
         b.subscribe(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1);
-        a.publish(BusMessage.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1, 4));
-        Optional<BusMessage> got = b.get(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1);
+        a.publish(Message.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1, 4));
+        Optional<Message> got = b.get(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1);
         check(got.isPresent() && got.get().payload(1) == 4, "two stand-in connections from one source talk to each other");
         source.close();    //nothing to close, must not fail
     }
@@ -86,8 +86,8 @@ public class BusSourceChecks {
                 "open() registers every connection, each with its own ID");
 
         car.subscribe(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_2);
-        center.publish(BusMessage.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_2, 7));
-        Optional<BusMessage> got = Optional.empty();
+        center.publish(Message.ofPayload(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_2, 7));
+        Optional<Message> got = Optional.empty();
         for (int i = 0; i < 600 && got.isEmpty(); i++) {
             got = car.get(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_2);
             Thread.sleep(5);

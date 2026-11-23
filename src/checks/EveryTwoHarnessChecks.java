@@ -1,8 +1,8 @@
 package checks;
 
+import Utilities.Message;
 import bus.BusCabinGateway;
 import bus.BusCodes;
-import bus.BusMessage;
 import bus.BusMessageDispatcher;
 import bus.BusStandIn;
 import harness.EveryTwoHarness;
@@ -46,7 +46,7 @@ public class EveryTwoHarnessChecks {
             ticks += 1;
 
             //CABIN_STATUS is only published when the car stops. The very first one is the start-up announcement.
-            for (BusMessage status : drain(monitor, BusCodes.CABIN_STATUS)) {
+            for (Message status : drain(monitor, BusCodes.CABIN_STATUS)) {
                 if (status.flag(1) && ticks > 1) {
                     stops.add(status.payload(2));
                 }
@@ -64,9 +64,9 @@ public class EveryTwoHarnessChecks {
                 "Every two floors: no safety lever was engaged");
     }
 
-    private static List<BusMessage> drain(BusMessageDispatcher monitor, int topic) {
-        List<BusMessage> values = new ArrayList<>();
-        Optional<BusMessage> next = monitor.get(topic, BusCodes.ELEVATOR_1);
+    private static List<Message> drain(BusMessageDispatcher monitor, int topic) {
+        List<Message> values = new ArrayList<>();
+        Optional<Message> next = monitor.get(topic, BusCodes.ELEVATOR_1);
         while (next.isPresent()) {
             values.add(next.get());
             next = monitor.get(topic, BusCodes.ELEVATOR_1);

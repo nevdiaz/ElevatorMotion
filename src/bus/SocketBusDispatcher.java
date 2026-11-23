@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import Utilities.Message;
 
 /**
  * Talks to Team03's real Software Bus over a TCP socket, using the same BusMessageDispatcher methods as BusStandIn.
@@ -34,7 +35,7 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
     private final DataInputStream in;
     private final OutputStream out;
     private final Object wire = new Object();     //one request on the socket at a time
-    private final ConcurrentHashMap<Integer, ConcurrentLinkedDeque<BusMessage>> inboxes = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, ConcurrentLinkedDeque<Message>> inboxes = new ConcurrentHashMap<>();
     private final Thread poller;
 
     private volatile boolean closed = false;
@@ -97,12 +98,12 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
                 return;
             }
             try {
-                writeFrame(BusMessage.of(BusCodes.REGISTER, 0, 0));
-                BusMessage reply = readFrame();     //REGISTER always gets exactly one reply, ID in the subtopic byte
-                if (reply.getTopic() != BusCodes.REGISTER) {
+                writeFrame(Message.of(BusCodes.REGISTER, 0, 0));
+                Message reply = readFrame();     //REGISTER always gets exactly one reply, ID in the subtopic byte
+                if (reply.topic() != BusCodes.REGISTER) {
                     throw new IOException("expected a REGISTER reply, got " + reply);
                 }
-                id = reply.getSubtopic();
+                id = reply.subtopic();
             } catch (IOException e) {
                 fail(e);
                 return;
@@ -118,7 +119,7 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         checkTopicAndSubtopic(topic, subtopic);
         //Create the inbox first, so nothing the bus sends after SUBSCRIBE can be lost
         if (inboxes.putIfAbsent(key(topic, subtopic), new ConcurrentLinkedDeque<>()) == null) {
-            send(BusMessage.of(BusCodes.SUBSCRIBE, topic, subtopic));
+            send(Message.of(BusCodes.SUBSCRIBE, topic, subtopic));
             //The bus does not reply to SUBSCRIBE and handles each connection on its own thread, so a message
             //published by someone else right after this call could be missed. One GET on this same connection
             //gets answered only after the SUBSCRIBE was processed, so when it returns the subscription is active.
@@ -130,21 +131,21 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
     public void unsubscribe(int topic, int subtopic) {
         checkTopicAndSubtopic(topic, subtopic);
         inboxes.remove(key(topic, subtopic));
-        send(BusMessage.of(BusCodes.UNSUBSCRIBE, topic, subtopic));
+        send(Message.of(BusCodes.UNSUBSCRIBE, topic, subtopic));
     }
 
     @Override
-    public void publish(BusMessage message) {
-        if (message == null || message.getTopic() < 1 || message.getTopic() > BusCodes.MAX_TOPIC) {
+    public void publish(Message message) {
+        if (message == null || message.topic() < 1 || message.topic() > BusCodes.MAX_TOPIC) {
             throw new IllegalArgumentException("message must not be null and its topic must be 1 to " + BusCodes.MAX_TOPIC);
         }
         send(message);
     }
 
     @Override
-    public Optional<BusMessage> get(int topic, int subtopic) {
+    public Optional<Message> get(int topic, int subtopic) {
         checkTopicAndSubtopic(topic, subtopic);
-        ConcurrentLinkedDeque<BusMessage> inbox = inboxes.get(key(topic, subtopic));
+        ConcurrentLinkedDeque<Message> inbox = inboxes.get(key(topic, subtopic));
         if (inbox == null) {
             return Optional.empty();
         }
@@ -185,23 +186,23 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
     private boolean drain(int key) {
         boolean any = false;
         while (isConnected()) {
-            BusMessage reply;
+            Message reply;
             synchronized (wire) {
                 if (!inboxes.containsKey(key)) {
                     return any;       //unsubscribed in the meantime
                 }
                 try {
-                    writeFrame(BusMessage.of(BusCodes.GET, key / 256, key % 256));
+                    writeFrame(Message.of(BusCodes.GET, key / 256, key % 256));
                     reply = readFrame();
                 } catch (IOException e) {
                     fail(e);
                     return any;
                 }
             }
-            if (reply.getTopic() == BusCodes.NO_MESSAGE) {
+            if (reply.topic() == BusCodes.NO_MESSAGE) {
                 return any;
             }
-            ConcurrentLinkedDeque<BusMessage> inbox = inboxes.get(key);
+            ConcurrentLinkedDeque<Message> inbox = inboxes.get(key);
             if (inbox != null) {
                 //Same as the real bus: when the queue is full the oldest message is dropped
                 while (inbox.size() >= MAX_QUEUE_SIZE) {
@@ -214,7 +215,7 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         return any;
     }
 
-    private void send(BusMessage message) {
+    private void send(Message message) {
         synchronized (wire) {
             if (!isConnected()) {
                 return;
@@ -227,15 +228,15 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         }
     }
 
-    private void writeFrame(BusMessage message) throws IOException {
+    private void writeFrame(Message message) throws IOException {
         out.write(message.toBytes());
         out.flush();
     }
 
-    private BusMessage readFrame() throws IOException {
-        byte[] word = new byte[BusMessage.WORD_SIZE];
+    private Message readFrame() throws IOException {
+        byte[] word = new byte[Message.SIZE];
         in.readFully(word);        //throws EOFException if the bus closed the connection
-        return BusMessage.fromBytes(word);
+        return Message.fromBytes(word);
     }
 
     private void fail(IOException e) {
