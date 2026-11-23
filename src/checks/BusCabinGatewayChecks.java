@@ -1,5 +1,6 @@
 package checks;
 
+import Utilities.Message;
 import api.Direction;
 import bus.*;
 import manager.TripController;
@@ -69,13 +70,13 @@ public class BusCabinGatewayChecks {
         }
 
         void send(int topic, int subtopic, int floor) {
-            center.publish(BusMessage.ofPayload(topic, subtopic, floor));
+            center.publish(Message.ofPayload(topic, subtopic, floor));
         }
 
         // Takes every CABIN_STATUS the monitor has queued, oldest first.
         List<Status> statuses() {
             List<Status> found = new ArrayList<>();
-            for (BusMessage m : drain(BusCodes.CABIN_STATUS)) {
+            for (Message m : drain(BusCodes.CABIN_STATUS)) {
                 found.add(new Status(m.payload(1), m.payload(2), m.payload(3)));
             }
             return found;
@@ -84,15 +85,15 @@ public class BusCabinGatewayChecks {
         // Takes every ALIGN or CAR_FAULT message queued, and returns payload byte 1 of each.
         List<Integer> firstBytes(int topic) {
             List<Integer> found = new ArrayList<>();
-            for (BusMessage m : drain(topic)) {
+            for (Message m : drain(topic)) {
                 found.add(m.payload(1));
             }
             return found;
         }
 
-        private List<BusMessage> drain(int topic) {
-            List<BusMessage> messages = new ArrayList<>();
-            Optional<BusMessage> next = monitor.get(topic, BusCodes.ELEVATOR_1);
+        private List<Message> drain(int topic) {
+            List<Message> messages = new ArrayList<>();
+            Optional<Message> next = monitor.get(topic, BusCodes.ELEVATOR_1);
             while (next.isPresent()) {
                 messages.add(next.get());
                 next = monitor.get(topic, BusCodes.ELEVATOR_1);
@@ -176,7 +177,7 @@ public class BusCabinGatewayChecks {
         rig.call(BusCodes.ELEVATOR_1, 11);
         rig.call(BusCodes.ELEVATOR_1, 255);
         //The old number style puts the floor in payload byte 6, so payload byte 1 is 0 and the call is not a floor
-        rig.center.publish(BusMessage.of(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1, 5));
+        rig.center.publish(Message.of(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1, 5));
         rig.run(200);
         check(rig.engine.isFloorAligned(1), "invalid floors and old-style messages do not move the car");
 

@@ -2,6 +2,7 @@ package bus;
 
 
 import java.util.Optional;
+import Utilities.Message;
 
 public interface BusMessageDispatcher {
 
@@ -15,8 +16,8 @@ public interface BusMessageDispatcher {
     void unsubscribe(int topic, int subtopic);
 
     /** Sends a message to every other connection subscribed to its topic. The sender does not receive its own message. */
-    void publish(BusMessage message);
+    void publish(Message message);
 
     /** Returns the oldest queued message for topic and subtopic, removes it, or empty if there is none. */
-    Optional<BusMessage> get(int topic, int subtopic);
+    Optional<Message> get(int topic, int subtopic);
 }

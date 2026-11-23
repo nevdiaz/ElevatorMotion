@@ -1,5 +1,6 @@
 package checks;
 
+import Utilities.Message;
 import bus.BusCodes;
 import bus.BusMessage;
 import bus.BusMessageDispatcher;
@@ -34,21 +35,21 @@ public class BusStandInChecks {
         int elevator = BusCodes.ELEVATOR_1;
 
         listener.subscribe(topic, elevator);
-        sender.publish(BusMessage.of(topic, elevator, 1));
+        sender.publish(Message.of(topic, elevator, 1));
         check(holdsValue(listener.get(topic, elevator), 1), "subscriber receives a published message");
         check(listener.get(topic, elevator).isEmpty(), "get removes the message");
 
         sender.subscribe(topic, elevator);
-        sender.publish(BusMessage.of(topic, elevator, 2));
+        sender.publish(Message.of(topic, elevator, 2));
         check(sender.get(topic, elevator).isEmpty(), "publisher does not receive its own message");
         check(holdsValue(listener.get(topic, elevator), 2), "the other connection still receives it");
 
-        sender.publish(BusMessage.of(BusCodes.ALIGN, elevator, 5));
+        sender.publish(Message.of(BusCodes.ALIGN, elevator, 5));
         check(listener.get(BusCodes.ALIGN, elevator).isEmpty(), "no message without a subscription");
 
         BusMessageDispatcher second = bus.connect();
         second.subscribe(topic, elevator);
-        sender.publish(BusMessage.of(topic, elevator, 3));
+        sender.publish(Message.of(topic, elevator, 3));
         check(holdsValue(listener.get(topic, elevator), 3), "first listener gets the message");
         check(holdsValue(second.get(topic, elevator), 3), "second listener gets the message");
     }
@@ -62,7 +63,7 @@ public class BusStandInChecks {
 
         listener.subscribe(topic, elevator);
         for (int i = 1; i <= 3; i++) {
-            sender.publish(BusMessage.of(topic, elevator, i));
+            sender.publish(Message.of(topic, elevator, i));
         }
         check(holdsValue(listener.get(topic, elevator), 1), "the oldest message comes first");
         check(holdsValue(listener.get(topic, elevator), 2), "the second message comes second");
@@ -77,13 +78,13 @@ public class BusStandInChecks {
 
         listener.subscribe(1, 2);
         listener.subscribe(2, 1);
-        sender.publish(BusMessage.of(1, 2, 100));
+        sender.publish(Message.of(1, 2, 100));
         check(listener.get(2, 1).isEmpty(), "a message for (1, 2) does not appear in the (2, 1) queue");
         check(holdsValue(listener.get(1, 2), 100), "a message for (1, 2) is in the (1, 2) queue");
 
         listener.subscribe(1, 0);
         listener.subscribe(2, 0);
-        sender.publish(BusMessage.of(1, 0, 7));
+        sender.publish(Message.of(1, 0, 7));
         check(listener.get(2, 0).isEmpty(), "a message for (1, 0) does not appear in the (2, 0) queue");
         check(holdsValue(listener.get(1, 0), 7), "a message for (1, 0) is in the (1, 0) queue");
     }
@@ -98,8 +99,8 @@ public class BusStandInChecks {
         checkAccepts(() -> conn.subscribe(5, 0), "subscribe with subtopic 0 (all elevators) accepted");
         checkRejects(() -> conn.unsubscribe(0, 1), "unsubscribe topic 0 rejected");
         checkRejects(() -> conn.publish(null), "publish null rejected");
-        checkRejects(() -> conn.publish(BusMessage.of(0, 1, 1)), "publish topic 0 rejected");
-        checkRejects(() -> conn.publish(BusMessage.of(BusCodes.FIRST_COMMAND, 1, 1)), "publish a command-range topic rejected");
+        checkRejects(() -> conn.publish(Message.of(0, 1, 1)), "publish topic 0 rejected");
+        checkRejects(() -> conn.publish(Message.of(BusCodes.FIRST_COMMAND, 1, 1)), "publish a command-range topic rejected");
         checkRejects(() -> conn.get(300, 0), "get topic 300 rejected");
         checkRejects(() -> conn.get(5, 256), "get subtopic 256 rejected");
     }
@@ -114,17 +115,17 @@ public class BusStandInChecks {
         listener.subscribe(topic, BusCodes.ELEVATOR_1);
         listener.subscribe(topic, BusCodes.ELEVATOR_2);
 
-        sender.publish(BusMessage.of(topic, BusCodes.ELEVATOR_1, 5));
+        sender.publish(Message.of(topic, BusCodes.ELEVATOR_1, 5));
         check(holdsValue(listener.get(topic, BusCodes.ELEVATOR_1), 5), "a message for elevator 1 reaches the elevator 1 queue");
         check(listener.get(topic, BusCodes.ELEVATOR_2).isEmpty(), "a message for elevator 1 does not reach the elevator 2 queue");
         check(holdsValue(listener.get(topic, BusCodes.ALL), 5), "a subscription on subtopic 0 catches a message for elevator 1 (as on Team03's bus)");
 
-        sender.publish(BusMessage.of(topic, BusCodes.ELEVATOR_2, 6));
+        sender.publish(Message.of(topic, BusCodes.ELEVATOR_2, 6));
         check(holdsValue(listener.get(topic, BusCodes.ALL), 6), "a subscription on subtopic 0 catches a message for elevator 2 too");
         check(holdsValue(listener.get(topic, BusCodes.ELEVATOR_2), 6), "the elevator 2 queue also gets it");
         check(listener.get(topic, BusCodes.ELEVATOR_1).isEmpty(), "the elevator 1 queue does not get a message for elevator 2");
 
-        sender.publish(BusMessage.of(topic, BusCodes.ALL, 9));
+        sender.publish(Message.of(topic, BusCodes.ALL, 9));
         check(holdsValue(listener.get(topic, BusCodes.ELEVATOR_1), 9), "a message for all reaches the elevator 1 queue");
         check(holdsValue(listener.get(topic, BusCodes.ELEVATOR_2), 9), "a message for all reaches the elevator 2 queue");
         check(holdsValue(listener.get(topic, BusCodes.ALL), 9), "a message for all reaches the subtopic 0 queue");
@@ -137,11 +138,11 @@ public class BusStandInChecks {
         int elevator = BusCodes.ELEVATOR_1;
 
         listener.subscribe(topic, elevator);
-        sender.publish(BusMessage.of(topic, elevator, 4));
+        sender.publish(Message.of(topic, elevator, 4));
         listener.unsubscribe(topic, elevator);
         check(listener.get(topic, elevator).isEmpty(), "unsubscribe discards the queued message");
 
-        sender.publish(BusMessage.of(topic, elevator, 6));
+        sender.publish(Message.of(topic, elevator, 6));
         check(listener.get(topic, elevator).isEmpty(), "no delivery after unsubscribing");
 
         listener.subscribe(topic, elevator);
@@ -156,12 +157,12 @@ public class BusStandInChecks {
 
         listener.subscribe(topic, BusCodes.ALL);
         for (int i = 0; i < 1100; i++) {
-            sender.publish(BusMessage.of(topic, BusCodes.ALL, i));
+            sender.publish(Message.of(topic, BusCodes.ALL, i));
         }
         int count = 0;
         long first = -1;
         long last = -1;
-        Optional<BusMessage> next = listener.get(topic, BusCodes.ALL);
+        Optional<Message> next = listener.get(topic, BusCodes.ALL);
         while (next.isPresent()) {
             if (count == 0) {
                 first = next.get().value();
@@ -175,7 +176,7 @@ public class BusStandInChecks {
         check(last == 1099, "the newest message is kept");
     }
 
-    private static boolean holdsValue(Optional<BusMessage> message, long expected) {
+    private static boolean holdsValue(Optional<Message> message, long expected) {
         return message.isPresent() && message.get().value() == expected;
     }
 

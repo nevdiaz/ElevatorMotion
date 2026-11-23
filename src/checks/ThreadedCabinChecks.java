@@ -1,5 +1,6 @@
 package checks;
 
+import Utilities.Message;
 import api.CabinSnapshot;
 import assembly.CabinAssembly;
 import assembly.CabinRunner;
@@ -69,7 +70,7 @@ public class ThreadedCabinChecks {
                     boolean more = true;
                     while (more) {
                         more = producing.get();
-                        java.util.Optional<BusMessage> m = link.get(BusCodes.CABIN_STATUS, subtopic);
+                        java.util.Optional<Message> m = link.get(BusCodes.CABIN_STATUS, subtopic);
                         while (m.isPresent()) {
                             long v = m.get().value();
                             int p = (int) (v / 1_000_000);
@@ -96,7 +97,7 @@ public class ThreadedCabinChecks {
                 try {
                     for (int i = 0; i < perProducer; i++) {
                         for (int k = 1; k <= consumers; k++) {
-                            link.publish(BusMessage.of(BusCodes.CABIN_STATUS, k, id * 1_000_000L + i));
+                            link.publish(Message.of(BusCodes.CABIN_STATUS, k, id * 1_000_000L + i));
                         }
                     }
                 } catch (Throwable e) {
@@ -144,7 +145,7 @@ public class ThreadedCabinChecks {
         while (System.currentTimeMillis() < end) {
             int car = 1 + random.nextInt(4);
             int floor = 1 + random.nextInt(10);
-            center.publish(BusMessage.of(BusCodes.CABIN_CALL, car, floor));
+            center.publish(Message.of(BusCodes.CABIN_CALL, car, floor));
             sent++;
             Thread.sleep(5);
         }
