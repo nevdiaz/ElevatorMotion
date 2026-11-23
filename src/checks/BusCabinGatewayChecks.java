@@ -56,7 +56,7 @@ public class BusCabinGatewayChecks {
         }
 
         void call(int subtopic, long floor) {
-            center.publish(BusMessage.of(BusCodes.CAR_CALL, subtopic, floor));
+            center.publish(BusMessage.of(BusCodes.CABIN_CALL, subtopic, floor));
         }
 
         // Takes every queued message the monitor has for this topic, oldest first.

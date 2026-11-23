@@ -144,7 +144,7 @@ public class ThreadedCabinChecks {
         while (System.currentTimeMillis() < end) {
             int car = 1 + random.nextInt(4);
             int floor = 1 + random.nextInt(10);
-            center.publish(BusMessage.of(BusCodes.CAR_CALL, car, floor));
+            center.publish(BusMessage.of(BusCodes.CABIN_CALL, car, floor));
             sent++;
             Thread.sleep(5);
         }

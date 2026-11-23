@@ -57,7 +57,7 @@ public class BusStandInChecks {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
         BusMessageDispatcher listener = bus.connect();
-        int topic = BusCodes.CAR_CALL;
+        int topic = BusCodes.CABIN_CALL;
         int elevator = BusCodes.ELEVATOR_1;
 
         listener.subscribe(topic, elevator);
@@ -108,7 +108,7 @@ public class BusStandInChecks {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
         BusMessageDispatcher listener = bus.connect();
-        int topic = BusCodes.CAR_CALL;
+        int topic = BusCodes.CABIN_CALL;
 
         listener.subscribe(topic, BusCodes.ALL);
         listener.subscribe(topic, BusCodes.ELEVATOR_1);

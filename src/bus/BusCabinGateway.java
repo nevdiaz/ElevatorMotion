@@ -32,7 +32,7 @@ public class BusCabinGateway {
         this.elevator = elevator;
 
         bus.register();
-        bus.subscribe(BusCodes.CAR_CALL, elevator);
+        bus.subscribe(BusCodes.CABIN_CALL, elevator);
     }
 
     //Empty the bus into the waiting queue
@@ -42,7 +42,7 @@ public class BusCabinGateway {
             pendingFloors.clear();       // a tripped car cannot serve calls
         }
 
-        Optional<BusMessage> call = bus.get(BusCodes.CAR_CALL, elevator);
+        Optional<BusMessage> call = bus.get(BusCodes.CABIN_CALL, elevator);
         //Removes the oldest message each time until empty
         while (call.isPresent()) {
             long floor = call.get().value();
@@ -50,7 +50,7 @@ public class BusCabinGateway {
             if (!lockedOut && floor >= 1 && floor <= Integer.MAX_VALUE && !pendingFloors.contains((int) floor)) {
                 pendingFloors.addLast((int) floor);
             }
-            call = bus.get(BusCodes.CAR_CALL, elevator);
+            call = bus.get(BusCodes.CABIN_CALL, elevator);
         }
     }
 

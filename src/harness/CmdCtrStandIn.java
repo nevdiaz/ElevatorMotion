@@ -53,7 +53,7 @@ public class CmdCtrStandIn {
         if (next < floors.length) {
             waitingFor = floors[next];
             next += 1;
-            center.publish(BusMessage.of(BusCodes.CAR_CALL, elevator, waitingFor));
+            center.publish(BusMessage.of(BusCodes.CABIN_CALL, elevator, waitingFor));
         }
     }
 
