@@ -27,7 +27,7 @@ public class Main extends Application {
     //Elevator 1 uses the first route, the others use the rest, so every car moves in DEMO mode
     private static final int[][] DEMO_ROUTES = {{2, 10, 4, 1}, {5, 1, 8}, {10, 3}, {7, 2, 9}};
     private enum Mode {DEMO, ROUTE_HARNESS, TOP_BOTTOM_HARNESS, NUDGE_HARNESS, LEVER_TOP_HARNESS, LEVER_BOTTOM_HARNESS, EVERY_TWO_HARNESS}
-    private static final Mode MODE = Mode.EVERY_TWO_HARNESS; //TODO: Change mode to one of the enums to run it
+    private static final Mode MODE = Mode.DEMO; //TODO: Change mode to one of the enums to run it
 
     @Override
     public void start(Stage primaryStage) throws Exception {
