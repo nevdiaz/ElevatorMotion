@@ -54,6 +54,7 @@ public class BusMessageChecks {
         check(message.getBody()[0] == 1, "changing the returned body does not change the message");
 
         numberChecks();
+        payloadChecks();
 
         System.out.println(checksRun + " checks run, " + checksFailed + " failed");
         if (checksFailed > 0) {
@@ -92,6 +93,37 @@ public class BusMessageChecks {
         check(a.hashCode() == b.hashCode(), "equal messages have the same hash code");
         check(!a.equals(BusMessage.of(3, 1, 8)), "different body is not equal");
         check(!a.equals(BusMessage.of(4, 1, 7)), "different topic is not equal");
+    }
+
+    //Catalog messages put each field in its own byte, starting at payload byte 1 (Team03's Message layout)
+    private static void payloadChecks() {
+        //Same layout as Team03's cabinStatus: stopped, floor, direction in payload bytes 1 to 3
+        BusMessage status = BusMessage.ofPayload(3, 2, 1, 7, 0);
+        check(Arrays.equals(status.getBody(), new byte[]{1, 7, 0, 0, 0, 0}), "payload bytes fill the body from the front");
+        check(status.payload(1) == 1 && status.payload(2) == 7 && status.payload(3) == 0, "payload(n) reads back each byte");
+        check(status.flag(1) && !status.flag(3), "flag(n) is true for non-zero");
+        check(status.payload(6) == 0, "unused payload bytes are 0");
+
+        //A floor sits in payload byte 1, not the last byte like of()
+        BusMessage call = BusMessage.ofPayload(6, 1, 5);
+        check(call.payload(1) == 5, "a floor is in payload byte 1");
+        check(call.toBytes()[2] == 5 && call.toBytes()[7] == 0, "floor 5 is wire index 2, not wire index 7");
+        check(BusMessage.of(6, 1, 5).payload(6) == 5, "of(5) is payload byte 6 (the old style)");
+
+        //Bytes above 127 survive
+        check(BusMessage.ofPayload(1, 0, 200).payload(1) == 200, "payload 200 reads back unsigned");
+
+        //Survives the wire
+        BusMessage copy = BusMessage.fromBytes(status.toBytes());
+        check(copy.equals(status) && copy.payload(2) == 7, "a payload message survives the round trip");
+
+        //Bad input
+        checkRejects(() -> BusMessage.ofPayload(1, 0, 256), "payload byte 256 rejected");
+        checkRejects(() -> BusMessage.ofPayload(1, 0, -1), "negative payload byte rejected");
+        checkRejects(() -> BusMessage.ofPayload(1, 0, 1, 2, 3, 4, 5, 6, 7), "seven payload bytes rejected");
+        checkRejects(() -> status.payload(0), "payload(0) rejected");
+        checkRejects(() -> status.payload(7), "payload(7) rejected");
+        check(BusMessage.ofPayload(1, 0).equals(BusMessage.of(1, 0, 0)), "no payload bytes is an all-zero body");
     }
 
     private static void check(boolean condition, String message) {

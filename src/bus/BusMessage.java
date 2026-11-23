@@ -15,6 +15,9 @@ public class BusMessage {
 
     public static final long MAX_VALUE = (1L << 48) - 1; //Largest number 6 bytes can hold
 
+    //Payload bytes are numbered 1 to 6 like Team03's message catalog, payload(1) is the first byte after the subtopic
+    public static final int PAYLOAD_BYTES = BODY_SIZE;
+
     public BusMessage(int topic, int subtopic, byte[] body) {
 
 
@@ -67,7 +70,44 @@ public class BusMessage {
         return new BusMessage(topic, subtopic, body);
     }
 
-    //Needed after seeing Team03's repo
+    /**
+     * Builds a catalog message. The first argument is payload byte 1,
+     * the second is payload byte 2, and so on.
+     * Unused payload bytes are 0. Every value must be 0 to 255.
+     * @param topic - payload byte 1
+     * @param subtopic - payload byte 2
+     * @param payload - catalogue message
+     * @return message
+     */
+    public static BusMessage ofPayload(int topic, int subtopic, int... payload) {
+        if (payload.length > PAYLOAD_BYTES) {
+            throw new IllegalArgumentException("at most " + PAYLOAD_BYTES + " payload bytes, got " + payload.length);
+        }
+        byte[] body = new byte[BODY_SIZE];
+        for (int i = 0; i < payload.length; i++) {
+            if (payload[i] < 0 || payload[i] > 255) {
+                throw new IllegalArgumentException("payload byte " + (i + 1) + " must be 0 to 255, got " + payload[i]);
+            }
+            body[i] = (byte) payload[i];
+        }
+        return new BusMessage(topic, subtopic, body);
+    }
+
+    //Reads payload byte n (1 to 6) as an unsigned value 0 to 255
+    public int payload(int n) {
+        if (n < 1 || n > PAYLOAD_BYTES) {
+            throw new IllegalArgumentException("payload byte must be 1 to " + PAYLOAD_BYTES + ", got " + n);
+        }
+        return body[n - 1] & 0xFF;
+    }
+
+    //Reads payload byte n as a yes/no flag (anything but 0 is true)
+    public boolean flag(int n) {
+        return payload(n) != 0;
+    }
+
+//Only for bus commands (SUBSCRIBE, GET ...) and the old number style, catalog messages use ofPayload
+
     //Method for building a body from a number
     public static BusMessage of(int topic, int subtopic, long value) {
         if (value < 0 || value > MAX_VALUE) {
@@ -82,8 +122,7 @@ public class BusMessage {
         return new BusMessage(topic, subtopic, body);
     }
 
-    //Needed after seeing Team03's repo
-    //Method for building a number from a body
+    //Method for building a number from a body (big-endian), catalog messages use payload(n) instead
     public long value() {
         long v = 0;
         for (byte b : body) {
@@ -106,6 +145,10 @@ public class BusMessage {
 
     @Override
     public String toString() {
-        return "[topic " + topic + " | subtopic " + subtopic + " | value " + value() + "]";
+        StringBuilder text = new StringBuilder("[topic " + topic + " | subtopic " + subtopic + " | payload");
+        for (int n = 1; n <= PAYLOAD_BYTES; n++) {
+            text.append(' ').append(payload(n));
+        }
+        return text.append(']').toString();
     }
 }

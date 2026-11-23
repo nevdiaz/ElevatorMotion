@@ -30,7 +30,7 @@ public class BusStandInChecks {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
         BusMessageDispatcher listener = bus.connect();
-        int topic = BusCodes.CAR_DIRECTION;
+        int topic = BusCodes.CABIN_STATUS;
         int elevator = BusCodes.ELEVATOR_1;
 
         listener.subscribe(topic, elevator);
@@ -43,8 +43,8 @@ public class BusStandInChecks {
         check(sender.get(topic, elevator).isEmpty(), "publisher does not receive its own message");
         check(holdsValue(listener.get(topic, elevator), 2), "the other connection still receives it");
 
-        sender.publish(BusMessage.of(BusCodes.CAR_POSITION, elevator, 5));
-        check(listener.get(BusCodes.CAR_POSITION, elevator).isEmpty(), "no message without a subscription");
+        sender.publish(BusMessage.of(BusCodes.ALIGN, elevator, 5));
+        check(listener.get(BusCodes.ALIGN, elevator).isEmpty(), "no message without a subscription");
 
         BusMessageDispatcher second = bus.connect();
         second.subscribe(topic, elevator);
@@ -57,7 +57,7 @@ public class BusStandInChecks {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
         BusMessageDispatcher listener = bus.connect();
-        int topic = BusCodes.CAR_CALL;
+        int topic = BusCodes.CABIN_CALL;
         int elevator = BusCodes.ELEVATOR_1;
 
         listener.subscribe(topic, elevator);
@@ -108,7 +108,7 @@ public class BusStandInChecks {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
         BusMessageDispatcher listener = bus.connect();
-        int topic = BusCodes.CAR_CALL;
+        int topic = BusCodes.CABIN_CALL;
 
         listener.subscribe(topic, BusCodes.ALL);
         listener.subscribe(topic, BusCodes.ELEVATOR_1);
@@ -117,7 +117,12 @@ public class BusStandInChecks {
         sender.publish(BusMessage.of(topic, BusCodes.ELEVATOR_1, 5));
         check(holdsValue(listener.get(topic, BusCodes.ELEVATOR_1), 5), "a message for elevator 1 reaches the elevator 1 queue");
         check(listener.get(topic, BusCodes.ELEVATOR_2).isEmpty(), "a message for elevator 1 does not reach the elevator 2 queue");
-        check(listener.get(topic, BusCodes.ALL).isEmpty(), "a subscription on subtopic 0 does not catch a message for elevator 1 (as on the real bus)");
+        check(holdsValue(listener.get(topic, BusCodes.ALL), 5), "a subscription on subtopic 0 catches a message for elevator 1 (as on Team03's bus)");
+
+        sender.publish(BusMessage.of(topic, BusCodes.ELEVATOR_2, 6));
+        check(holdsValue(listener.get(topic, BusCodes.ALL), 6), "a subscription on subtopic 0 catches a message for elevator 2 too");
+        check(holdsValue(listener.get(topic, BusCodes.ELEVATOR_2), 6), "the elevator 2 queue also gets it");
+        check(listener.get(topic, BusCodes.ELEVATOR_1).isEmpty(), "the elevator 1 queue does not get a message for elevator 2");
 
         sender.publish(BusMessage.of(topic, BusCodes.ALL, 9));
         check(holdsValue(listener.get(topic, BusCodes.ELEVATOR_1), 9), "a message for all reaches the elevator 1 queue");
@@ -128,7 +133,7 @@ public class BusStandInChecks {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
         BusMessageDispatcher listener = bus.connect();
-        int topic = BusCodes.CAR_POSITION;
+        int topic = BusCodes.CABIN_STATUS;
         int elevator = BusCodes.ELEVATOR_1;
 
         listener.subscribe(topic, elevator);
@@ -147,7 +152,7 @@ public class BusStandInChecks {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
         BusMessageDispatcher listener = bus.connect();
-        int topic = BusCodes.HALL_CALL;
+        int topic = BusCodes.UP_CALL;
 
         listener.subscribe(topic, BusCodes.ALL);
         for (int i = 0; i < 1100; i++) {
@@ -166,8 +171,8 @@ public class BusStandInChecks {
             next = listener.get(topic, BusCodes.ALL);
         }
         check(count == 1024, "a full queue holds 1024 messages");
-        check(first == 0, "the oldest message is kept");
-        check(last == 1023, "new messages are dropped once the queue is full");
+        check(first == 1100 - 1024, "the oldest messages are dropped once the queue is full (as on Team03's bus)");
+        check(last == 1099, "the newest message is kept");
     }
 
     private static boolean holdsValue(Optional<BusMessage> message, long expected) {

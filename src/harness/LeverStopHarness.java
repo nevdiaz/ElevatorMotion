@@ -45,7 +45,7 @@ public class LeverStopHarness {
         }
         Optional<BusMessage> message = listener.get(BusCodes.CAR_FAULT, elevator);
         while (message.isPresent()) {
-            fault = message.get().value();
+            fault = message.get().payload(1);
             System.out.println("EMERGENCY on the bus: " + describe(fault));
             message = listener.get(BusCodes.CAR_FAULT, elevator);
         }

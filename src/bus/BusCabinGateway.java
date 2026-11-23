@@ -1,6 +1,5 @@
 package bus;
 
-import api.Direction;
 import api.MotionControllerAPI;
 import manager.TripController;
 import sim.MotionEngine;
@@ -10,14 +9,18 @@ import java.util.Optional;
 
 public class BusCabinGateway {
 
+    //The topics that ask this cabin to go to a floor. All three carry the floor in payload byte 1.
+    //We have no doors, so GOTO (keep doors closed) and SERVICE (open doors) are treated like CABIN_CALL.
+    private static final int[] CALL_TOPICS = {BusCodes.CABIN_CALL, BusCodes.GOTO, BusCodes.SERVICE};
+
     private final MotionControllerAPI motion;
     private final TripController trip;
     private final BusMessageDispatcher bus;
     private final int elevator;
     private final ArrayDeque<Integer> pendingFloors = new ArrayDeque<>();
-    private int lastFloor = 0;
-    private int lastDirection = -1;
-    private int lastFault = 0;      //0 = nothing announced
+    private int lastFault = 0;          //0 = nothing announced
+    private int lastAlignment = -1;     //-1 = nothing announced yet
+    private boolean statusAnnounced = false;
 
 
     public BusCabinGateway(MotionControllerAPI motion, TripController trip,
@@ -32,7 +35,9 @@ public class BusCabinGateway {
         this.elevator = elevator;
 
         bus.register();
-        bus.subscribe(BusCodes.CAR_CALL, elevator);
+        for (int topic : CALL_TOPICS) {
+            bus.subscribe(topic, elevator);
+        }
     }
 
     //Empty the bus into the waiting queue
@@ -42,15 +47,18 @@ public class BusCabinGateway {
             pendingFloors.clear();       // a tripped car cannot serve calls
         }
 
-        Optional<BusMessage> call = bus.get(BusCodes.CAR_CALL, elevator);
-        //Removes the oldest message each time until empty
-        while (call.isPresent()) {
-            long floor = call.get().value();
-            //skips a floor that is already waiting so a repeated button press doesn't queue twice
-            if (!lockedOut && floor >= 1 && floor <= Integer.MAX_VALUE && !pendingFloors.contains((int) floor)) {
-                pendingFloors.addLast((int) floor);
+        //Calls from different topics are read one topic after the other, not in the order they were sent
+        for (int topic : CALL_TOPICS) {
+            Optional<BusMessage> call = bus.get(topic, elevator);
+            //Removes the oldest message each time until empty
+            while (call.isPresent()) {
+                int floor = call.get().payload(1);
+                //skips a floor that is already waiting so a repeated button press doesn't queue twice
+                if (!lockedOut && floor >= 1 && floor <= MotionEngine.FLOORS && !pendingFloors.contains(floor)) {
+                    pendingFloors.addLast(floor);
+                }
+                call = bus.get(topic, elevator);
             }
-            call = bus.get(BusCodes.CAR_CALL, elevator);
         }
     }
 
@@ -67,40 +75,47 @@ public class BusCabinGateway {
     private void publishChanges() {
         int fault = currentFault();
         if (fault != lastFault) {
-            bus.publish(BusMessage.of(BusCodes.CAR_FAULT, elevator, fault));
+            bus.publish(BusMessage.ofPayload(BusCodes.CAR_FAULT, elevator, fault));
             lastFault = fault;
         }
 
+        //ALIGN: the sensors at the ends of the shaft. Bottom is the floor 1 zone and top is the floor 10 zone.
+        int alignment = BusCodes.ALIGN_NONE;
+        if (motion.isBottomAligned()) {
+            alignment += BusCodes.ALIGN_BOTTOM;
+        }
+        if (motion.isTopAligned()) {
+            alignment += BusCodes.ALIGN_TOP;
+        }
+        if (alignment != lastAlignment) {
+            bus.publish(BusMessage.ofPayload(BusCodes.ALIGN, elevator, alignment));
+            lastAlignment = alignment;
+        }
+
+        //CABIN_STATUS is only published when the car has stopped, so nothing is sent while it travels or levels.
+        if (motion.isMoving() || trip.isTripActive()) {
+            statusAnnounced = false;
+            return;
+        }
+        if (statusAnnounced) {
+            return;
+        }
         int floor = 0;
         for (int f = 1; f <= MotionEngine.FLOORS; f++) {
             if (motion.isFloorAligned(f)) {
                 floor = f;
             }
         }
-
-        //ASSUMPTION: Publish when the car enters the floor's sensor zone and not between floors
-        if (floor != 0 && floor != lastFloor) {
-            bus.publish(BusMessage.of(BusCodes.CAR_POSITION, elevator, floor));
-            lastFloor = floor;
-        }
-
-        int direction;
-        if (motion.isMoving()) {
-            direction = (motion.getDirection() == Direction.Up) ? 1 : 2;
-        } else if (trip.isTripActive()) {
-            direction = lastDirection;     //still leveling, so don't announce idle yet
-        } else {
-            direction = 0;                 //truly idle
-        }
-        if (direction != lastDirection) {
-            bus.publish(BusMessage.of(BusCodes.CAR_DIRECTION, elevator, direction));
-            lastDirection = direction;
+        //A car stopped between floors (a tripped safety lever) has no floor to report
+        if (floor != 0) {
+            bus.publish(BusMessage.ofPayload(BusCodes.CABIN_STATUS, elevator, 1, floor, BusCodes.DIR_IDLE));
+            statusAnnounced = true;
         }
     }
 
     public void update() {
         readCalls();
-        publishChanges(); //report the car's state first so a finished trip shows as idle
+        publishChanges(); //report the car's state first so a finished trip shows as stopped
         startNextCall(); //only then start the next queued call
 
     }
