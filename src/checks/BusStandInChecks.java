@@ -117,7 +117,12 @@ public class BusStandInChecks {
         sender.publish(BusMessage.of(topic, BusCodes.ELEVATOR_1, 5));
         check(holdsValue(listener.get(topic, BusCodes.ELEVATOR_1), 5), "a message for elevator 1 reaches the elevator 1 queue");
         check(listener.get(topic, BusCodes.ELEVATOR_2).isEmpty(), "a message for elevator 1 does not reach the elevator 2 queue");
-        check(listener.get(topic, BusCodes.ALL).isEmpty(), "a subscription on subtopic 0 does not catch a message for elevator 1 (as on the real bus)");
+        check(holdsValue(listener.get(topic, BusCodes.ALL), 5), "a subscription on subtopic 0 catches a message for elevator 1 (as on Team03's bus)");
+
+        sender.publish(BusMessage.of(topic, BusCodes.ELEVATOR_2, 6));
+        check(holdsValue(listener.get(topic, BusCodes.ALL), 6), "a subscription on subtopic 0 catches a message for elevator 2 too");
+        check(holdsValue(listener.get(topic, BusCodes.ELEVATOR_2), 6), "the elevator 2 queue also gets it");
+        check(listener.get(topic, BusCodes.ELEVATOR_1).isEmpty(), "the elevator 1 queue does not get a message for elevator 2");
 
         sender.publish(BusMessage.of(topic, BusCodes.ALL, 9));
         check(holdsValue(listener.get(topic, BusCodes.ELEVATOR_1), 9), "a message for all reaches the elevator 1 queue");
@@ -166,8 +171,8 @@ public class BusStandInChecks {
             next = listener.get(topic, BusCodes.ALL);
         }
         check(count == 1024, "a full queue holds 1024 messages");
-        check(first == 0, "the oldest message is kept");
-        check(last == 1023, "new messages are dropped once the queue is full");
+        check(first == 1100 - 1024, "the oldest messages are dropped once the queue is full (as on Team03's bus)");
+        check(last == 1099, "the newest message is kept");
     }
 
     private static boolean holdsValue(Optional<BusMessage> message, long expected) {

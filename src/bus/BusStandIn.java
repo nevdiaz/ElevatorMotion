@@ -75,28 +75,33 @@ public class BusStandIn {
             }
         }
 
+        /**
+         * Same rule as Team03's bus (Message.matches):
+         * Topics must match exactly
+         * Subtopic 0 is a wildcard on either side.
+         * A subscription on subtopic 0 gets every elevator
+         * A message published with subtopic 0 reaches every subscription of that topic.
+         */
         private void receive(BusMessage message) {
             int topic = message.getTopic();
             int subtopic = message.getSubtopic();
 
-            if (subtopic == BusCodes.ALL) {
-                for (Map.Entry<Integer, Deque<BusMessage>> entry : queues.entrySet()) {
-                    if (entry.getKey() / 256 == topic) {
-                        addIfRoom(entry.getValue(), message);
-                    }
-                }
-            } else {
-                Deque<BusMessage> queue = queues.get(key(topic, subtopic));
-                if (queue != null) {
-                    addIfRoom(queue, message);
+            for (Map.Entry<Integer, Deque<BusMessage>> entry : queues.entrySet()) {
+                int queueTopic = entry.getKey() / 256;
+                int queueSubtopic = entry.getKey() % 256;
+                if (queueTopic == topic
+                        && (queueSubtopic == BusCodes.ALL || subtopic == BusCodes.ALL || queueSubtopic == subtopic)) {
+                    addDroppingOldest(entry.getValue(), message);
                 }
             }
         }
 
-        private void addIfRoom(Deque<BusMessage> queue, BusMessage message) {
-            if (queue.size() < MAX_QUEUE_SIZE) {
-                queue.addLast(message);
+        //Same as Team03's bus: when a queue is full the oldest message is thrown away to make room for the new one
+        private void addDroppingOldest(Deque<BusMessage> queue, BusMessage message) {
+            while (queue.size() >= MAX_QUEUE_SIZE) {
+                queue.pollFirst();
             }
+            queue.addLast(message);
         }
 
         @Override
