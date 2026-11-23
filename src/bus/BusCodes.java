@@ -58,7 +58,4 @@ public final class BusCodes {
     public static final int CAR_FAULT = 20;         //subtopic = elevator, P1 = fault code
     public static final int FAULT_TOP_LIMIT = 1;    //cabin hit the lever above floor 10
     public static final int FAULT_BOTTOM_LIMIT = 2; //cabin hit the lever below floor 1
-
-    //TODO: remove in step 3, the old separate direction message is retired in the catalog
-    public static final int CAR_DIRECTION = 4;
 }
