@@ -1,5 +1,9 @@
 package bus;
 
+import Utilities.Message;
+import Utilities.Protocol;
+import Utilities.Topics;
+
 public final class BusCodes {
 
     //These numbers come from the approved Software Bus Message Catalog in Team03's repo (Utilities/Topics.java).
@@ -38,7 +42,7 @@ public final class BusCodes {
     public static final int ELEVATOR_1 = 1;
     public static final int ELEVATOR_2 = 2;
     public static final int ELEVATOR_3 = 3;
-    public static final int ELEVATOR_4 = 4;
+    public static final int ELEVATOR_4 = Topics.ELEVATOR_4;
 
     //Payload values
     public static final int DIR_IDLE = 0;           //"idle" in CABIN_STATUS, "none" in ARRIVAL_CHIME
