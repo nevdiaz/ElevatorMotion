@@ -80,7 +80,7 @@ public class BusCabinGateway {
 
         //ASSUMPTION: Publish when the car enters the floor's sensor zone and not between floors
         if (floor != 0 && floor != lastFloor) {
-            bus.publish(BusMessage.of(BusCodes.CAR_POSITION, elevator, floor));
+            bus.publish(BusMessage.of(BusCodes.CABIN_STATUS, elevator, floor));
             lastFloor = floor;
         }
 

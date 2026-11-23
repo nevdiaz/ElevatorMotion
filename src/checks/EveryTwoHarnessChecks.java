@@ -32,7 +32,7 @@ public class EveryTwoHarnessChecks {
         TripController trip = new TripController(engine);
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher monitor = bus.connect();
-        monitor.subscribe(BusCodes.CAR_POSITION, BusCodes.ELEVATOR_1);
+        monitor.subscribe(BusCodes.CABIN_STATUS, BusCodes.ELEVATOR_1);
         monitor.subscribe(BusCodes.CAR_DIRECTION, BusCodes.ELEVATOR_1);
         BusCabinGateway gateway = new BusCabinGateway(engine, trip, bus.connect(), BusCodes.ELEVATOR_1);
         EveryTwoHarness scenario = new EveryTwoHarness(bus.connect());
@@ -49,7 +49,7 @@ public class EveryTwoHarnessChecks {
             engine.tick();
             ticks += 1;
 
-            for (long floor : drain(monitor, BusCodes.CAR_POSITION)) {
+            for (long floor : drain(monitor, BusCodes.CABIN_STATUS)) {
                 floorsPassed.add(floor);
                 lastFloor = floor;
             }

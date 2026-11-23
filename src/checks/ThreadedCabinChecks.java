@@ -47,7 +47,7 @@ public class ThreadedCabinChecks {
         List<BusMessageDispatcher> consumerLinks = new ArrayList<>();
         for (int k = 1; k <= consumers; k++) {
             BusMessageDispatcher link = bus.connect();
-            link.subscribe(BusCodes.CAR_POSITION, k);
+            link.subscribe(BusCodes.CABIN_STATUS, k);
             consumerLinks.add(link);
         }
         List<BusMessageDispatcher> producerLinks = new ArrayList<>();
@@ -69,7 +69,7 @@ public class ThreadedCabinChecks {
                     boolean more = true;
                     while (more) {
                         more = producing.get();
-                        java.util.Optional<BusMessage> m = link.get(BusCodes.CAR_POSITION, subtopic);
+                        java.util.Optional<BusMessage> m = link.get(BusCodes.CABIN_STATUS, subtopic);
                         while (m.isPresent()) {
                             long v = m.get().value();
                             int p = (int) (v / 1_000_000);
@@ -79,7 +79,7 @@ public class ThreadedCabinChecks {
                                         + " go from " + last[p] + " to " + seq);
                             }
                             last[p] = seq;
-                            m = link.get(BusCodes.CAR_POSITION, subtopic);
+                            m = link.get(BusCodes.CABIN_STATUS, subtopic);
                         }
                     }
                 } catch (Throwable e) {
@@ -96,7 +96,7 @@ public class ThreadedCabinChecks {
                 try {
                     for (int i = 0; i < perProducer; i++) {
                         for (int k = 1; k <= consumers; k++) {
-                            link.publish(BusMessage.of(BusCodes.CAR_POSITION, k, id * 1_000_000L + i));
+                            link.publish(BusMessage.of(BusCodes.CABIN_STATUS, k, id * 1_000_000L + i));
                         }
                     }
                 } catch (Throwable e) {

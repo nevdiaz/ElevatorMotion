@@ -41,7 +41,7 @@ public class BusCabinGatewayChecks {
         final BusCabinGateway gateway;
 
         Rig() {
-            monitor.subscribe(BusCodes.CAR_POSITION, BusCodes.ELEVATOR_1);
+            monitor.subscribe(BusCodes.CABIN_STATUS, BusCodes.ELEVATOR_1);
             monitor.subscribe(BusCodes.CAR_DIRECTION, BusCodes.ELEVATOR_1);
             monitor.subscribe(BusCodes.CAR_FAULT, BusCodes.ELEVATOR_1);
             gateway = new BusCabinGateway(engine, trip, bus.connect(), BusCodes.ELEVATOR_1);
@@ -74,20 +74,20 @@ public class BusCabinGatewayChecks {
     private static void initialAnnouncementChecks() {
         Rig rig = new Rig();
         rig.run(1);
-        check(rig.drain(BusCodes.CAR_POSITION).equals(List.of(1L)), "the first update announces floor 1");
+        check(rig.drain(BusCodes.CABIN_STATUS).equals(List.of(1L)), "the first update announces floor 1");
         check(rig.drain(BusCodes.CAR_DIRECTION).equals(List.of(0L)), "the first update announces idle");
     }
 
     private static void callServedChecks() {
         Rig rig = new Rig();
         rig.run(1);
-        rig.drain(BusCodes.CAR_POSITION);
+        rig.drain(BusCodes.CABIN_STATUS);
         rig.drain(BusCodes.CAR_DIRECTION);
 
         rig.call(BusCodes.ELEVATOR_1, 5);
         rig.run(CheckTime.scaled(2000));
         check(rig.engine.isFloorAligned(5), "a car call for floor 5 takes the car to floor 5");
-        check(rig.drain(BusCodes.CAR_POSITION).equals(List.of(2L, 3L, 4L, 5L)),
+        check(rig.drain(BusCodes.CABIN_STATUS).equals(List.of(2L, 3L, 4L, 5L)),
                 "floors 2, 3, 4 and 5 are published in order");
         check(rig.drain(BusCodes.CAR_DIRECTION).equals(List.of(1L, 0L)),
                 "direction goes up, then idle");
@@ -96,7 +96,7 @@ public class BusCabinGatewayChecks {
     private static void queuedCallsChecks() {
         Rig rig = new Rig();
         rig.run(1);
-        rig.drain(BusCodes.CAR_POSITION);
+        rig.drain(BusCodes.CABIN_STATUS);
         rig.drain(BusCodes.CAR_DIRECTION);
 
         rig.call(BusCodes.ELEVATOR_1, 3);
@@ -104,7 +104,7 @@ public class BusCabinGatewayChecks {
         rig.call(BusCodes.ELEVATOR_1, 4);
         rig.run(CheckTime.scaled(4000));
         check(rig.engine.isFloorAligned(4), "three calls are served and the car ends at floor 4");
-        check(rig.drain(BusCodes.CAR_POSITION).equals(List.of(2L, 3L, 2L, 3L, 4L)),
+        check(rig.drain(BusCodes.CABIN_STATUS).equals(List.of(2L, 3L, 2L, 3L, 4L)),
                 "calls are served in the order they arrived (3, then 2, then 4)");
         check(rig.drain(BusCodes.CAR_DIRECTION).equals(List.of(1L, 0L, 2L, 0L, 1L, 0L)),
                 "direction is up, idle, down, idle, up, idle");
@@ -125,7 +125,7 @@ public class BusCabinGatewayChecks {
     private static void sameFloorChecks() {
         Rig rig = new Rig();
         rig.run(1);
-        rig.drain(BusCodes.CAR_POSITION);
+        rig.drain(BusCodes.CABIN_STATUS);
         rig.drain(BusCodes.CAR_DIRECTION);
 
         rig.call(BusCodes.ELEVATOR_1, 1);
@@ -154,7 +154,7 @@ public class BusCabinGatewayChecks {
     private static void faultChecks() {
         Rig rig = new Rig();
         rig.run(1);
-        rig.drain(BusCodes.CAR_POSITION);
+        rig.drain(BusCodes.CABIN_STATUS);
         rig.drain(BusCodes.CAR_DIRECTION);
         check(rig.drain(BusCodes.CAR_FAULT).isEmpty(), "no fault is announced at start");
 

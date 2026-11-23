@@ -43,8 +43,8 @@ public class BusStandInChecks {
         check(sender.get(topic, elevator).isEmpty(), "publisher does not receive its own message");
         check(holdsValue(listener.get(topic, elevator), 2), "the other connection still receives it");
 
-        sender.publish(BusMessage.of(BusCodes.CAR_POSITION, elevator, 5));
-        check(listener.get(BusCodes.CAR_POSITION, elevator).isEmpty(), "no message without a subscription");
+        sender.publish(BusMessage.of(BusCodes.CABIN_STATUS, elevator, 5));
+        check(listener.get(BusCodes.CABIN_STATUS, elevator).isEmpty(), "no message without a subscription");
 
         BusMessageDispatcher second = bus.connect();
         second.subscribe(topic, elevator);
@@ -128,7 +128,7 @@ public class BusStandInChecks {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
         BusMessageDispatcher listener = bus.connect();
-        int topic = BusCodes.CAR_POSITION;
+        int topic = BusCodes.CABIN_STATUS;
         int elevator = BusCodes.ELEVATOR_1;
 
         listener.subscribe(topic, elevator);

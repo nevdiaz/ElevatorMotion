@@ -28,13 +28,13 @@ public class CmdCtrStandIn {
         this.elevator = elevator;
         this.floors = floors;
         this.pauseTicks = pauseTicks;
-        center.subscribe(BusCodes.CAR_POSITION, elevator);
+        center.subscribe(BusCodes.CABIN_STATUS, elevator);
         center.subscribe(BusCodes.CAR_DIRECTION, elevator);
     }
 
     /** Call once per simulation step from the beforeStep hook. */
     public void update() {
-        lastFloor = latest(BusCodes.CAR_POSITION, lastFloor);
+        lastFloor = latest(BusCodes.CABIN_STATUS, lastFloor);
         lastDirection = latest(BusCodes.CAR_DIRECTION, lastDirection);
 
         if (waitingFor != 0) {
