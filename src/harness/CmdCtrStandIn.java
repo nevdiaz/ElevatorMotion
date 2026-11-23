@@ -2,7 +2,6 @@ package harness;
 
 import Utilities.Message;
 import bus.BusCodes;
-import bus.BusMessage;
 import bus.BusMessageDispatcher;
 
 import java.util.ArrayList;
