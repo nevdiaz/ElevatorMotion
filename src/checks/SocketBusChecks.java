@@ -5,7 +5,6 @@ import SoftwareBus.SoftwareBusServer;
 import Utilities.Message;
 import bus.BusCabinGateway;
 import bus.BusCodes;
-import bus.BusMessage;
 import bus.SocketBusDispatcher;
 import manager.TripController;
 import sim.MotionEngine;

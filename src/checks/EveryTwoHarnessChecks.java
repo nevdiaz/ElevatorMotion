@@ -3,7 +3,6 @@ package checks;
 import Utilities.Message;
 import bus.BusCabinGateway;
 import bus.BusCodes;
-import bus.BusMessage;
 import bus.BusMessageDispatcher;
 import bus.BusStandIn;
 import harness.EveryTwoHarness;
