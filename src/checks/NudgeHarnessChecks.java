@@ -10,6 +10,9 @@ import sim.MotionEngine;
 
 import java.util.List;
 
+/**
+ * Checks nudging behavior and brake-delay handling.
+ */
 public class NudgeHarnessChecks {
 
     private static int checksRun = 0;
@@ -25,6 +28,9 @@ public class NudgeHarnessChecks {
         }
     }
 
+    /**
+     * Checks the nudging scenario from start to completion.
+     */
     private static void nudgeScenarioChecks() {
         MotionEngine engine = new MotionEngine();
         TripController trip = new TripController(engine);
@@ -102,6 +108,9 @@ public class NudgeHarnessChecks {
                 "no safety lever was tripped");
     }
 
+    /**
+     * Checks the effect of the configured brake delay.
+     */
     private static void brakeDelayChecks() {
         MotionEngine engine = new MotionEngine();
         TripController trip = new TripController(engine);
@@ -127,6 +136,12 @@ public class NudgeHarnessChecks {
         check(trip.getNudgingFloor() == 0, "no nudging after a normal arrival");
     }
 
+    /**
+     * Asserts that the supplied condition is true and reports the message if it is false.
+     *
+     * @param condition condition that must be true for the check to pass
+     * @param message description printed when the check fails
+     */
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {

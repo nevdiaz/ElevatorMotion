@@ -57,6 +57,12 @@ public class BusCodesChecks {
         }
     }
 
+    /**
+     * Asserts that the supplied condition is true and reports the message if it is false.
+     *
+     * @param condition condition that must be true for the check to pass
+     * @param message description printed when the check fails
+     */
     private static void check(boolean condition, String message) {
         checksRun++;
         if (condition == false) {

@@ -14,6 +14,11 @@ public class TopAndBottomHarness {
 
     private final CmdCtrStandIn runner;
 
+    /**
+     * Creates and initializes the TopAndBottomHarness instance.
+     *
+     * @param commandCenter message dispatcher used to communicate with the command center
+     */
     public TopAndBottomHarness(BusMessageDispatcher commandCenter) {
         runner = new CmdCtrStandIn(commandCenter, BusCodes.ELEVATOR_1, FLOORS, PAUSE_TICKS);
     }
@@ -23,10 +28,20 @@ public class TopAndBottomHarness {
         runner.update();
     }
 
+    /**
+     * Reports whether the harness or scenario has completed.
+     *
+     * @return whether the requested condition is true
+     */
     public boolean isFinished() {
         return runner.isFinished();
     }
 
+    /**
+     * Returns the floor numbers recorded as arrivals, in arrival order.
+     *
+     * @return the resulting List value
+     */
     public List<Integer> getArrivals() {
         return runner.getArrivals();
     }

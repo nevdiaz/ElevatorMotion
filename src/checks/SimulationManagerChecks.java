@@ -4,6 +4,9 @@ import manager.SimulationManager;
 import manager.TripController;
 import sim.MotionEngine;
 
+/**
+ * Checks simulation-manager scheduling and time scaling.
+ */
 public class SimulationManagerChecks {
 
     private static int checksRun = 0;
@@ -49,6 +52,12 @@ public class SimulationManagerChecks {
         }
     }
 
+    /**
+     * Asserts that the supplied condition is true and reports the message if it is false.
+     *
+     * @param condition condition that must be true for the check to pass
+     * @param message description printed when the check fails
+     */
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {
@@ -57,6 +66,12 @@ public class SimulationManagerChecks {
         }
     }
 
+    /**
+     * Checks rejects and reports a failure when the expectation is not met.
+     *
+     * @param action operation expected to throw an exception
+     * @param message description printed when the check fails
+     */
     private static void checkRejects(Runnable action, String message) {
         boolean threw = false;
         try {

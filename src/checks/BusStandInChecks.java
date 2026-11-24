@@ -6,6 +6,9 @@ import bus.BusMessageDispatcher;
 import bus.BusStandIn;
 import java.util.Optional;
 
+/**
+ * Checks message delivery, ordering, wildcard matching, and queue behavior in the stand-in.
+ */
 public class BusStandInChecks {
 
     private static int checksRun = 0;
@@ -26,6 +29,9 @@ public class BusStandInChecks {
         }
     }
 
+    /**
+     * Checks delivery of published messages to matching subscribers.
+     */
     private static void deliveryChecks() {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
@@ -53,6 +59,9 @@ public class BusStandInChecks {
         check(holdsValue(second.get(topic, elevator), 3), "second listener gets the message");
     }
 
+    /**
+     * Checks that queued messages are delivered in publication order.
+     */
     private static void orderChecks() {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
@@ -70,6 +79,9 @@ public class BusStandInChecks {
         check(listener.get(topic, elevator).isEmpty(), "the queue is empty once everything is taken");
     }
 
+    /**
+     * Checks that distinct topic/subtopic pairs remain distinct.
+     */
     private static void collisionChecks() {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
@@ -88,6 +100,9 @@ public class BusStandInChecks {
         check(holdsValue(listener.get(1, 0), 7), "a message for (1, 0) is in the (1, 0) queue");
     }
 
+    /**
+     * Checks rejection of invalid input values.
+     */
     private static void badInputChecks() {
         BusMessageDispatcher conn = new BusStandIn().connect();
 
@@ -104,6 +119,9 @@ public class BusStandInChecks {
         checkRejects(() -> conn.get(5, 256), "get subtopic 256 rejected");
     }
 
+    /**
+     * Checks exact and wildcard subtopic matching.
+     */
     private static void subtopicChecks() {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
@@ -129,6 +147,10 @@ public class BusStandInChecks {
         check(holdsValue(listener.get(topic, BusCodes.ELEVATOR_2), 9), "a message for all reaches the elevator 2 queue");
         check(holdsValue(listener.get(topic, BusCodes.ALL), 9), "a message for all reaches the subtopic 0 queue");
     }
+
+    /**
+     * Checks that unsubscribed messages are no longer delivered.
+     */
     private static void unsubscribeChecks() {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
@@ -148,6 +170,9 @@ public class BusStandInChecks {
         check(listener.get(topic, elevator).isEmpty(), "a new subscription starts with an empty queue");
     }
 
+    /**
+     * Checks the bounded queue behavior when more messages arrive than it can hold.
+     */
     private static void queueLimitChecks() {
         BusStandIn bus = new BusStandIn();
         BusMessageDispatcher sender = bus.connect();
@@ -175,10 +200,23 @@ public class BusStandInChecks {
         check(last == 1099, "the newest message is kept");
     }
 
+    /**
+     * Reports whether the optional message contains the expected numeric value.
+     *
+     * @param message description printed when the check fails
+     * @param expected expected value
+     * @return whether the requested condition is true
+     */
     private static boolean holdsValue(Optional<Message> message, long expected) {
         return message.isPresent() && message.get().value() == expected;
     }
 
+    /**
+     * Asserts that the supplied condition is true and reports the message if it is false.
+     *
+     * @param condition condition that must be true for the check to pass
+     * @param message description printed when the check fails
+     */
     private static void check(boolean condition, String message) {
         checksRun++;
         if (condition == false) {
@@ -187,7 +225,12 @@ public class BusStandInChecks {
         }
     }
 
-    //Passes only if the action throws an IllegalArgumentException.
+    /**
+     * Passes only if the action throws an IllegalArgumentException.
+     *
+     * @param action operation expected to throw an exception
+     * @param message description printed when the check fails
+     */
     private static void checkRejects(Runnable action, String message) {
         boolean threw = false;
         try {
@@ -198,6 +241,12 @@ public class BusStandInChecks {
         check(threw, message);
     }
 
+    /**
+     * Checks accepts and reports a failure when the expectation is not met.
+     *
+     * @param action operation expected to throw an exception
+     * @param message description printed when the check fails
+     */
     private static void checkAccepts(Runnable action, String message) {
         boolean threw = false;
         try {

@@ -4,6 +4,9 @@ import api.Direction;
 import api.MotionControllerAPI;
 import sim.MotionEngine;
 
+/**
+ * Converts floor requests and cabin state into motor-control decisions.
+ */
 public class TripController {
 
     private double targetPosition;
@@ -15,10 +18,20 @@ public class TripController {
     private int targetFloor;
     private double brakeDelay = 0.0; //Feet to brake later than normal. Only scenarios change this.
 
+    /**
+     * Creates and initializes the TripController instance.
+     *
+     * @param motionController value for motionController
+     */
     public TripController(MotionControllerAPI  motionController) {
         this.motionController = motionController;
     }
 
+    /**
+     * Reports whether a trip is currently active. The method is synchronized on this instance.
+     *
+     * @return whether the requested condition is true
+     */
     public synchronized boolean isTripActive() {
         return tripActive;
     }
@@ -27,6 +40,9 @@ public class TripController {
      * Scenario hook: makes the car brake this many feet later than normal, so it passes the
      * target floor's sensors and then has to be nudged back. 0 (the default) is normal braking.
      * Keep it under the 1 ft lever margin or the car will trip a safety lever.
+     *
+     * @param feet distance or position in feet
+     * @throws IllegalArgumentException if an argument or state violates the method’s requirements
      */
     public synchronized void setBrakeDelay(double feet) {
         if (Double.isNaN(feet) || feet < 0) {
@@ -38,6 +54,8 @@ public class TripController {
     /**
      * The floor whose sensors are being corrected by nudging, or 0 when no nudging is happening.
      * Nudging means a trip is active, the car has stopped, and it is not level with the target yet.
+     *
+     * @return the resulting integer value
      */
     public synchronized int getNudgingFloor() {
         if (tripActive && motionController.isMoving() == false
@@ -47,6 +65,11 @@ public class TripController {
         return 0;
     }
 
+    /**
+     * Requests travel to the specified floor. The method is synchronized on this instance.
+     *
+     * @param floor floor number
+     */
     public synchronized void goToFloor(int floor) {
         if (floor < 1 || floor > MotionEngine.FLOORS) {
             System.out.println("Floor must be 1 through 10.");
@@ -75,6 +98,9 @@ public class TripController {
         }
     }
 
+    /**
+     * Performs one trip-controller decision step and updates the motor command. The method is synchronized on this instance.
+     */
     public synchronized void controlStep() {
         if (motionController.isTopLimitTripped() || motionController.isBottomLimitTripped()) {
             if (tripActive) {

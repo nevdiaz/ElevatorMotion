@@ -38,6 +38,7 @@ public class SocketBusChecks {
         System.exit(checksFailed > 0 ? 1 : 0);      //exit explicitly, the bus threads are still running
     }
 
+    /** Starts bus. */
     private static void startBus() {
         Thread busThread = new Thread(() -> {
             try {
@@ -50,10 +51,21 @@ public class SocketBusChecks {
         busThread.start();
     }
 
+    /**
+     * Creates and returns a connection to the selected bus implementation.
+     *
+     * @return the connected socket dispatcher
+     * @throws IOException if the operation cannot be completed
+     */
     private static SocketBusDispatcher connect() throws IOException {
         return SocketBusDispatcher.connect(HOST, PORT, 50);
     }
 
+    /**
+     * Checks registration and assignment of client identifiers.
+     *
+     * @throws Exception if the operation cannot be completed
+     */
     private static void registerChecks() throws Exception {
         try (SocketBusDispatcher a = connect(); SocketBusDispatcher b = connect()) {
             check(a.getId() == 0, "the ID is 0 before register()");
@@ -68,6 +80,11 @@ public class SocketBusChecks {
         }
     }
 
+    /**
+     * Checks delivery of published messages to matching subscribers.
+     *
+     * @throws Exception if the operation cannot be completed
+     */
     private static void deliveryChecks() throws Exception {
         try (SocketBusDispatcher car = connect(); SocketBusDispatcher center = connect()) {
             car.register();
@@ -97,6 +114,11 @@ public class SocketBusChecks {
         }
     }
 
+    /**
+     * Checks wildcard topic/subtopic delivery behavior.
+     *
+     * @throws Exception if the operation cannot be completed
+     */
     private static void wildcardChecks() throws Exception {
         try (SocketBusDispatcher listener = connect(); SocketBusDispatcher sender = connect()) {
             listener.register();
@@ -122,6 +144,11 @@ public class SocketBusChecks {
         }
     }
 
+    /**
+     * Checks message order and unsubscribe behavior.
+     *
+     * @throws Exception if the operation cannot be completed
+     */
     private static void orderAndUnsubscribeChecks() throws Exception {
         try (SocketBusDispatcher listener = connect(); SocketBusDispatcher sender = connect()) {
             listener.register();
@@ -154,6 +181,11 @@ public class SocketBusChecks {
         }
     }
 
+    /**
+     * Checks dispatcher behavior when the socket connection fails.
+     *
+     * @throws Exception if the operation cannot be completed
+     */
     private static void failureChecks() throws Exception {
         //Nothing is listening on this port
         boolean refused = false;
@@ -174,7 +206,10 @@ public class SocketBusChecks {
         check(closing.get(BusCodes.CABIN_CALL, BusCodes.ELEVATOR_1).isEmpty(), "a closed dispatcher returns nothing");
     }
 
-    //A whole cabin on the real bus: a call comes in, the car travels, and CABIN_STATUS comes back
+    /**
+     * A whole cabin on the real bus: a call comes in, the car travels, and CABIN_STATUS comes back
+     * @throws Exception if the operation cannot be completed
+     */
     private static void gatewayOverRealBusChecks() throws Exception {
         MotionEngine engine = new MotionEngine();
         TripController trip = new TripController(engine);
@@ -212,7 +247,15 @@ public class SocketBusChecks {
         }
     }
 
-    //Polls get() until a message comes or about 3 s pass
+    /**
+     * Polls get() until a message comes or about 3 s pass
+     *
+     * @param d value for d
+     * @param topic topic number
+     * @param subtopic subtopic number
+     * @return the resulting Optional value
+     * @throws InterruptedException if the operation cannot be completed
+     */
     private static Optional<Message> await(SocketBusDispatcher d, int topic, int subtopic) throws InterruptedException {
         for (int i = 0; i < 600; i++) {
             Optional<Message> m = d.get(topic, subtopic);
@@ -224,10 +267,22 @@ public class SocketBusChecks {
         return Optional.empty();
     }
 
+    /**
+     * Waits for the supplied duration in milliseconds.
+     *
+     * @param ms duration in milliseconds
+     * @throws InterruptedException if the operation cannot be completed
+     */
     private static void pause(long ms) throws InterruptedException {
         Thread.sleep(ms);
     }
 
+    /**
+     * Asserts that the supplied condition is true and reports the message if it is false.
+     *
+     * @param condition condition that must be true for the check to pass
+     * @param message description printed when the check fails
+     */
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {
@@ -236,6 +291,12 @@ public class SocketBusChecks {
         }
     }
 
+    /**
+     * Checks rejects and reports a failure when the expectation is not met.
+     *
+     * @param action operation expected to throw an exception
+     * @param message description printed when the check fails
+     */
     private static void checkRejects(Runnable action, String message) {
         boolean threw = false;
         try {

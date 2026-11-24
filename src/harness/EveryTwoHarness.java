@@ -16,19 +16,34 @@ public class EveryTwoHarness {
 
     private final CmdCtrStandIn runner;
 
+    /**
+     * Creates and initializes the EveryTwoHarness instance.
+     *
+     * @param commandCenter message dispatcher used to communicate with the command center
+     */
     public EveryTwoHarness(BusMessageDispatcher commandCenter) {
         runner = new CmdCtrStandIn(commandCenter, BusCodes.ELEVATOR_1, FLOORS, PAUSE_TICKS);
     }
+
+    /**
+     * Updates the component for the current simulation step.
+     */
     public void update() {
         runner.update();
     }
 
-    /** True if the car has arrived at every floor */
+    /** True if the car has arrived at every floor
+     *
+     * @return whether the requested condition is true
+     */
     public boolean isFinished() {
         return runner.isFinished();
     }
 
-    /** Floors the car has visited in order */
+    /** Floors the car has visited in order
+     *
+     * @return the resulting List value
+     */
     public List<Integer> getArrivals() {
         return runner.getArrivals();
     }

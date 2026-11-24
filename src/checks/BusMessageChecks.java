@@ -5,6 +5,9 @@ import Utilities.Message;
 
 import java.util.Arrays;
 
+/**
+ * Checks message encoding, decoding, payload helpers, and immutability.
+ */
 public class BusMessageChecks {
 
     private static int checksRun = 0;
@@ -90,7 +93,9 @@ public class BusMessageChecks {
 
     }
 
-    //Needed these checks after incorporating Team03's repo
+    /**
+     * Needed these checks after incorporating Team03's repo
+     */
     private static void numberChecks() {
         //A small numbers lands in the last body byte
         Message five = Message.of(1, 1, 5);
@@ -122,7 +127,9 @@ public class BusMessageChecks {
         check(!a.equals(Message.of(4, 1, 7)), "different topic is not equal");
     }
 
-    //Catalog messages put each field in its own byte, starting at payload byte 1 (Team03's Message layout)
+    /**
+     * Catalog messages put each field in its own byte, starting at payload byte 1 (Team03's Message layout)
+     */
     private static void payloadChecks() {
         //Same layout as Team03's cabinStatus: stopped, floor, direction in payload bytes 1 to 3
         Message status = Message.ofPayload(3, 2, 1, 7, 0);
@@ -153,6 +160,12 @@ public class BusMessageChecks {
         check(Message.ofPayload(1, 0).equals(Message.of(1, 0, 0)), "no payload bytes is an all-zero body");
     }
 
+    /**
+     * Asserts that the supplied condition is true and reports the message if it is false.
+     *
+     * @param condition condition that must be true for the check to pass
+     * @param message description printed when the check fails
+     */
     private static void check(boolean condition, String message) {
         checksRun++;
         if (condition == false) {
@@ -161,7 +174,12 @@ public class BusMessageChecks {
         }
     }
 
-    //Passes only if the action throws an IllegalArgumentException.
+    /**
+     * Passes only if the action throws an IllegalArgumentException.
+     *
+     * @param action operation expected to throw an exception
+     * @param message description printed when the check fails
+     */
     private static void checkRejects(Runnable action, String message) {
         boolean threw = false;
         try {

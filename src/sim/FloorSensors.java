@@ -14,13 +14,22 @@ public final class FloorSensors {
     private FloorSensors() {
     }
 
-    /** True while the car is inside the sensor zone of the given floor (1 to 10). */
+    /** True while the car is inside the sensor zone of the given floor (1 to 10).
+     *
+     * @param position cabin position in feet
+     * @param floor floor number
+     * @return whether the requested condition is true
+     */
     public static boolean isAligned(double position, int floor) {
         double offset = Math.abs(position - MotionEngine.floorPosition(floor));
         return offset <= ZONE_HEIGHT / 2.0 + EPS;
     }
 
-    /** Floor whose sensor zone contains the car, or 0 if the car is between zones. */
+    /** Floor whose sensor zone contains the car, or 0 if the car is between zones.
+     *
+     * @param position cabin position in feet
+     * @return the resulting integer value
+     */
     public static int currentFloor(double position) {
         for (int f = 1; f <= MotionEngine.FLOORS; f++) {
             if (isAligned(position, f)) {

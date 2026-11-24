@@ -26,6 +26,12 @@ public class CabinAssemblyChecks {
         }
     }
 
+    /**
+     * Creates the cabin assemblies used by the checks.
+     *
+     * @param bus software-bus instance
+     * @return the resulting List value
+     */
     private static List<CabinAssembly> buildCars(BusStandIn bus) {
         List<CabinAssembly> cars = new ArrayList<>();
         for (int n = BusCodes.ELEVATOR_1; n <= BusCodes.ELEVATOR_4; n++) {
@@ -34,6 +40,12 @@ public class CabinAssemblyChecks {
         return cars;
     }
 
+    /**
+     * Runs the component’s main processing loop. It runs on the calling or worker thread.
+     *
+     * @param cars cabin assemblies being checked
+     * @param ticks number of simulation ticks
+     */
     private static void run(List<CabinAssembly> cars, int ticks) {
         for (int i = 0; i < ticks; i++) {
             for (CabinAssembly car : cars) {
@@ -42,6 +54,9 @@ public class CabinAssemblyChecks {
         }
     }
 
+    /**
+     * Checks that a call moves only its addressed cabin.
+     */
     private static void callMovesOnlyThatCar() {
         BusStandIn bus = new BusStandIn();
         List<CabinAssembly> cars = buildCars(bus);
@@ -57,6 +72,9 @@ public class CabinAssemblyChecks {
         check(cars.get(3).engine().isFloorAligned(1), "car 4 stayed at floor 1");
     }
 
+    /**
+     * Checks that each cabin serves its own call.
+     */
     private static void everyCarServesItsOwnCall() {
         BusStandIn bus = new BusStandIn();
         List<CabinAssembly> cars = buildCars(bus);
@@ -75,6 +93,9 @@ public class CabinAssemblyChecks {
         }
     }
 
+    /**
+     * Checks that an invalid elevator number is rejected.
+     */
     private static void invalidNumberRejected() {
         BusStandIn bus = new BusStandIn();
         boolean rejected = false;
@@ -86,6 +107,12 @@ public class CabinAssemblyChecks {
         check(rejected, "car number 5 is rejected");
     }
 
+    /**
+     * Asserts that the supplied condition is true and reports the message if it is false.
+     *
+     * @param condition condition that must be true for the check to pass
+     * @param what description printed when the check fails
+     */
     private static void check(boolean condition, String what) {
         checksRun++;
         if (!condition) {

@@ -21,6 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.DoubleConsumer;
 
+/**
+ * Controls the JavaFX elevator display, cabin selection, speed controls, and animation updates.
+ */
 public class ElevatorViewController {
 
     @FXML private Label acceleration;
@@ -54,6 +57,9 @@ public class ElevatorViewController {
     private final HBox worldBox = new HBox();                       //the world view's row of shafts
     private final Group worldGroup = new Group(worldBox);           //the group makes the scaled size count for layout
 
+    /**
+     * Initializes the component and prepares its controls or state.
+     */
     @FXML
     private void initialize() {
         currentFloor.setText("Current Floor");
@@ -86,6 +92,12 @@ public class ElevatorViewController {
     public void start() {
         AnimationTimer timer = new AnimationTimer() {
             long previousTimeStamp = -1;
+
+            /**
+             * Handles the current JavaFX animation pulse and updates the display.
+             *
+             * @param now current animation time
+             */
             @Override
             public void handle(long now) {
                 if (selectedIndex < 0) { return; }
@@ -107,6 +119,11 @@ public class ElevatorViewController {
         timer.start();
     }
 
+    /**
+     * Applies the supplied shaft specification to the view.
+     *
+     * @param spec shaft dimensions and motion configuration
+     */
     private void applySpec(ShaftSpec spec) {
         scale = new ViewScale(spec);
         cruisingSpeed.setText(String.format("Cruising Speed: %.1f ft/s", spec.cruiseSpeed()));
@@ -117,7 +134,10 @@ public class ElevatorViewController {
         speedAxis.setTickUnit(Math.max(1.0, Math.ceil(top / 5.0)));
     }
 
-    /** Gives the GUI the cars to choose from, builds one shaft per car and shows the first car. */
+    /** Gives the GUI the cars to choose from, builds one shaft per car and shows the first car.
+     *
+     * @param cabins cabin views to display
+     */
     public void setCabins(List<CabinView> cabins) {
         this.cabins = List.copyOf(cabins);
         if (!this.cabins.isEmpty()) {
@@ -137,12 +157,20 @@ public class ElevatorViewController {
         elevatorSelector.getSelectionModel().selectFirst();
     }
 
+    /**
+     * Sets the callback used when the simulation speed changes.
+     *
+     * @param handler callback invoked when the value changes
+     */
     public void setSpeedHandler(DoubleConsumer handler) {
         this.speedHandler = handler;
         speedSlider.setDisable(handler == null);
     }
 
-    /** The car at this index becomes the selected one: labels and speed graph follow it. */
+    /** The car at this index becomes the selected one: labels and speed graph follow it.
+     *
+     * @param index zero-based index of the selected item
+     */
     private void selectCabin(int index) {
         selectedIndex = index;
         speedSeries.getData().clear();   //restart the speed graph
@@ -176,6 +204,12 @@ public class ElevatorViewController {
         updateCamera();
     }
 
+    /**
+     * Loads and returns the shaft view used by the controller.
+     *
+     * @return the resulting ShaftView value
+     * @throws IllegalStateException if an argument or state violates the method’s requirements
+     */
     private ShaftView loadShaft() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Shaft.fxml"));
@@ -186,6 +220,9 @@ public class ElevatorViewController {
         }
     }
 
+    /**
+     * Creates the speed chart and its data series.
+     */
     private void buildSpeedChart() {
         timeAxis = (NumberAxis) speedChart.getXAxis();
         speedAxis = (NumberAxis) speedChart.getYAxis();
@@ -207,6 +244,9 @@ public class ElevatorViewController {
         speedChart.setLegendVisible(false);
     }
 
+    /**
+     * Creates the simulation-speed control.
+     */
     private void buildSpeedControl() {
         speedSlider.setMin(0.5);
         speedSlider.setMax(8.0);
@@ -225,6 +265,11 @@ public class ElevatorViewController {
         });
     }
 
+    /**
+     * Updates the labels from the supplied cabin snapshot.
+     *
+     * @param s value for s
+     */
     private void updateLabels(CabinSnapshot s) {
         currentFloor.setText(s.alignedFloor() == 0 ? "-" : String.valueOf(s.alignedFloor()));
         speed.setText(String.format("%.2f ft/s", Math.abs(s.velocity())));
@@ -237,6 +282,12 @@ public class ElevatorViewController {
         }
     }
 
+    /**
+     * Adds the cabin’s speed sample to the graph using elapsed seconds.
+     *
+     * @param elapsedSeconds elapsed simulation time in seconds
+     * @param s value for s
+     */
     private void updateGraph(double elapsedSeconds, CabinSnapshot s) {
         graphTime += elapsedSeconds;
         if (graphTime >= nextSampleTime) {
@@ -253,7 +304,9 @@ public class ElevatorViewController {
         }
     }
 
-    /** Single view: scroll the shaft so the cabin stays centered. World view: scale all shafts to fit. */
+    /**
+     * Single view: scroll the shaft so the cabin stays centered. World view: scale all shafts to fit.
+     */
     private void updateCamera() {
         if (selectedIndex < 0) {
             return;
@@ -269,6 +322,9 @@ public class ElevatorViewController {
         }
     }
 
+    /**
+     * Constrains the viewport to the permitted shaft area.
+     */
     private void clipViewport() {
         Rectangle clip = new Rectangle();
         clip.widthProperty().bind(viewport.widthProperty());

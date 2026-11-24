@@ -214,11 +214,20 @@ public class MotionEngine implements MotionControllerAPI {
         }
     }
 
+    /**
+     * Stops the motion engine and clears its active motion.
+     */
     private void halt() {
         speed = 0.0;
         state = MotionState.STOPPED;
     }
 
+    /**
+     * Constrains the supplied numeric value to the permitted range.
+     *
+     * @param p value for p
+     * @return the resulting measurement or calculated value
+     */
     private static double clamp(double p) {
         return Math.max(MIN_POSITION, Math.min(MAX_POSITION, p));
     }
@@ -235,6 +244,11 @@ public class MotionEngine implements MotionControllerAPI {
         return FloorSensors.currentFloor(position);
     }
 
+    /**
+     * Returns an immutable snapshot of the cabin’s current state. The method is synchronized on this instance.
+     *
+     * @return an immutable snapshot of the cabin state
+     */
     @Override
     public synchronized CabinSnapshot snapshot() {
         return new CabinSnapshot(position, speed, direction, state,

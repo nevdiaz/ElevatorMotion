@@ -9,6 +9,9 @@ import sim.MotionEngine;
 
 import java.util.List;
 
+/**
+ * Checks command-center behavior at the top and bottom safety limits.
+ */
 public class CmdCtrChecks {
 
     private static int checksRun = 0;
@@ -23,6 +26,9 @@ public class CmdCtrChecks {
         }
     }
 
+    /**
+     * Runs the top and bottom checks.
+     */
     private static void topAndBottomChecks() {
         MotionEngine engine = new MotionEngine();
         TripController trip = new TripController(engine);
@@ -45,6 +51,12 @@ public class CmdCtrChecks {
                 "top and bottom: car ends level at floor 1");
     }
 
+    /**
+     * Asserts that the supplied condition is true and reports the message if it is false.
+     *
+     * @param condition condition that must be true for the check to pass
+     * @param message description printed when the check fails
+     */
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {

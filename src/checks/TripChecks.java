@@ -5,6 +5,9 @@ import api.MotionState;
 import manager.TripController;
 import sim.MotionEngine;
 
+/**
+ * Checks trip-controller behavior, including normal trips and safety edge cases.
+ */
 public class TripChecks {
 
     private static int checksRun = 0;
@@ -29,7 +32,16 @@ public class TripChecks {
         }
     }
 
-    /** Sends the car to a floor and ticks until the trip ends or the cap is hit. */
+    /** Sends the car to a floor and ticks until the trip ends or the cap is hit.
+     *
+     * @param controller trip controller used by the harness
+     * @param api value for api
+     * @param tick simulation tick callback
+     * @param floor floor number
+     * @param maxTicks value for maxTicks
+     * @param reads value for reads
+     * @return whether the requested condition is true
+     */
     private static boolean runTrip(TripController controller, MotionControllerAPI api, Runnable tick,
                                    int floor, int maxTicks, int[] reads) {
         controller.goToFloor(floor);
@@ -49,7 +61,11 @@ public class TripChecks {
         return !controller.isTripActive();
     }
 
-    /** Records one check and reports it if it fails. */
+    /** Records one check and reports it if it fails.
+     *
+     * @param condition condition that must be true for the check to pass
+     * @param message description printed when the check fails
+     */
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {
@@ -58,6 +74,14 @@ public class TripChecks {
         }
     }
 
+    /**
+     * Checks the expected state after a trip.
+     *
+     * @param engine motion engine being checked
+     * @param controller trip controller used by the harness
+     * @param tick simulation tick callback
+     * @param floor floor number
+     */
     private static void verifyTrip(MotionEngine engine, TripController controller,
                                    Runnable tick, int floor) {
 
@@ -93,6 +117,9 @@ public class TripChecks {
         check(engine.isBottomAligned() == (floor == 1), label + "bottom sensor matches the floor");
     }
 
+    /**
+     * Checks behavior at the safety-lever limits.
+     */
     private static void leverChecks() {
         MotionEngine engine = new MotionEngine();
         TripController trip = new TripController(engine);
@@ -115,6 +142,12 @@ public class TripChecks {
         check(engine.getPosition() == frozenAt, "the car stays frozen");
     }
 
+    /**
+     * Checks motion-engine edge cases using the supplied engine and tick callback.
+     *
+     * @param engine motion engine being checked
+     * @param tick simulation tick callback
+     */
     private static void edgeCases(MotionEngine engine, Runnable tick) {
         TripController controller = new TripController(engine);
 

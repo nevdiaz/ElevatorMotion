@@ -24,6 +24,12 @@ public class NudgeHarness {
 
     private final CmdCtrStandIn runner;
 
+    /**
+     * Creates and initializes the NudgeHarness instance.
+     *
+     * @param commandCenter message dispatcher used to communicate with the command center
+     * @param trip trip controller for the cabin
+     */
     public NudgeHarness(BusMessageDispatcher commandCenter, TripController trip) {
         trip.setBrakeDelay(BRAKE_DELAY_FEET);
         runner = new CmdCtrStandIn(commandCenter, BusCodes.ELEVATOR_1, FLOORS, PAUSE_TICKS);
@@ -34,10 +40,20 @@ public class NudgeHarness {
         runner.update();
     }
 
+    /**
+     * Reports whether the harness or scenario has completed.
+     *
+     * @return whether the requested condition is true
+     */
     public boolean isFinished() {
         return runner.isFinished();
     }
 
+    /**
+     * Returns the floor numbers recorded as arrivals, in arrival order.
+     *
+     * @return the resulting List value
+     */
     public List<Integer> getArrivals() {
         return runner.getArrivals();
     }

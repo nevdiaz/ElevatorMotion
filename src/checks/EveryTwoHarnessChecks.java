@@ -13,6 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Checks the every-two-floors demonstration harness.
+ */
 public class EveryTwoHarnessChecks {
 
     private static int checksRun = 0;
@@ -27,6 +30,9 @@ public class EveryTwoHarnessChecks {
         }
     }
 
+    /**
+     * Runs the every two floors checks.
+     */
     private static void everyTwoFloorsChecks() {
         MotionEngine engine = new MotionEngine();
         TripController trip = new TripController(engine);
@@ -64,6 +70,13 @@ public class EveryTwoHarnessChecks {
                 "Every two floors: no safety lever was engaged");
     }
 
+    /**
+     * Removes and returns queued messages for the requested topic.
+     *
+     * @param monitor dispatcher subscribed to the messages being observed
+     * @param topic topic number
+     * @return the resulting List value
+     */
     private static List<Message> drain(BusMessageDispatcher monitor, int topic) {
         List<Message> values = new ArrayList<>();
         Optional<Message> next = monitor.get(topic, BusCodes.ELEVATOR_1);
@@ -74,6 +87,12 @@ public class EveryTwoHarnessChecks {
         return values;
     }
 
+    /**
+     * Asserts that the supplied condition is true and reports the message if it is false.
+     *
+     * @param condition condition that must be true for the check to pass
+     * @param message description printed when the check fails
+     */
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {

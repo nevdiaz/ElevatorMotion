@@ -32,17 +32,31 @@ public class TestHarness {
                 return thread;
             });
 
-
+    /**
+     * Creates and initializes the TestHarness instance.
+     *
+     * @param controller trip controller used by the harness
+     * @param updateTimeStep callback that advances the simulation by one time step
+     */
     public TestHarness(TripController controller, Runnable updateTimeStep) {
         this.controller = controller;
         this.sequencer = new FloorSequencer(controller, ROUTE, PAUSE_SECONDS);
         this.updateTimeStep = updateTimeStep;
     }
 
+    /**
+     * Starts the component or begins its scheduled work.
+     */
     public void start() {
         clock.scheduleAtFixedRate(this::onUpdate, 0, STEP_MICROS, TimeUnit.MICROSECONDS);
     }
 
+    /**
+     * Sets the callback that runs immediately before each simulation step.
+     *
+     * @param beforeStep callback to run before each simulation step
+     * @throws IllegalArgumentException if an argument or state violates the method’s requirements
+     */
     public void setBeforeStep(Runnable beforeStep) {
         if (beforeStep == null) {
             throw new IllegalArgumentException("beforeStep must not be null");
@@ -50,6 +64,9 @@ public class TestHarness {
         this.beforeStep = beforeStep;
     }
 
+    /**
+     * Runs the configured update callback for the current harness step.
+     */
     void onUpdate() {
         try {
             beforeStep.run();

@@ -24,6 +24,15 @@ public class LeverStopHarness {
     private boolean started = false;
     private long fault = 0;
 
+    /**
+     * Creates and initializes the LeverStopHarness instance.
+     *
+     * @param car cabin assembly being checked
+     * @param listener value for listener
+     * @param elevator elevator identifier
+     * @param runaway direction of runaway travel
+     * @param delayTicks value for delayTicks
+     */
     public LeverStopHarness(MotionControllerAPI car, BusMessageDispatcher listener, int elevator,
                             Direction runaway, int delayTicks) {
         this.car = car;
@@ -51,14 +60,30 @@ public class LeverStopHarness {
         }
     }
 
+    /**
+     * Reports whether the harness or scenario has completed.
+     *
+     * @return whether the requested condition is true
+     */
     public boolean isFinished() {
         return fault != 0;
     }
 
+    /**
+     * Returns the fault code recorded by the harness.
+     *
+     * @return the resulting numeric value
+     */
     public long getFault() {
         return fault;
     }
 
+    /**
+     * Returns a readable description of the supplied value.
+     *
+     * @param code fault or status code
+     * @return the resulting text
+     */
     private static String describe(long code) {
         if (code == BusCodes.FAULT_TOP_LIMIT) {
             return "car hit the lever above floor 10";

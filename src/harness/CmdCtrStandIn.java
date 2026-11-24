@@ -23,6 +23,14 @@ public class CmdCtrStandIn {
     private boolean lastStopped = false;   //newest CABIN_STATUS: was the car stopped
     private int lastFloor = -1;            //newest CABIN_STATUS: floor, -1 means nothing heard yet
 
+    /**
+     * Creates and initializes the CmdCtrStandIn instance.
+     *
+     * @param center message dispatcher used to communicate with the command center
+     * @param elevator elevator identifier
+     * @param floors number of floors in the shaft
+     * @param pauseTicks number of simulation ticks to pause between requests
+     */
     public CmdCtrStandIn(BusMessageDispatcher center, int elevator, int[] floors, int pauseTicks) {
         this.center = center;
         this.elevator = elevator;
@@ -55,10 +63,20 @@ public class CmdCtrStandIn {
         }
     }
 
+    /**
+     * Reports whether the harness or scenario has completed.
+     *
+     * @return whether the requested condition is true
+     */
     public boolean isFinished() {
         return next >= floors.length && waitingFor == 0;
     }
 
+    /**
+     * Returns the floor numbers recorded as arrivals, in arrival order.
+     *
+     * @return the resulting List value
+     */
     public List<Integer> getArrivals() {
         return arrivals;
     }

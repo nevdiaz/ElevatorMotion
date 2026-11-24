@@ -1,6 +1,8 @@
 package manager;
 
-//This is a demo script
+/**
+ * This is a demo script
+ */
 public class FloorSequencer {
 
     private final TripController controller;
@@ -10,6 +12,13 @@ public class FloorSequencer {
     private int nextIndex = 0;
     private boolean wasActive = false;
 
+    /**
+     * Creates and initializes the FloorSequencer instance.
+     *
+     * @param controller trip controller used by the harness
+     * @param floors number of floors in the shaft
+     * @param pauseSeconds pause duration in seconds
+     */
     public FloorSequencer(TripController controller, int[] floors, double pauseSeconds) {
         this.controller = controller;
         this.floors = floors;
@@ -17,6 +26,11 @@ public class FloorSequencer {
         this.pauseLeft = pauseSeconds;
     }
 
+    /**
+     * Updates the component for the current simulation step.
+     *
+     * @param elapsedSeconds elapsed simulation time in seconds
+     */
     public void update(double elapsedSeconds) {
         if (controller.isTripActive() == true) {
             wasActive = true;

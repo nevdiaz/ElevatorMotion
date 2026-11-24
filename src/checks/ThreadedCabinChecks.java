@@ -118,6 +118,11 @@ public class ThreadedCabinChecks {
                 + (problem.get() == null ? "" : ": " + problem.get()));
     }
 
+    /**
+     * Checks cabin behavior while its simulation runner is active.
+     *
+     * @throws Exception if the operation cannot be completed
+     */
     private static void carChecks() throws Exception {
         BusStandIn bus = new BusStandIn();
         List<CabinAssembly> cars = new ArrayList<>();
@@ -172,6 +177,12 @@ public class ThreadedCabinChecks {
                 (snapshotProblem == null ? "" : ": " + snapshotProblem));
     }
 
+    /**
+     * Reports whether every cabin is currently idle.
+     *
+     * @param cars cabin assemblies being checked
+     * @return whether the requested condition is true
+     */
     private static boolean allIdle(List<CabinAssembly> cars) {
         for (CabinAssembly car : cars) {
             if (car.engine().isMoving() || car.trip().isTripActive()) {
@@ -181,7 +192,11 @@ public class ThreadedCabinChecks {
         return true;
     }
 
-    /** Acts like the GUI: reads snapshots and nudging floors in a tight loop and checks they make sense. */
+    /** Acts like the GUI: reads snapshots and nudging floors in a tight loop and checks they make sense.
+     *
+     * @param cars cabin assemblies being checked
+     * @return the resulting Thread value
+     */
     private static Thread startWatcher(List<CabinAssembly> cars) {
         Thread watcher = new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
@@ -205,6 +220,12 @@ public class ThreadedCabinChecks {
         return watcher;
     }
 
+    /**
+     * Asserts that the supplied condition is true and reports the message if it is false.
+     *
+     * @param condition condition that must be true for the check to pass
+     * @param what description printed when the check fails
+     */
     private static void check(boolean condition, String what) {
         checksRun++;
         if (!condition) {

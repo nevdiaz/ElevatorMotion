@@ -8,6 +8,9 @@ import harness.LeverStopHarness;
 import manager.TripController;
 import sim.MotionEngine;
 
+/**
+ * Checks the safety-lever stop scenarios.
+ */
 public class LeverStopHarnessChecks {
 
     private static int checksRun = 0;
@@ -23,6 +26,13 @@ public class LeverStopHarnessChecks {
         }
     }
 
+    /**
+     * Runs the supplied safety-lever scenario and checks its resulting fault.
+     *
+     * @param runaway direction of runaway travel
+     * @param expectedFault expected elevator fault code
+     * @param name display name for this cabin or component
+     */
     private static void play(Direction runaway, int expectedFault, String name) {
         MotionEngine engine = new MotionEngine();
         TripController trip = new TripController(engine);
@@ -47,6 +57,12 @@ public class LeverStopHarnessChecks {
         check(engine.isMoving() == false, name + ": the car is frozen");
     }
 
+    /**
+     * Asserts that the supplied condition is true and reports the message if it is false.
+     *
+     * @param condition condition that must be true for the check to pass
+     * @param message description printed when the check fails
+     */
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {

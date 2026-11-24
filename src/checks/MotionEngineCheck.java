@@ -12,6 +12,12 @@ public class MotionEngineCheck {
 
     static int failures = 0;
 
+    /**
+     * Asserts that the supplied condition is true and reports the message if it is false.
+     *
+     * @param ok value for ok
+     * @param what description printed when the check fails
+     */
     static void check(boolean ok, String what) {
         if (!ok) {
             failures++;
@@ -19,6 +25,9 @@ public class MotionEngineCheck {
         }
     }
 
+    /**
+     * Stores trip-check data used by the motion-engine test.
+     */
     static class Trip {
         double time;
         double stopError;      // final position minus target position (ft)
@@ -30,6 +39,10 @@ public class MotionEngineCheck {
     /**
      * Example controller: drives only through the MotionControllerAPI and calls stopMotor
      * when the distance remaining is within the braking distance.
+     *
+     * @param from value for from
+     * @param to value for to
+     * @return the resulting Trip value
      */
     static Trip run(int from, int to) {
         MotionEngine eng = new MotionEngine(MotionEngine.floorPosition(from));
@@ -70,6 +83,9 @@ public class MotionEngineCheck {
     /**
      * Travel time for a trip of this many feet with the example controller above: accelerate,
      * cruise if there is room, decelerate. A short trip never reaches cruising speed.
+     *
+     * @param distance value for distance
+     * @return the resulting measurement or calculated value
      */
     static double expectedTime(double distance) {
         double v = MotionEngine.CRUISE_SPEED;

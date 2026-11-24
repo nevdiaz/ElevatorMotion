@@ -32,6 +32,14 @@ public class ShaftView {
     private static final Color leverColor = Color.DARKRED;
     private static final long blinkNanos = 400_000_000L;        // 0.4 s per on/off phase
 
+    /**
+     * Stores the left and right scene-graph markers for a floor.
+     *
+     * @param floorLeft value for floorLeft
+     * @param floorRight value for floorRight
+     * @param ceilingLeft value for ceilingLeft
+     * @param ceilingRight value for ceilingRight
+     */
     private record FloorMarkers(Rectangle floorLeft, Rectangle floorRight,
                                 Rectangle ceilingLeft, Rectangle ceilingRight) {}
 
@@ -43,6 +51,9 @@ public class ShaftView {
     private IntSupplier nudgingFloor = () -> 0;   //floor being nudged, or 0
     private double shownFeet = 0;                 //smoothed position that is actually drawn
 
+    /**
+     * Initializes the component and prepares its controls or state.
+     */
     @FXML
     private void initialize() {
         //The name sits centered over the shaft, just below its top edge. The width is only known
@@ -101,6 +112,11 @@ public class ShaftView {
         world.setTranslateY(0);
     }
 
+    /**
+     * Builds the shaft view from the supplied shaft specification.
+     *
+     * @param spec shaft dimensions and motion configuration
+     */
     private void build(ShaftSpec spec) {
         scale = new ViewScale(spec);
         buildShaft();
@@ -108,11 +124,17 @@ public class ShaftView {
         buildLevers();
     }
 
+    /**
+     * Creates the shaft scene-graph elements.
+     */
     private void buildShaft() {
         shaft.setLayoutY(0);
         shaft.setHeight(scale.shaftHeight());
     }
 
+    /**
+     * Creates the floor markers and floor labels.
+     */
     private void buildFloors() {
         for (int i = 1; i <= scale.floorCount(); i++) {
             double floorYPosition = scale.feetToWorldYValue(scale.floorToFeet(i));
@@ -132,6 +154,13 @@ public class ShaftView {
         }
     }
 
+    /**
+     * Creates a shaft sensor aligned to a cabin sensor and floor line.
+     *
+     * @param cabinSensor cabin sensor graphic used for alignment
+     * @param floorLineY floor-line coordinate in the shaft view
+     * @return the resulting Rectangle value
+     */
     private Rectangle buildShaftSensor(Rectangle cabinSensor, double floorLineY) {
         double x = cabinAssembly.getLayoutX() + cabinSensor.getLayoutX();
         double y = floorLineY + cabinSensor.getLayoutY() - gondolaBottomOffset();
@@ -142,11 +171,20 @@ public class ShaftView {
         return shaftSensor;
     }
 
+    /**
+     * Creates the top and bottom safety-lever graphics.
+     */
     private void buildLevers() {
         topLever = buildLever(scale.floorToFeet(scale.floorCount()) + scale.leverMargin());
         bottomLever = buildLever(-scale.leverMargin());
     }
 
+    /**
+     * Creates a safety-lever graphic at the supplied position in feet.
+     *
+     * @param feet distance or position in feet
+     * @return the resulting Line value
+     */
     private Line buildLever(double feet) {
         double y = scale.feetToWorldYValue(feet);
         Line lever = new Line(shaft.getLayoutX(), y, shaft.getLayoutX() + shaft.getWidth(), y);
@@ -156,27 +194,63 @@ public class ShaftView {
         return lever;
     }
 
+    /**
+     * Returns the cabin-bottom offset used for shaft positioning, in feet.
+     *
+     * @return the resulting measurement or calculated value
+     */
     private double gondolaBottomOffset() {
         return gondola.getLayoutY() + gondola.getHeight();
     }
 
+    /**
+     * Positions the cabin graphic at the supplied height in feet.
+     *
+     * @param feet distance or position in feet
+     */
     private void placeCabin(double feet) {
         double floorLineY = scale.feetToWorldYValue(feet);
         cabinAssembly.setLayoutY(floorLineY - gondolaBottomOffset());
     }
 
+    /**
+     * Sets a sensor graphic’s active or inactive color.
+     *
+     * @param sensor sensor graphic to update
+     * @param lit whether the sensor should be shown as active
+     * @param offColor color used when the sensor is inactive
+     */
     private void setSensorColor(Rectangle sensor, boolean lit, Color offColor) {
         sensor.setFill(lit ? sensorsAligned : offColor);
     }
 
+    /**
+     * Updates a sensor graphic’s blinking state.
+     *
+     * @param sensor sensor graphic to update
+     * @param on whether the sensor is active
+     * @param offColor color used when the sensor is inactive
+     */
     private void blinkSensor(Rectangle sensor, boolean on, Color offColor) {
         sensor.setFill(on ? sensorsFault : offColor);
     }
 
+    /**
+     * Determines whether the sensor should be lit at the supplied animation time.
+     *
+     * @param nowNanos current time in nanoseconds
+     * @return whether the requested condition is true
+     */
     private boolean blinkOn(long nowNanos) {
         return (nowNanos / blinkNanos) % 2 == 0;
     }
 
+    /**
+     * Updates the sensor graphics from the cabin snapshot and animation time.
+     *
+     * @param s value for s
+     * @param now current animation time
+     */
     private void updateSensors(CabinSnapshot s, long now) {
         boolean anyAligned = s.alignedFloor() != 0;
         for (int i = 1; i <= scale.floorCount(); i++) {

@@ -29,6 +29,9 @@ public class BusSourceChecks {
         System.exit(checksFailed > 0 ? 1 : 0);      //exit explicitly, the bus threads are still running
     }
 
+    /**
+     * Checks bus-source command-line argument parsing.
+     */
     private static void argumentChecks() {
         check(!BusSource.fromArguments(List.of()).isRealBus(), "no arguments means the stand-in");
         check(!BusSource.fromArguments(List.of("--other", "x")).isRealBus(), "unknown arguments are ignored");
@@ -54,6 +57,11 @@ public class BusSourceChecks {
         checkRejects(() -> BusSource.fromArguments(List.of("--bus=localhost:70000")), "port 70000 rejected");
     }
 
+    /**
+     * Checks selection and behavior of the in-memory bus stand-in.
+     *
+     * @throws Exception if the operation cannot be completed
+     */
     private static void standInChecks() throws Exception {
         BusSource source = new BusSource();
         BusMessageDispatcher a = source.open();
@@ -65,6 +73,11 @@ public class BusSourceChecks {
         source.close();    //nothing to close, must not fail
     }
 
+    /**
+     * Checks connection and communication with a real software bus.
+     *
+     * @throws Exception if the operation cannot be completed
+     */
     private static void realBusChecks() throws Exception {
         Thread busThread = new Thread(() -> {
             try {
@@ -112,6 +125,12 @@ public class BusSourceChecks {
                 "the error names the address and suggests the bus is not running: " + message);
     }
 
+    /**
+     * Asserts that the supplied condition is true and reports the message if it is false.
+     *
+     * @param condition condition that must be true for the check to pass
+     * @param message description printed when the check fails
+     */
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {
@@ -120,6 +139,12 @@ public class BusSourceChecks {
         }
     }
 
+    /**
+     * Checks rejects and reports a failure when the expectation is not met.
+     *
+     * @param action operation expected to throw an exception
+     * @param message description printed when the check fails
+     */
     private static void checkRejects(Runnable action, String message) {
         boolean threw = false;
         try {

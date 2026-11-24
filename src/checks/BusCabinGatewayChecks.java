@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Runs checks for cabin-to-bus message translation and gateway behavior.
+ */
 public class BusCabinGatewayChecks {
 
     private static int checksRun = 0;
@@ -65,15 +68,32 @@ public class BusCabinGatewayChecks {
             }
         }
 
+        /**
+         * Creates or queues the requested cabin-call message.
+         *
+         * @param subtopic subtopic number
+         * @param floor floor number
+         */
         void call(int subtopic, int floor) {
             send(BusCodes.CABIN_CALL, subtopic, floor);
         }
 
+        /**
+         * Queues or sends a message to the connected router or bus endpoint.
+         *
+         * @param topic topic number
+         * @param subtopic subtopic number
+         * @param floor floor number
+         */
         void send(int topic, int subtopic, int floor) {
             center.publish(Message.ofPayload(topic, subtopic, floor));
         }
 
-        // Takes every CABIN_STATUS the monitor has queued, oldest first.
+        /**
+         * Takes every CABIN_STATUS the monitor has queued, oldest first.
+         *
+         * @return the resulting List value
+         */
         List<Status> statuses() {
             List<Status> found = new ArrayList<>();
             for (Message m : drain(BusCodes.CABIN_STATUS)) {
@@ -82,7 +102,12 @@ public class BusCabinGatewayChecks {
             return found;
         }
 
-        // Takes every ALIGN or CAR_FAULT message queued, and returns payload byte 1 of each.
+        /**
+         * Takes every ALIGN or CAR_FAULT message queued, and returns payload byte 1 of each.
+         *
+         * @param topic topic number
+         * @return the resulting List value
+         */
         List<Integer> firstBytes(int topic) {
             List<Integer> found = new ArrayList<>();
             for (Message m : drain(topic)) {
@@ -91,6 +116,12 @@ public class BusCabinGatewayChecks {
             return found;
         }
 
+        /**
+         * Removes and returns queued messages for the requested topic.
+         *
+         * @param topic topic number
+         * @return the resulting List value
+         */
         private List<Message> drain(int topic) {
             List<Message> messages = new ArrayList<>();
             Optional<Message> next = monitor.get(topic, BusCodes.ELEVATOR_1);
@@ -101,7 +132,9 @@ public class BusCabinGatewayChecks {
             return messages;
         }
 
-        // Forgets everything announced so far
+        /**
+         * Forgets everything announced so far
+         */
         void clear() {
             statuses();
             firstBytes(BusCodes.ALIGN);
@@ -109,6 +142,9 @@ public class BusCabinGatewayChecks {
         }
     }
 
+    /**
+     * Checks the gateway’s initial status announcements.
+     */
     private static void initialAnnouncementChecks() {
         Rig rig = new Rig();
         rig.run(1);
@@ -121,6 +157,9 @@ public class BusCabinGatewayChecks {
         check(rig.firstBytes(BusCodes.ALIGN).isEmpty(), "the alignment is not repeated while the car sits still");
     }
 
+    /**
+     * Checks that a cabin call is served and reported.
+     */
     private static void callServedChecks() {
         Rig rig = new Rig();
         rig.run(1);
@@ -139,6 +178,9 @@ public class BusCabinGatewayChecks {
                 "the alignment goes to none when the car leaves floor 1 and stays none until it stops at floor 5");
     }
 
+    /**
+     * Checks that queued calls are served in order.
+     */
     private static void queuedCallsChecks() {
         Rig rig = new Rig();
         rig.run(1);
@@ -153,6 +195,9 @@ public class BusCabinGatewayChecks {
                 "calls are served in the order they arrived (3, then 2, then 4), one status each");
     }
 
+    /**
+     * Checks GOTO and service-mode message handling.
+     */
     private static void gotoAndServiceChecks() {
         Rig rig = new Rig();
         rig.run(1);
@@ -169,6 +214,9 @@ public class BusCabinGatewayChecks {
         check(rig.statuses().equals(List.of(stoppedAt(2))), "SERVICE ends with a stopped status at floor 2");
     }
 
+    /**
+     * Checks that invalid floor calls are ignored or rejected.
+     */
     private static void invalidCallChecks() {
         Rig rig = new Rig();
         rig.run(1);
@@ -186,6 +234,9 @@ public class BusCabinGatewayChecks {
         check(rig.engine.isFloorAligned(2), "invalid floors are skipped and the valid call is still served");
     }
 
+    /**
+     * Checks the behavior of a request for the current floor.
+     */
     private static void sameFloorChecks() {
         Rig rig = new Rig();
         rig.run(1);
@@ -198,6 +249,9 @@ public class BusCabinGatewayChecks {
         check(rig.firstBytes(BusCodes.ALIGN).isEmpty(), "a call for the current floor publishes no alignment change");
     }
 
+    /**
+     * Checks that messages for another elevator are not consumed.
+     */
     private static void otherElevatorChecks() {
         Rig rig = new Rig();
         rig.run(1);
@@ -207,6 +261,9 @@ public class BusCabinGatewayChecks {
         check(rig.engine.isFloorAligned(1), "a call for elevator 2 is ignored by elevator 1");
     }
 
+    /**
+     * Checks constructor validation and initial state.
+     */
     private static void constructorChecks() {
         MotionEngine engine = new MotionEngine();
         TripController trip = new TripController(engine);
@@ -215,6 +272,9 @@ public class BusCabinGatewayChecks {
         checkRejects(() -> new BusCabinGateway(engine, trip, bus.connect(), 5), "elevator 5 rejected");
     }
 
+    /**
+     * Checks publication of elevator fault messages.
+     */
     private static void faultChecks() {
         Rig rig = new Rig();
         rig.run(1);
@@ -243,6 +303,12 @@ public class BusCabinGatewayChecks {
                 "the bottom lever fault is announced once");
     }
 
+    /**
+     * Asserts that the supplied condition is true and reports the message if it is false.
+     *
+     * @param condition condition that must be true for the check to pass
+     * @param message description printed when the check fails
+     */
     private static void check(boolean condition, String message) {
         checksRun++;
         if (!condition) {
@@ -251,6 +317,12 @@ public class BusCabinGatewayChecks {
         }
     }
 
+    /**
+     * Checks rejects and reports a failure when the expectation is not met.
+     *
+     * @param action operation expected to throw an exception
+     * @param message description printed when the check fails
+     */
     private static void checkRejects(Runnable action, String message) {
         boolean threw = false;
         try {
