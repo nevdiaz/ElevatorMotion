@@ -29,7 +29,12 @@ public class BusSource implements AutoCloseable {
         this.standIn = new BusStandIn();
     }
 
-    /** Team03's real bus at host:port. */
+    /** Team03's real bus at host:port.
+     *
+     * @param host software-bus host name or IP address
+     * @param port software-bus TCP port number
+     * @throws IllegalArgumentException if an argument or state violates the method’s requirements
+     */
     public BusSource(String host, int port) {
         if (host == null || host.isBlank()) {
             throw new IllegalArgumentException("bus host must not be empty");
@@ -45,6 +50,10 @@ public class BusSource implements AutoCloseable {
     /**
      * Reads the command-line arguments. Two forms connect to the real bus: --bus=host:port, or Team03's own
      * convention of two plain arguments, host then port (192.168.8.10 6000). No bus arguments means the stand-in.
+     *
+     * @param arguments command-line arguments
+     * @return the configured bus source
+     * @throws IllegalArgumentException if an argument or state violates the method’s requirements
      */
     public static BusSource fromArguments(List<String> arguments) {
         for (String argument : arguments) {
@@ -63,6 +72,15 @@ public class BusSource implements AutoCloseable {
         return new BusSource();
     }
 
+    /**
+     * Builds a source that connects to the real software bus.
+     *
+     * @param host software-bus host name or IP address
+     * @param port software-bus TCP port number
+     * @param whole original argument text used in an error message
+     * @return the configured bus source
+     * @throws IllegalArgumentException if an argument or state violates the method’s requirements
+     */
     private static BusSource realBus(String host, String port, String whole) {
         try {
             return new BusSource(host, Integer.parseInt(port));
@@ -71,21 +89,39 @@ public class BusSource implements AutoCloseable {
         }
     }
 
-    /** Fewer retries make a missing bus fail faster (the checks use this). */
+    /** Fewer retries make a missing bus fail faster (the checks use this).
+     *
+     * @param attempts maximum number of connection attempts
+     * @return the configured bus source
+     */
     public BusSource retries(int attempts) {
         this.connectAttempts = attempts;
         return this;
     }
 
+    /**
+     * Reports whether this source uses the real socket-based software bus.
+     *
+     * @return whether the requested condition is true
+     */
     public boolean isRealBus() {
         return standIn == null;
     }
 
+    /**
+     * Returns a readable description of the supplied value.
+     *
+     * @return the resulting text
+     */
     public String describe() {
         return isRealBus() ? "Team03's Software Bus at " + host + ":" + port : "in-process stand-in";
     }
 
-    /** A new connection. For the real bus this connects and registers, and throws if the bus cannot be reached. */
+    /** A new connection. For the real bus this connects and registers, and throws if the bus cannot be reached.
+     *
+     * @return the connected message dispatcher
+     * @throws IOException if the operation cannot be completed
+     */
     public synchronized BusMessageDispatcher open() throws IOException {
         if (standIn != null) {
             return standIn.connect();

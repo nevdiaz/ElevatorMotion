@@ -4,10 +4,15 @@ import Utilities.Message;
 import Utilities.Protocol;
 import Utilities.Topics;
 
+/**
+ * Compatibility facade for shared software-bus constants and elevator-specific fault codes.
+ */
 public final class BusCodes {
 
-    //This class now uses the approved Software Bus Message Catalog in Team03's repo (Utilities/Topics.java).
-    //Empty constructor so no one can instantiate this like ViewScale
+    /**
+     * This class now uses the approved Software Bus Message Catalog in Team03's repo (Utilities/Topics.java).
+     * Empty constructor so no one can instantiate this like ViewScale
+     */
     private BusCodes() {}
 
     //Commands

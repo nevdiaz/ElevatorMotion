@@ -45,6 +45,13 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
     /**
      * Connects to the bus. The bus may still be starting, so a refused connection is retried every 0.1 s,
      * up to attempts times (Team03's README suggests about 50).
+     *
+     * @param host software-bus host name or IP address
+     * @param port software-bus TCP port number
+     * @param attempts maximum number of connection attempts
+     * @return the connected socket dispatcher
+     * @throws IOException if the operation cannot be completed
+     * @throws IllegalArgumentException if an argument or state violates the method’s requirements
      */
     public static SocketBusDispatcher connect(String host, int port, int attempts) throws IOException {
         if (attempts < 1) {
@@ -67,6 +74,12 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         throw last;
     }
 
+    /**
+     * Creates and initializes the SocketBusDispatcher instance.
+     *
+     * @param socket connected client socket
+     * @throws IOException if the operation cannot be completed
+     */
     private SocketBusDispatcher(Socket socket) throws IOException {
         this.socket = socket;
         socket.setSoTimeout(READ_TIMEOUT_MS);
@@ -82,6 +95,11 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         return id;
     }
 
+    /**
+     * Reports whether the socket connection is currently active.
+     *
+     * @return whether the requested condition is true
+     */
     public boolean isConnected() {
         return failure == null && !closed;
     }
@@ -91,6 +109,12 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         return failure;
     }
 
+    /**
+     * Registers the device or connection with the bus.
+     *
+     * @throws IOException if the operation cannot be completed
+     * @throws IllegalStateException if an argument or state violates the method’s requirements
+     */
     @Override
     public void register() {
         synchronized (wire) {
@@ -114,6 +138,12 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         }
     }
 
+    /**
+     * Subscribes to messages matching the supplied topic and subtopic.
+     *
+     * @param topic topic number
+     * @param subtopic subtopic number
+     */
     @Override
     public void subscribe(int topic, int subtopic) {
         checkTopicAndSubtopic(topic, subtopic);
@@ -127,6 +157,12 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         }
     }
 
+    /**
+     * Removes the subscription matching the supplied topic and subtopic.
+     *
+     * @param topic topic number
+     * @param subtopic subtopic number
+     */
     @Override
     public void unsubscribe(int topic, int subtopic) {
         checkTopicAndSubtopic(topic, subtopic);
@@ -134,6 +170,12 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         send(Message.of(BusCodes.UNSUBSCRIBE, topic, subtopic));
     }
 
+    /**
+     * Publishes a message to the connected bus.
+     *
+     * @param message description printed when the check fails
+     * @throws IllegalArgumentException if an argument or state violates the method’s requirements
+     */
     @Override
     public void publish(Message message) {
         if (message == null || message.topic() < 1 || message.topic() > BusCodes.MAX_TOPIC) {
@@ -142,6 +184,13 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         send(message);
     }
 
+    /**
+     * Retrieves the next queued message for the supplied topic and subtopic, if one is available.
+     *
+     * @param topic topic number
+     * @param subtopic subtopic number
+     * @return the resulting Optional value
+     */
     @Override
     public Optional<Message> get(int topic, int subtopic) {
         checkTopicAndSubtopic(topic, subtopic);
@@ -152,6 +201,9 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         return Optional.ofNullable(inbox.pollFirst());     //oldest first
     }
 
+    /**
+     * Closes the component and releases its associated resources.
+     */
     @Override
     public void close() {
         closed = true;
@@ -163,7 +215,9 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         }
     }
 
-    //Background thread: ask the bus for the queued messages of every subscription, again and again
+    /**
+     * Background thread: ask the bus for the queued messages of every subscription, again and again
+     */
     private void pollLoop() {
         while (isConnected()) {
             boolean foundAny = false;
@@ -182,7 +236,12 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         }
     }
 
-    //GET until NO_MESSAGE for one subscription. Returns true if at least one message came.
+    /**
+     * GET until NO_MESSAGE for one subscription. Returns true if at least one message came.
+     *
+     * @param key value for key
+     * @return whether the requested condition is true
+     */
     private boolean drain(int key) {
         boolean any = false;
         while (isConnected()) {
@@ -215,6 +274,11 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         return any;
     }
 
+    /**
+     * Queues or sends a message to the connected router or bus endpoint.
+     *
+     * @param message description printed when the check fails
+     */
     private void send(Message message) {
         synchronized (wire) {
             if (!isConnected()) {
@@ -228,17 +292,34 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         }
     }
 
+    /**
+     * Writes one message frame to the socket output stream.
+     *
+     * @param message description printed when the check fails
+     * @throws IOException if the operation cannot be completed
+     */
     private void writeFrame(Message message) throws IOException {
         out.write(message.toBytes());
         out.flush();
     }
 
+    /**
+     * Reads and decodes one message frame from the socket input stream.
+     *
+     * @return the created or decoded message
+     * @throws IOException if the operation cannot be completed
+     */
     private Message readFrame() throws IOException {
         byte[] word = new byte[Message.SIZE];
         in.readFully(word);        //throws EOFException if the bus closed the connection
         return Message.fromBytes(word);
     }
 
+    /**
+     * Records an I/O failure and updates the dispatcher connection state.
+     *
+     * @param e value for e
+     */
     private void fail(IOException e) {
         if (failure == null && !closed) {
             failure = e;
@@ -250,10 +331,24 @@ public class SocketBusDispatcher implements BusMessageDispatcher, AutoCloseable 
         }
     }
 
+    /**
+     * Builds the integer key used to index a topic/subtopic pair.
+     *
+     * @param topic topic number
+     * @param subtopic subtopic number
+     * @return the resulting integer value
+     */
     private static int key(int topic, int subtopic) {
         return topic * 256 + subtopic;
     }
 
+    /**
+     * Validates the supplied topic and subtopic values.
+     *
+     * @param topic topic number
+     * @param subtopic subtopic number
+     * @throws IllegalArgumentException if an argument or state violates the method’s requirements
+     */
     private static void checkTopicAndSubtopic(int topic, int subtopic) {
         if (topic < 1 || topic > BusCodes.MAX_TOPIC || subtopic < 0 || subtopic > 255) {
             throw new IllegalArgumentException("topic must be 1 to " + BusCodes.MAX_TOPIC + " and subtopic 0 to 255");

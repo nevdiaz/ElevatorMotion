@@ -4,6 +4,9 @@ package bus;
 import java.util.Optional;
 import Utilities.Message;
 
+/**
+ * Defines the elevator application’s interface for sending and receiving bus messages.
+ */
 public interface BusMessageDispatcher {
 
     /** Announces this connection to the bus. The real bus replies with the ID and SocketBusDispatcher reads it. */

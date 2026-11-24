@@ -23,6 +23,13 @@ public class CabinRunner {
     private long lastNanos = -1;                 //only touched by the car's own thread
     private volatile Throwable failure;
 
+    /**
+     * Creates and initializes the CabinRunner instance.
+     *
+     * @param name display name for this cabin or component
+     * @param manager simulation manager to update
+     * @param sequencer floor sequencer associated with the cabin runner
+     */
     public CabinRunner(String name, SimulationManager manager, FloorSequencer sequencer) {
         this.name = name;
         this.manager = manager;

@@ -1,5 +1,9 @@
 package api;
 
+
+/**
+ * Defines access to the top and bottom safety-limit switches.
+ */
 public interface SafetyLeverAPI {
 
     /** True once the car has hit the safety lever above floor 10. */

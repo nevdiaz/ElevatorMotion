@@ -1,5 +1,8 @@
 package api;
 
+/**
+ * Defines access to floor-alignment and end-of-shaft sensors.
+ */
 public interface SensorAPI {
 
     boolean isTopAligned();

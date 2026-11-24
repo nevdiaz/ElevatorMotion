@@ -7,6 +7,9 @@ import Utilities.Message;
 import java.util.ArrayDeque;
 import java.util.Optional;
 
+/**
+ * Translates between elevator cabin state and software-bus messages.
+ */
 public class BusCabinGateway {
 
     //The topics that ask this cabin to go to a floor. All three carry the floor in payload byte 1.
@@ -23,6 +26,15 @@ public class BusCabinGateway {
     private boolean statusAnnounced = false;
 
 
+    /**
+     * Creates and initializes the BusCabinGateway instance.
+     *
+     * @param motion value for motion
+     * @param trip trip controller for the cabin
+     * @param bus software-bus instance
+     * @param elevator elevator identifier
+     * @throws IllegalArgumentException if an argument or state violates the method’s requirements
+     */
     public BusCabinGateway(MotionControllerAPI motion, TripController trip,
                            BusMessageDispatcher bus, int elevator) {
 
@@ -40,11 +52,11 @@ public class BusCabinGateway {
         }
     }
 
-    //Empty the bus into the waiting queue
+    /** Empty the bus into the waiting queue */
     private void readCalls() {
         boolean lockedOut = currentFault() != 0;
         if (lockedOut) {
-            pendingFloors.clear();       // a tripped car cannot serve calls
+            pendingFloors.clear();       //a tripped car cannot serve calls
         }
 
         //Calls from different topics are read one topic after the other, not in the order they were sent
@@ -62,7 +74,7 @@ public class BusCabinGateway {
         }
     }
 
-    //Take the next waiting floor when the cabin is free
+    /** Take the next waiting floor when the cabin is free */
     private void startNextCall() {
         //Only starts a trip if the cabin is idle
         if (pendingFloors.isEmpty() || trip.isTripActive() || motion.isMoving()) {
@@ -71,7 +83,7 @@ public class BusCabinGateway {
         trip.goToFloor(pendingFloors.pollFirst());
     }
 
-    //Send on the bus only what has changed
+    /** Send on the bus only what has changed */
     private void publishChanges() {
         int fault = currentFault();
         if (fault != lastFault) {
@@ -113,6 +125,7 @@ public class BusCabinGateway {
         }
     }
 
+    /** Updates the component for the current simulation step.*/
     public void update() {
         readCalls();
         publishChanges(); //report the car's state first so a finished trip shows as stopped
@@ -120,6 +133,11 @@ public class BusCabinGateway {
 
     }
 
+    /**
+     * Returns the current elevator fault code, or zero when no fault is active.
+     *
+     * @return the resulting integer value
+     */
     private int currentFault() {
         if (motion.isTopLimitTripped()) {
             return BusCodes.FAULT_TOP_LIMIT;
